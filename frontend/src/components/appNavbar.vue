@@ -8,13 +8,22 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
+          <router-link to="/" class="nav-link" href="#">Home</router-link>
         </li>
+
         <li class="nav-item">
-          <a class="nav-link" href="#">About</a>
+          <router-link to="/gene-input" class="nav-link" href="#">Gene Input</router-link>
+        </li>
+
+        <li class="nav-item">
+          <router-link to="/gene-sequence/:geneId" class="nav-link" href="#">Gene Sequence Display</router-link>
+        </li>
+
+        <li class="nav-item">
+          <router-link to="/about" class="nav-link" href="#">About</router-link>
         </li>
         <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="False">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="True">
             Gene Compare
           </a>
           <ul class="dropdown-menu">
@@ -33,8 +42,11 @@
 </template>
 
 <script>
-export default {
+// import { RouterLink } from 'vue-router';
 
+// import { createRouter, createWebHistory } from 'vue-router';
+export default {
+    // components: { RouterLink }
 }
 </script>
 

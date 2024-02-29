@@ -1,19 +1,34 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Home  from './components/home.vue';
 import About from './components/About.vue';
+import GeneInput from './components/GeneInput.vue';
+import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
+
+
 
 
 const routes = [
     {
         path:'/',
-        name:'home',
+        name:'home-page',
         component: Home
     },
     {
-        path:'/About',
-        name:'About',
+        path:'/about',
+        name:'about',
         component: About
-    }
+    },
+    {
+        path: '/gene-input',
+        name: 'gene-input',
+        component: GeneInput,
+    },
+    {
+        path: '/gene-sequence/:geneId',
+        name: 'gene-sequence',
+        component: GeneSequenceDisplay,
+        props: true,
+    },
 ]
 
 const router = createRouter({

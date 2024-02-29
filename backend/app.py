@@ -19,7 +19,7 @@ class Gene(db.Model):
 
 app=Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:'':tiger@localhost/my'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:'':F14g258h369!@localhost/my'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)

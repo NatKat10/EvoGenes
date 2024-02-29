@@ -12,7 +12,8 @@
     "core-js": "^3.8.3",
     "jquery": "^3.7.1",
     "popper.js": "^1.16.1",
-    "vue": "^3.2.13"
+    "vue": "^3.2.13",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
