@@ -3,6 +3,7 @@ import Home  from './components/home.vue';
 import About from './components/About.vue';
 import GeneInput from './components/GeneInput.vue';
 import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
+import GeneStructure from './components/GeneStructure.vue';
 
 
 
@@ -29,6 +30,7 @@ const routes = [
         component: GeneSequenceDisplay,
         props: true,
     },
+    { path: '/gene-structure', component: GeneStructure },
 ]
 
 const router = createRouter({

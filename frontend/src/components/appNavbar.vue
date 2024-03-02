@@ -20,9 +20,13 @@
         </li>
 
         <li class="nav-item">
+          <router-link to="/gene-structure" class="nav-link">Gene Structure</router-link>
+        </li>
+
+        <li class="nav-item">
           <router-link to="/about" class="nav-link" href="#">About</router-link>
         </li>
-        <li class="nav-item dropdown">
+        <!-- <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="True">
             Gene Compare
           </a>
@@ -32,7 +36,7 @@
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="#">Help</a></li>
           </ul>
-        </li>
+        </li> -->
 
       </ul>
 

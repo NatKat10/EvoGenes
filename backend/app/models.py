@@ -1,4 +1,4 @@
-from . import db
+from .extensions import db
 
 class Gene(db.Model):
     __tablename__ = 'genes'
