@@ -30,7 +30,14 @@ const routes = [
         component: GeneSequenceDisplay,
         props: true,
     },
-    { path: '/gene-structure', component: GeneStructure },
+    {   
+        path: '/gene-structure', 
+        component: GeneStructure 
+    },
+    {   
+        path: '/gene-image', 
+        component: GeneStructure 
+    },
 ]
 
 const router = createRouter({

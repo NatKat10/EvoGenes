@@ -26,17 +26,7 @@
         <li class="nav-item">
           <router-link to="/about" class="nav-link" href="#">About</router-link>
         </li>
-        <!-- <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="True">
-            Gene Compare
-          </a>
-          <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Use DB</a></li>
-            <li><a class="dropdown-item" href="#">Upload Yourself</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Help</a></li>
-          </ul>
-        </li> -->
+        
 
       </ul>
 

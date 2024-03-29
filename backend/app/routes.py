@@ -7,6 +7,8 @@ import requests, sys, json
 import logging
 
 from flask_cors import CORS
+from flask_cors import cross_origin
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
@@ -28,6 +30,9 @@ from flask import jsonify, request
 from flask import jsonify, request
 from .extensions import db  # Make sure this import is correct based on your setup
 from .models import Gene  # Adjust this import if necessary
+
+from .GeneImage import GeneImage  # Import the GeneImage class
+
 
 @main.route('/add', methods=['POST'])
 def add_gene():
@@ -96,6 +101,7 @@ def fetch_endpoint(gene_ensembl_id, content_type):
     return r.json()
 
 @generate.route('/gene-structure', methods=['POST'])
+@cross_origin()
 def get_gene_structure():
     data = request.get_json()
     gene_id = data.get('gene_id', '')
@@ -121,3 +127,16 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
     except requests.exceptions.HTTPError as e:
         logging.error(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
         return None  # Return None to indicate failure
+    
+
+@generate.route('/gene-image', methods=['POST'])
+@cross_origin()
+def plot_gene_image():
+    data = request.json
+    exons_positions = data.get('exonsPositions', [])
+    
+    # Generate the gene image plot
+    gene = GeneImage(exons_positions,exons_positions[0])
+    gene.save_plot()  # Adjust the output path as needed
+
+    return jsonify({'message': 'Gene image plot generated successfully'})
