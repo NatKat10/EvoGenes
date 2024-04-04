@@ -39,6 +39,7 @@
       <button @click="plotGeneImage">Plot Gene Image</button>
 
       <!-- Display the gene image -->
+      
       <img v-if="imageSrc" :src="imageSrc" alt="Gene Image">
     </div>
 
@@ -83,6 +84,7 @@ export default {
         // Create a Blob URL and set it as the image source
         const imageUrl = URL.createObjectURL(blob);
         this.imageSrc = imageUrl;
+        console.log('Image URL:', imageUrl);
       })
       .catch(error => {
         console.error('Error fetching gene image:', error);

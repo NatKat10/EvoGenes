@@ -153,6 +153,8 @@ class GeneImage(object):
         plt.savefig(output_path)
 
 
+
+
 # geneImage = GeneImage() 
 # if  __name__ == "__main__":
 #     #exons positions

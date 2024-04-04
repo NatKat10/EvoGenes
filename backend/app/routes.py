@@ -24,7 +24,8 @@ def test():
 def get_data():
     return jsonify({"Hello": "World"})
 
-
+import os
+from flask import send_file
 from flask import jsonify, request
 
 from flask import jsonify, request
@@ -33,7 +34,7 @@ from .models import Gene  # Adjust this import if necessary
 
 from .GeneImage import GeneImage  # Import the GeneImage class
 
-
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', '..', 'backend')
 @main.route('/add', methods=['POST'])
 def add_gene():
     data = request.get_json()
@@ -136,7 +137,14 @@ def plot_gene_image():
     exons_positions = data.get('exonsPositions', [])
     
     # Generate the gene image plot
-    gene = GeneImage(exons_positions,exons_positions[0])
-    gene.save_plot()  # Adjust the output path as needed
+    gene = GeneImage(exons_positions, exons_positions[0])
 
-    return jsonify({'message': 'Gene image plot generated successfully'})
+    # Ensure the directory exists
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+
+    image_path = os.path.join(UPLOAD_FOLDER, 'gene_image.png')
+    gene.save_plot(image_path)  # Save the image file
+    
+    # Return the image file as a response
+    return send_file(image_path, mimetype='image/png')
