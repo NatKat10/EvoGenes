@@ -14,6 +14,9 @@
         <li class="nav-item">
           <router-link to="/gene-input" class="nav-link" href="#">Gene Input</router-link>
         </li>
+        <li class="nav-item">
+          <router-link to="/run-yass" class="nav-link" href="#">Run Yass</router-link>
+        </li>
 
         <li class="nav-item">
           <router-link to="/gene-sequence/:geneId" class="nav-link" href="#">Gene Sequence Display</router-link>
