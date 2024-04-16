@@ -4,6 +4,7 @@ import About from './components/About.vue';
 import GeneInput from './components/GeneInput.vue';
 import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
 import GeneStructure from './components/GeneStructure.vue';
+import RunYass from './components/RunYass.vue';
 
 
 
@@ -37,6 +38,10 @@ const routes = [
     {   
         path: '/gene-image', 
         component: GeneStructure 
+    },
+    {   
+        path: '/run-yass', 
+        component: RunYass 
     },
 ]
 
