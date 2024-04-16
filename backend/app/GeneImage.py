@@ -44,8 +44,8 @@ class GeneImage(object):
         self.numExons = len(self.exonIntervals)
         self.totalSpan = self.exonIntervals[-1][1] - self.exonIntervals[0][0]
         self.minExonLen = self.totalSpan * 0.005
-        self.ylims = {'exon_max': 2, 'exon_min': 1}
-        self.figure, self.canvas = plt.subplots(figsize=(15, 1.5))
+        self.ylims = {'exon_max': 1, 'exon_min': -1.5}
+        self.figure, self.canvas = plt.subplots(figsize=(15, 0.5))
         self.canvas.set_facecolor(self.bgColor)
         self._draw()
 
@@ -102,10 +102,12 @@ class GeneImage(object):
         if self.markerColors == []:
             self.markerColors = [self.markerDefaultColor for x in self.markerPositions]
         for p, h, c in zip(self.markerPositions, self.markerHeights, self.markerColors):
-            self.canvas.plot((p, p), (self.ylims['bar_max'], self.ylims['bar_max'] + h),
-                             linestyle='-', color='black', linewidth=self.MarkerWeight, alpha=0.7)
-            self.canvas.scatter(p, self.ylims['bar_max'] + h + 0.25, s=self.markerSize, marker='o', c=c,
-                                edgecolor=c, alpha=1)
+            # self.canvas.plot((p, p), (self.ylims['bar_max'], self.ylims['bar_max'] + h),
+            #                  linestyle='-', color='black', linewidth=self.MarkerWeight, alpha=0.7)
+            # self.canvas.scatter(p, self.ylims['bar_max'] + h + 0.25, s=self.markerSize, marker='o', c=c,
+            #                     edgecolor=c, alpha=1)
+            self.canvas.scatter(p, self.ylims['bar_max'] + h + 1,  c=c,
+                                 alpha=1)
 
     def _clean_axes(self):
         # self.canvas.set_ylim((self.ylims['exon_min'], self.ylims['bar_max']))
@@ -133,13 +135,13 @@ class GeneImage(object):
         self._set_limits()
         self._transform_spans()
         for i in range(self.numExons):
-            if i > 0:
-                self._draw_intron([self.exonIntervals[i - 1][1], self.exonIntervals[i][0]])
+            # if i > 0:
+            #     self._draw_intron([self.exonIntervals[i - 1][1], self.exonIntervals[i][0]])
             self._draw_exon(self.exonIntervals[i])
-        self.canvas.fill_between([self.exonIntervals[0][0], self.exonIntervals[-1][1]],
-                                 self.ylims['bar_min'], self.ylims['bar_max'],
-                                 edgecolor=self.bgColor, facecolor=self.barColor)
-        self._draw_markers()
+        # self.canvas.fill_between([self.exonIntervals[0][0], self.exonIntervals[-1][1]],
+        #                          self.ylims['bar_min'], self.ylims['bar_max'],
+        #                          edgecolor=self.bgColor, facecolor=self.barColor)
+        # self._draw_fs()
         self._clean_axes()
 
     def show(self):
