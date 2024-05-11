@@ -1,10 +1,12 @@
 import {createRouter, createWebHistory} from 'vue-router'
-import Home  from './components/home.vue';
+import Home  from './pages/HomePage.vue';
+
 import About from './components/About.vue';
 import GeneInput from './components/GeneInput.vue';
 import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
 import GeneStructure from './components/GeneStructure.vue';
-import RunYass from './components/RunYass.vue';
+
+import RunYass from './pages/YassPage.vue';
 
 
 
