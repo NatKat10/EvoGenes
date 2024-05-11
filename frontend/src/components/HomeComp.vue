@@ -1,20 +1,23 @@
 <template>
- 
-  <div class="home-comp px-4">
-    <h1> HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII</h1>
-      <b-carousel-slide v-for="item in items" :key="item.id">
-        <template #default>
-          <div class="card mx-auto" style="width: 18rem;">
-            <img :src="item.image" class="card-img-top" alt="Profile of {{ item.name }}">
-            <div class="card-body">
-              <h5 class="card-title">{{ item.name }}</h5>
-              <p class="card-text">{{ item.description }}</p>
-              <a href="#" class="btn btn-primary">View More</a>
-            </div>
-          </div>
-        </template>
-      </b-carousel-slide>
+  <div class="container"> 
+    <div class="card rounded-pill text-center overflow-hidden" style="width: 18rem;">
+      <img src="../assets/evo1.png" class="card-img-top" alt="...">
+      <div class="card-body bg-dark text-white">
+        <h5 class="card-title">Run Yass</h5>
+        <p class="card-text">Something about the yass.</p>
+        <p class="mt-3">$129.00</p>
+        <a href="#" class="btn btn-light px-3 rounded-pill">Run Now</a>
+      </div>
   </div>
+
+
+  </div>
+  
+
+  
+
+  
+
     
   </template>
   
