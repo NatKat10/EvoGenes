@@ -1,7 +1,23 @@
 <template>
     <div class="home-page">
-        <HomeComp /> <!-- Make sure this matches the registered component name -->
-        <HomeComp />
+        <!-- <HomeComp /> Make sure this matches the registered component name -->
+        <!-- <HomeComp /> -->
+
+        <HomeComp
+          :imageUrl="'../assets/evo1.png'"
+          :title="'Run Yass'"
+          :description="'Use the YASS algorithm to generate graphs'"
+          :link="'/run-yass'" 
+          :buttonLabel="'Run Now'"
+        />
+
+        <HomeComp
+          :imageUrl="'../assets/evo1.png'"
+          :title="'Search Gene Sequence'"
+          :description="'Seach gene sequences using GeneID from www.ensembl.org website'"
+          :link="'/gene-sequence/:geneId'" 
+          :buttonLabel="'Run Now'"
+        />
     </div>
   </template>
   

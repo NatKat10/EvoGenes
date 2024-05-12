@@ -6,7 +6,7 @@
       </div>
       <nav class="nav flex-column">
         <router-link to="/" class="nav-link" @click="keepSidebarOpen"> <i class="fa fa-home"></i> <span>Home</span> </router-link>
-        <router-link to="/gene-input" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-dna"></i> <span>Gene Input</span> </router-link>
+        <!-- <router-link to="/gene-input" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-dna"></i> <span>Gene Input</span> </router-link> -->
         <router-link to="/run-yass" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-play"></i><span>Run Yass</span></router-link>
         <router-link to="/gene-sequence/:geneId" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-list"></i><span>Gene Sequence Display</span></router-link>
         <router-link to="/gene-structure" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-project-diagram"></i><span>Gene Structure</span></router-link>
@@ -104,6 +104,7 @@ export default {
 .nav-link span {
   display: none; /* Hide text when sidebar is collapsed */
   white-space: nowrap;
+  margin-left: 10px; /* T-h-i-s is what does the space between icon and label */
 }
 
 .sidebar:hover .nav-link span, .sidebar.active .nav-link span {

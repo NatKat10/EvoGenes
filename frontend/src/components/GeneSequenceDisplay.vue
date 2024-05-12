@@ -1,12 +1,22 @@
 <template>
-  <div>
+  <!-- <div>
     <h1>Gene Sequence Display</h1>
     <div>
       <input v-model="geneId" placeholder="Enter Gene ID" />
       <button @click="searchGene">Search</button>
       <textarea v-model="gene_seq_content" rows="10" cols="50" readonly></textarea>
     </div>
+  </div> -->
+
+  <div class="container">
+    <h1>Gene Sequence Display</h1>
+    <div class="input-container">
+      <input v-model="geneId" placeholder="Enter Gene ID" />
+      <button @click="searchGene">Search</button>
+    </div>
+    <textarea v-model="gene_seq_content" rows="10" cols="50" readonly></textarea>
   </div>
+
 </template>
 
 <script>
@@ -41,7 +51,8 @@ export default {
         }
 
         const data = await response.json();
-        this.gene_seq_content = JSON.stringify(data, null, 2); // Display JSON content
+        // this.gene_seq_content = JSON.stringify(data, null, 2); // Display JSON content
+        this.gene_seq_content = data.seq; // Display JSON content
       } catch (error) {
         console.error('Error:', error);
       }
