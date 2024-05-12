@@ -10,11 +10,31 @@
     </div>
     
 
-    <div class="uplod">
+    <!-- <div class="uplod">
       <h3>Or upload files:</h3>
+     
+
       <input type="file" class="upload-box" ref="file1" @change="handleFileChange('file1')" accept=".fa, .fasta"/>
+      
+
       <input type="file" class="upload-box" ref="file2" @change="handleFileChange('file2')" accept=".fa, .fasta"/>
+    </div> -->
+
+
+    <div class="upload-section">
+      <h3>Or upload files:</h3>
+      <div class="file-group">
+        <div class="file-label-input">
+          <label for="file1" class="upload-label">Choose FASTA file for Gene1:</label>
+          <input type="file" id="file1" class="upload-box" ref="file1" @change="handleFileChange('file1')" accept=".fa, .fasta"/>
+        </div>
+        <div class="file-label-input">
+          <label for="file2" class="upload-label">Choose FASTA file for Gene2:</label>
+          <input type="file" id="file2" class="upload-box" ref="file2" @change="handleFileChange('file2')" accept=".fa, .fasta"/>
+        </div>
+      </div>
     </div>
+
 
     <!-- <button @click="runYASS" class="run-button">Run YASS</button> -->
     <div class="btn">
@@ -24,6 +44,19 @@
         <span></span>
       </button>
     </div>
+
+<!-- 
+    <div class="btn">
+      <svg @click="runYASS" id="play" viewBox="0 0 163 163" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none">
+          <g transform="translate(2.000000, 2.000000)" stroke-width="4">
+            <path d="M10,80 C10,118.107648 40.8923523,149 79,149 C117.107648,149 148,118.107648 148,80 C148,41.8923523 117.107648,11 79,11" stroke="#A5CB43"></path>
+            <path d="M105.9,74.4158594 L67.2,44.2158594 C63.5,41.3158594 58,43.9158594 58,48.7158594 L58,109.015859 C58,113.715859 63.4,116.415859 67.2,113.515859 L105.9,83.3158594 C108.8,81.1158594 108.8,76.6158594 105.9,74.4158594" stroke="#A3CD3A" fill="rgba(22,22,22,0)"></path>
+            <path d="M159,79.5 C159,35.5933624 123.406638,0 79.5,0 C35.5933624,0 0,35.5933624 0,79.5 C0,123.406638 35.5933624,159 79.5,159" stroke="#A5CB43"></path>
+          </g>
+        </g>
+      </svg>
+    </div> -->
     
 
     <div class="image-container">
@@ -139,6 +172,11 @@ export default {
   box-shadow: 7px 5px 5px 5px rgb(144, 143, 143);
 
 }
+.btn {
+  display: flex;
+  justify-content: center; /* Centers the button horizontally */
+  width: 100%; /* Ensure the flex container spans the full width */
+}
 
 .textarea:hover {
   cursor: pointer;
@@ -166,7 +204,12 @@ export default {
   box-shadow: 7px 5px 5px 5px rgb(110, 110, 110);
   width: 350px;
   outline: none;
+  margin-right: 20px; 
+
 }
+.upload-box:last-child {
+    margin-right: 0; /* Removes margin from the last upload button */
+  }
 
 ::-webkit-file-upload-button{
   color: #f4f4f4;
@@ -223,6 +266,7 @@ button {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  color: #fff;
 }
 
 button:hover,
@@ -286,7 +330,34 @@ button:has(:last-child:active)::before {
   transition: transform 500ms, opacity 250ms;
 }
 
+.upload-section {
+  text-align: center;
+  margin: 20px 0;
+}
 
+.file-group {
+  display: flex;
+  justify-content: space-evenly; /* Distribute space evenly */
+  align-items: center; /* Align items vertically in the center */
+}
+
+.file-label-input {
+  display: flex;
+  flex-direction: column; /* Stack label and input vertically */
+  align-items: center; /* Center-align the contents */
+}
+
+.upload-label {
+  margin-bottom: 5px; /* Space between label and input */
+}
+
+
+
+.btn {
+  display: flex;
+  justify-content: center; /* Centers the button horizontally */
+  width: 100%; /* Ensure the flex container spans the full width */
+}
 
 
 
