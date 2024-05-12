@@ -25,7 +25,7 @@ def get_data():
     return jsonify({"Hello": "World"})
 
 import os
-from flask import send_file
+from flask import send_file,send_from_directory
 
 from flask import jsonify, request,send_file,current_app
 from .extensions import db  # Make sure this import is correct based on your setup
@@ -40,14 +40,7 @@ import os
 import tempfile
 from flask import Response
 import io  
-
-
-
-
-
-
-
-
+import re
 
 
 
@@ -57,40 +50,88 @@ import io
 
 @main.route('/run-yass', methods=['POST'])
 def run_yass():
-    # Retrieve files from POST request
-    fasta_file1 = request.files['fasta1']
-    fasta_file2 = request.files['fasta2']
+        # Uncomment this block to serve an example image instead of processing the sequences
+    image_directory = '../'  # This navigates up from 'backend/app' to 'backend'
+    image_filename = 'example.png'
+    return send_from_directory(image_directory, image_filename)
+
+    # fasta_file1_path = 'temp_sequence1.fasta'
+    # fasta_file2_path = 'temp_sequence2.fasta'
+
+    # if 'fasta1' in request.files and 'fasta2' in request.files:
+    #     fasta_file1 = request.files['fasta1']
+    #     fasta_file2 = request.files['fasta2']
+    #     fasta_file1.save(fasta_file1_path)
+    #     fasta_file2.save(fasta_file2_path)
+    # elif 'sequence1' in request.form and 'sequence2' in request.form:
+    #     sequence1 = request.form['sequence1']
+    #     sequence2 = request.form['sequence2']
+    #     # Validate sequence input
+    #     if not re.match('^[ACGTacgt]*$', sequence1) or not re.match('^[ACGTacgt]*$', sequence2):
+    #         return jsonify({'error': 'Invalid sequence input. Sequences should only contain A, C, G, T characters.'}), 400
+    #     with open(fasta_file1_path, 'w') as file1, open(fasta_file2_path, 'w') as file2:
+    #         file1.write(f'>Sequence1\n{sequence1}\n')
+    #         file2.write(f'>Sequence2\n{sequence2}\n')
+    # else:
+    #     return jsonify({'error': 'No valid sequence or file input provided'}), 400
+
+
+
+    # # Proceed with YASS processing if inputs are valid
+    # yass_output_path = 'yass_output.yop'
+    # dp_output_path = 'dp.png'
+    # yass_executable = './yass-Win64.exe'
+    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    # subprocess.run(command, check=True)
     
-    # Save files to temporary paths
-    fasta_file1_path = 'temp_sequence1.fasta'
-    fasta_file2_path = 'temp_sequence2.fasta'
-    fasta_file1.save(fasta_file1_path)
-    fasta_file2.save(fasta_file2_path)
+    # php_script = 'yass2dotplot.php'
+    # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
     
-    # Define output paths
-    yass_output_path = 'yass_output.yop'
-    dp_output_path = 'dp.png'
+    # with open(dp_output_path, 'rb') as file:
+    #     image_data = file.read()
     
-    # Run YASS with the FASTA files
-    yass_executable = './yass-Win64.exe'
-    command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-    subprocess.run(command, check=True)
+    # os.remove(fasta_file1_path)
+    # os.remove(fasta_file2_path)
+    # os.remove(yass_output_path)
+    # os.remove(dp_output_path)
     
-    # Convert YOP to DotPlot
-    php_script = 'yass2dotplot.php'  # Make sure this script is executable and has a .php extension
-    subprocess.run(['php', php_script, yass_output_path, 'filename1="gene1"', 'filename2="gene2"', dp_output_path], check=True)
+    # return Response(image_data, mimetype='image/png')
+
+
+    # code for file input only
+    # fasta_file1 = request.files['fasta1']
+    # fasta_file2 = request.files['fasta2']
     
-    # Send the DotPlot image file as a response
-    with open(dp_output_path, 'rb') as file:
-        image_data = file.read()
+    # # Save files to temporary paths
+    # fasta_file1_path = 'temp_sequence1.fasta'
+    # fasta_file2_path = 'temp_sequence2.fasta'
+    # fasta_file1.save(fasta_file1_path)
+    # fasta_file2.save(fasta_file2_path)
     
-    # Delete temporary files
-    os.remove(fasta_file1_path)
-    os.remove(fasta_file2_path)
-    os.remove(yass_output_path)
-    os.remove(dp_output_path)
+    # # Define output paths
+    # yass_output_path = 'yass_output.yop'
+    # dp_output_path = 'dp.png'
     
-    return Response(image_data, mimetype='image/png')
+    # # Run YASS with the FASTA files
+    # yass_executable = './yass-Win64.exe'
+    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    # subprocess.run(command, check=True)
+    
+    # # Convert YOP to DotPlot
+    # php_script = 'yass2dotplot.php'  # Make sure this script is executable and has a .php extension
+    # subprocess.run(['php', php_script, yass_output_path, 'filename1="gene1"', 'filename2="gene2"', dp_output_path], check=True)
+    
+    # # Send the DotPlot image file as a response
+    # with open(dp_output_path, 'rb') as file:
+    #     image_data = file.read()
+    
+    # # Delete temporary files
+    # os.remove(fasta_file1_path)
+    # os.remove(fasta_file2_path)
+    # os.remove(yass_output_path)
+    # os.remove(dp_output_path)
+    
+    # return Response(image_data, mimetype='image/png')
 
 
 @main.route('/add', methods=['POST'])

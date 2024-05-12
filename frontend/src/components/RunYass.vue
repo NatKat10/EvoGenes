@@ -57,10 +57,13 @@ export default {
       if (this.file1 && this.file2) {
         formData.append('fasta1', this.file1);
         formData.append('fasta2', this.file2);
-      } else {
+    } else if (this.sequence1 && this.sequence2) {
         formData.append('sequence1', this.sequence1);
         formData.append('sequence2', this.sequence2);
-      }
+    } else {
+        alert("Please provide two sequences or two FASTA files.");
+        return;
+    }
 
       try {
         const response = await fetch('http://localhost:5000/run-yass', {
@@ -74,6 +77,8 @@ export default {
         this.imageSrc = URL.createObjectURL(blob);
       } catch (error) {
         console.error('Error running YASS:', error);
+        alert("Incorrect Input");
+
       }
     }
   }

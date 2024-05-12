@@ -2,7 +2,7 @@
   <div>
     <div class="sidebar" @mouseenter="openSidebar" @mouseleave="closeSidebar">
       <div class="logo">
-        <img src="../assets/back1.png" alt="Logo"> <!-- Update path as needed -->
+        <img src="../assets/circle_logo.png" alt="Logo"> <!-- Update path as needed -->
       </div>
       <nav class="nav flex-column">
         <router-link to="/" class="nav-link" @click="keepSidebarOpen"> <i class="fa fa-home"></i> <span>Home</span> </router-link>
