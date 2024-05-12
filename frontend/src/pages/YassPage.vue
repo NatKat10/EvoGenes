@@ -1,7 +1,7 @@
 <template>
     <div class="run-yass">
       <div class="yassComp">
-        <h1>AYELETTTTTTTTTTTTTTTTTTT</h1>
+        <h1></h1>
         <RunYass />
       </div>
     </div>
