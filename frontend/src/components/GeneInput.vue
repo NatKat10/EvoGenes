@@ -1,6 +1,6 @@
 <template>
     <div>
-      <h1>Gene Input Page</h1>
+      <h1>Gene Input Page hiiiiiiiiii</h1>
       <form @submit.prevent="submitForm">
         <label for="gene1">Gene 1:</label>
         <textarea v-model="gene1" id="gene1" rows="4" cols="50" required></textarea>

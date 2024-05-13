@@ -118,18 +118,19 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 100px;
-  border: 3px solid #ebebeb;
-  border-radius: 5px;
+  max-width: 90vw;
+  min-width: 320px;
+  margin: 5vh auto;
+  padding: 5vw;
+  border: 0.3vw solid #ebebeb;
   background-color: #f4f4f4;
-  border-radius: 50px;
-  box-shadow: 10px 5px 5px rgb(144, 143, 143);
-  /* display: flex; */
-  /* flex-direction: column; */
+  border-radius: 2vw;
+  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
+  display: flex;
+  flex-direction: column;
   align-items: center;
 }
   
@@ -159,17 +160,16 @@ export default {
   background-color: #fff4ee;
   color: #a81414;
   padding: 1em;
-  border-radius: 10px;
-  border: 3px solid transparent;
+  border-radius: 1vw;
+  border: 0.2vw solid transparent;
   outline: none;
   font-family: "Heebo", sans-serif;
-  font-weight: 500;
-  font-size: 16px;
+  font-size: 1.2vw;
   line-height: 1.8;
-  width: 40vw;
+  width: 90%;
   height: 10vh;
   transition: all 0.2s;
-  box-shadow: 7px 5px 5px 5px rgb(144, 143, 143);
+  box-shadow: 0.5vw 0.3vw 0.5vw rgba(144, 143, 143, 0.5);
 
 }
 .btn {
@@ -179,15 +179,13 @@ export default {
 }
 
 .textarea:hover {
-  cursor: pointer;
   background-color: #ffd3aa;
 }
 
 .textarea:focus {
-  cursor: text;
-  color: #333333;
-  background-color: white;
-  border-color: #333333;
+  color: #333;
+  background-color: #fff;
+  border-color: #333;
 }
 
 .uplod{
@@ -197,16 +195,20 @@ export default {
 
 }
 
-.upload-box{
-  font-size: 16px;
+.upload-box {
+  font-size: 1vw;
   background: #ebebeb;
   border-radius: 50px;
-  box-shadow: 7px 5px 5px 5px rgb(110, 110, 110);
-  width: 350px;
+  box-shadow: 0.3vw 0.3vw 0.5vw rgb(110, 110, 110);
+  width: 80%;
   outline: none;
-  margin-right: 20px; 
-
+  padding: 0.5vw 1vw;
 }
+
+.upload-box:hover {
+  background-color: #ccc;
+}
+
 .upload-box:last-child {
     margin-right: 0; /* Removes margin from the last upload button */
   }

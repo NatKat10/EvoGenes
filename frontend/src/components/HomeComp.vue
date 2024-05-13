@@ -55,7 +55,7 @@
       },
 
       mounted() {
-          console.log('HomeComp mounted');
+          // console.log('HomeComp mounted');
       }
     }
   
