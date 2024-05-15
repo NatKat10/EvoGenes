@@ -2,7 +2,7 @@
 
   <div class="container">
 
-    <h1>Gene Sequence Display</h1>
+    <h1>Search Gene Sequence</h1>
 
     <div class="input-container">
       <input v-model="geneId" placeholder="Enter Gene ID" />

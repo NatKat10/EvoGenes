@@ -7,33 +7,6 @@
       <button type="submit">Search Gene Structure</button>
     </form>
 
-    <!-- Section to display processed gene structure
-    <div v-if="geneStructure">
-      <h2>Processed Gene Structure</h2>
-      <div v-for="gene in geneStructure" :key="gene.gene_id">
-        <h3>Gene ID: {{ gene.gene_id }}</h3>
-        <div v-for="(exon, exonIndex) in gene.exons" :key="exonIndex">
-          <div>Exon ID: {{ exon.id }}</div>
-          <div>Start: {{ exon.start }}</div>
-          <div>End: {{ exon.end }}</div>
-        </div>
-        <div v-if="gene.introns && gene.introns.length > 0">
-          <h4>Introns:</h4>
-          <div v-for="(intron, intronIndex) in gene.introns" :key="intronIndex">
-            <div>Intron ID: {{ intron.id }}</div>
-            <div>Start: {{ intron.start }}</div>
-            <div>End: {{ intron.end }}</div>
-          </div>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- Section to display the raw API response in a window-like container -->
-    <!-- <div v-if="rawApiResponse" class="api-response-window">
-      <h2>Raw API Response</h2>
-      <pre>{{ rawApiResponse }}</pre>
-    </div> -->
-
     <!-- Display success message if the gene is found -->
     <div v-if="geneStructureFound" class="success-message">
       Gene structure found successfully!

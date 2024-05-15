@@ -11,7 +11,7 @@
     </div>
   </div> -->
 
-  <div class="container"> 
+  <!-- <div class="container">  -->
     <div class="card rounded-pill text-center overflow-hidden" style="width: 18rem;">
       <img :src="imageUrl" class="card-img-top" alt="...">
       <div class="card-body bg-dark text-white">
@@ -19,7 +19,7 @@
         <p class="card-text">{{ description }}</p>
         <a :href="link" class="btn btn-light px-3 rounded-pill">{{ buttonLabel }}</a>
       </div>
-    </div>
+    <!-- </div> -->
   </div>
 
 </template>

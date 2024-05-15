@@ -20,7 +20,7 @@
           :title="'Search Gene Sequence'"
           :description="'Seach gene sequences using GeneID from www.ensembl.org website'"
           :link="'/gene-sequence/:geneId'" 
-          :buttonLabel="'Run Now'"
+          :buttonLabel="'Search'"
         />
     </div>
   </template>
@@ -37,13 +37,28 @@
   </script>
   
   <style>
-  .home-page {
-    position: relative; /* Needed for absolute positioning of the pseudo-element */
+  /* .home-page {
+    position: relative; Needed for absolute positioning of the pseudo-element
     width: 100%;
     height: 100vh;
-    overflow: hidden; /* Prevents content from spilling out */
-  }
+    overflow: hidden; Prevents content from spilling out
+  } */
   
+  .home-page {
+    display: flex; /* Change display to flex */
+    flex-direction: row; /* Ensure components are arranged horizontally */
+    justify-content: center; /* Center components horizontally */
+    align-items: center; /* Center components vertically */
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Add margin between HomeComp components */
+  .home-page > * + * {
+    margin-left: 50px; /* Adjust this value as needed */
+  }
+
+
   .home-page::before {
     content: "";
     position: absolute;
