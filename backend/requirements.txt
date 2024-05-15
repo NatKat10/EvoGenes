@@ -6,4 +6,6 @@ typing-extensions==4.9.0
 Flask-Marshmallow==1.2.0
 marshmallow==3.20.2
 packaging==23.2
-
+pytest
+pytest-cov
+flask-testing
