@@ -5,6 +5,8 @@ from app.models import Gene
 import warnings
 import io
 
+
+# to run the tests paste "python -m unittest discover -s tests" in the terminal
 class RoutesTestCase(TestCase):
     def create_app(self):
         app = create_app()

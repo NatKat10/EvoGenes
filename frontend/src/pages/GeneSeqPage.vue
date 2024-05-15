@@ -1,7 +1,7 @@
 <template>
     <div class="seq">
         <div class="cont">
-            <h1>HEHEHEHEHEHEHEHEHE TOTOTO</h1>
+            <!-- <h1>HEHEHEHEHEHEHEHEHE TOTOTO</h1> -->
 
             <GeneSequenceDisplay/>
 

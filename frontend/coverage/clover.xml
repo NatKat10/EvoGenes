@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1715760761728" clover="3.2.0">
-  <project timestamp="1715760761728" name="All files">
-    <metrics statements="414" coveredstatements="237" conditionals="416" coveredconditionals="74" methods="120" coveredmethods="48" elements="950" coveredelements="359" complexity="0" loc="414" ncloc="414" packages="5" files="21" classes="21"/>
+<coverage generated="1715773869263" clover="3.2.0">
+  <project timestamp="1715773869263" name="All files">
+    <metrics statements="433" coveredstatements="237" conditionals="416" coveredconditionals="74" methods="121" coveredmethods="48" elements="970" coveredelements="359" complexity="0" loc="433" ncloc="433" packages="5" files="22" classes="22"/>
     <package name="frontend">
       <metrics statements="7" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="0"/>
       <file name="babel.config.js" path="C:\Users\natka\Desktop\נטשה לימודים\שנה אחרונה\סמסטר א\פרויקט\finalProject\frontend\babel.config.js">
@@ -189,7 +189,7 @@
       </file>
     </package>
     <package name="frontend.src.components">
-      <metrics statements="219" coveredstatements="189" conditionals="87" coveredconditionals="74" methods="59" coveredmethods="44"/>
+      <metrics statements="238" coveredstatements="189" conditionals="87" coveredconditionals="74" methods="60" coveredmethods="44"/>
       <file name="About.vue" path="C:\Users\natka\Desktop\נטשה לימודים\שנה אחרונה\סמסטר א\פרויקט\finalProject\frontend\src\components\About.vue">
         <metrics statements="16" coveredstatements="16" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
         <line num="3" count="1" type="stmt"/>
@@ -318,6 +318,28 @@
         <line num="139" count="0" type="cond" truecount="2" falsecount="0"/>
         <line num="141" count="0" type="cond" truecount="2" falsecount="2"/>
         <line num="147" count="1" type="stmt"/>
+      </file>
+      <file name="HelloWorld.vue" path="C:\Users\natka\Desktop\נטשה לימודים\שנה אחרונה\סמסטר א\פרויקט\finalProject\frontend\src\components\HelloWorld.vue">
+        <metrics statements="19" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="3" count="0" type="stmt"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="20" count="0" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
+        <line num="34" count="0" type="stmt"/>
       </file>
       <file name="HomeComp.vue" path="C:\Users\natka\Desktop\נטשה לימודים\שנה אחרונה\סמסטר א\פרויקט\finalProject\frontend\src\components\HomeComp.vue">
         <metrics statements="16" coveredstatements="16" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>

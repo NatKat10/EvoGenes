@@ -7,3 +7,6 @@ module.exports = {
       return 'staticAsset';
     },
   };
+
+
+//   to run the tests paste "npm run test" in the terminal from frontend directory

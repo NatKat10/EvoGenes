@@ -51,54 +51,54 @@ import re
 @main.route('/run-yass', methods=['POST'])
 def run_yass():
     #to show the real output of yass you need to comment this lines.
-    # image_directory = '../'  # This navigates up from 'backend/app' to 'backend'
-    # image_filename = 'example.png'
-    # try:
-    #     return send_from_directory(image_directory, image_filename)
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+    image_directory = '../'  # This navigates up from 'backend/app' to 'backend'
+    image_filename = 'example.png'
+    try:
+        return send_from_directory(image_directory, image_filename)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    fasta_file1_path = 'temp_sequence1.fasta'
-    fasta_file2_path = 'temp_sequence2.fasta'
+    # fasta_file1_path = 'temp_sequence1.fasta'
+    # fasta_file2_path = 'temp_sequence2.fasta'
 
-    if 'fasta1' in request.files and 'fasta2' in request.files:
-        fasta_file1 = request.files['fasta1']
-        fasta_file2 = request.files['fasta2']
-        fasta_file1.save(fasta_file1_path)
-        fasta_file2.save(fasta_file2_path)
-    elif 'sequence1' in request.form and 'sequence2' in request.form:
-        sequence1 = request.form['sequence1']
-        sequence2 = request.form['sequence2']
-        # Validate sequence input
-        if not re.match('^[ACGTacgt]*$', sequence1) or not re.match('^[ACGTacgt]*$', sequence2):
-            return jsonify({'error': 'Invalid sequence input. Sequences should only contain A, C, G, T characters.'}), 400
-        with open(fasta_file1_path, 'w') as file1, open(fasta_file2_path, 'w') as file2:
-            file1.write(f'>Sequence1\n{sequence1}\n')
-            file2.write(f'>Sequence2\n{sequence2}\n')
-    else:
-        return jsonify({'error': 'No valid sequence or file input provided'}), 400
+    # if 'fasta1' in request.files and 'fasta2' in request.files:
+    #     fasta_file1 = request.files['fasta1']
+    #     fasta_file2 = request.files['fasta2']
+    #     fasta_file1.save(fasta_file1_path)
+    #     fasta_file2.save(fasta_file2_path)
+    # elif 'sequence1' in request.form and 'sequence2' in request.form:
+    #     sequence1 = request.form['sequence1']
+    #     sequence2 = request.form['sequence2']
+    #     # Validate sequence input
+    #     if not re.match('^[ACGTacgt]*$', sequence1) or not re.match('^[ACGTacgt]*$', sequence2):
+    #         return jsonify({'error': 'Invalid sequence input. Sequences should only contain A, C, G, T characters.'}), 400
+    #     with open(fasta_file1_path, 'w') as file1, open(fasta_file2_path, 'w') as file2:
+    #         file1.write(f'>Sequence1\n{sequence1}\n')
+    #         file2.write(f'>Sequence2\n{sequence2}\n')
+    # else:
+    #     return jsonify({'error': 'No valid sequence or file input provided'}), 400
 
 
 
-    # Proceed with YASS processing if inputs are valid
-    yass_output_path = 'yass_output.yop'
-    dp_output_path = 'dp.png'
-    yass_executable = './yass-Win64.exe'
-    command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-    subprocess.run(command, check=True)
+    # # Proceed with YASS processing if inputs are valid
+    # yass_output_path = 'yass_output.yop'
+    # dp_output_path = 'dp.png'
+    # yass_executable = './yass-Win64.exe'
+    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    # subprocess.run(command, check=True)
     
-    php_script = 'yass2dotplot.php'
-    subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
+    # php_script = 'yass2dotplot.php'
+    # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
     
-    with open(dp_output_path, 'rb') as file:
-        image_data = file.read()
+    # with open(dp_output_path, 'rb') as file:
+    #     image_data = file.read()
     
-    os.remove(fasta_file1_path)
-    os.remove(fasta_file2_path)
-    os.remove(yass_output_path)
-    os.remove(dp_output_path)
+    # os.remove(fasta_file1_path)
+    # os.remove(fasta_file2_path)
+    # os.remove(yass_output_path)
+    # os.remove(dp_output_path)
     
-    return Response(image_data, mimetype='image/png')
+    # return Response(image_data, mimetype='image/png')
 
 
     # code for file input only
