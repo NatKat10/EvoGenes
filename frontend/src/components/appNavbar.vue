@@ -86,8 +86,8 @@ export default {
 }
 
 .nav-link:hover {
-  background-color: #e1e1e1;
-  color: black; /* Change text color on hover */
+  background-color: #f7f7f7;
+  color: rgb(25, 25, 25); /* Change text color on hover */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Shadow for depth */
   transform: translateX(10px); /* Slight shift to the right on hover */
 }
