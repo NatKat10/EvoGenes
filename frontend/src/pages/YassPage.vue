@@ -1,14 +1,16 @@
 <template>
   <div class="container1">
     <div class="run-yass">
-      <div class="yassComp">
-        <div class="components-container">
-          <GeneStructure />
-          <RunYass />
-        </div>
+    <div class="yassComp">
+      <div class="components-container">
+        <GeneStructure />
+        <RunYass />
       </div>
     </div>
   </div>
+
+  </div>
+  
 </template>
 
 <script>
@@ -23,15 +25,7 @@ export default {
 };
 </script>
 
-<style scoped>
-.container1 {
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+<style>
 .run-yass {
   position: relative; /* Needed for absolute positioning of the pseudo-element */
   display: flex;
@@ -81,50 +75,5 @@ export default {
 h1 {
   text-align: center;
   margin-bottom: 20px; /* Add some space below the heading */
-}
-
-@media (max-width: 1200px) {
-  .yassComp {
-    padding: 15px;
-  }
-
-  .components-container {
-    gap: 15px;
-  }
-
-  h1 {
-    font-size: 1.5em;
-    margin-bottom: 15px;
-  }
-}
-
-@media (max-width: 768px) {
-  .yassComp {
-    padding: 10px;
-  }
-
-  .components-container {
-    gap: 10px;
-  }
-
-  h1 {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .yassComp {
-    padding: 5px;
-  }
-
-  .components-container {
-    gap: 5px;
-  }
-
-  h1 {
-    font-size: 1em;
-    margin-bottom: 5px;
-  }
 }
 </style>
