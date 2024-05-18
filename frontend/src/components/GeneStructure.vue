@@ -3,7 +3,7 @@
     <h1>Find Gene Structure</h1>
     <form @submit.prevent="fetchGeneStructure" class="input-container">
       <div class="input-button-wrapper">
-        <input class="textarea" type="text" v-model="geneId" placeholder="Enter Hrer Gene ID Please...">
+        <input class="textarea" type="text" v-model="geneId" placeholder="Enter Gene ID Here...">
         <button type="submit" class="search-button">➔</button>
       </div>
     </form>
@@ -130,9 +130,9 @@ export default {
 
 <style scoped>
 .container {
-  width: 100%;
+  width: 90%;
   max-width: 900px;
-  margin: 3vh auto;
+  margin: 5vh auto;
   padding: 3vw;
   border: 0.3vw solid #ebebeb;
   background-color: rgba(244, 244, 244, 0.6);
@@ -141,35 +141,26 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 
-
-/* .container { original
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 900px; 
-  margin: 0 auto; 
-  padding: 20px; 
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-  border-radius: 8px;
-  background-color: #fff; 
-} */
+h1 {
+  margin-bottom: 40px; /* Increase space below the title */
+  text-align: center; /* Center-align the title */
+}
 
 .input-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 70%;
+  width: 100%; /* Ensure the input container takes full width */
 }
 
 .input-button-wrapper {
   display: flex;
   align-items: center;
   position: relative;
-  width: 100%;
+  width: 100%; /* Ensure the wrapper takes full width */
 }
 
 .textarea {
@@ -182,9 +173,10 @@ export default {
   font-family: "Heebo", sans-serif;
   font-size: 1vw; /* Reduced font size for thinner height */
   line-height: 1.2; /* Adjusted line-height for thinner height */
-  width: 98.2%;
+  width: 100%; /* Ensure the textarea takes full width */
   transition: all 0.2s;
   box-shadow: 0.5vw 0.3vw 0.5vw rgba(144, 143, 143, 0.5);
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 
 .textarea:hover {
@@ -196,7 +188,6 @@ export default {
   background-color: #fff;
   border-color: #333;
 }
-
 
 .search-button {
   position: absolute;
@@ -217,22 +208,18 @@ export default {
   background-color: #22a66d;
 }
 
-#lbl {
-  padding: 0em 2em;
-}
-
-.error-message {
+.error-message, .success-message {
   margin-top: 20px;
-  color: red;
   width: 100%; /* Ensure message width doesn't exceed container */
   text-align: center; /* Center align the text */
 }
 
 .success-message {
-  margin-top: 20px;
   color: green;
-  width: 100%; /* Ensure message width doesn't exceed container */
-  text-align: center; /* Center align the text */
+}
+
+.error-message {
+  color: red;
 }
 
 .success-message::before {
@@ -258,10 +245,6 @@ export default {
   width: 100%;
 }
 
-h1 {
-  margin-bottom: 40px; /* Increase space below the title */
-}
-
 .gene-image-container img {
   width: 100%; /* Ensure image fills its container */
   max-width: 100%; /* Ensure image does not exceed its container */
@@ -279,5 +262,6 @@ h1 {
   margin-top: 20px;
   border-radius: 5px;
   resize: both; /* Allows the text box to be resizable */
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 </style>

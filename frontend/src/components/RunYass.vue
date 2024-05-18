@@ -3,10 +3,10 @@
     <h1>Run YASS Algorithm</h1>
     <!-- Sequence text inputs -->
     <div class="txt1">
-      <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here" rows="4" cols="50"></textarea>
+      <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here"></textarea>
     </div>
     <div class="txt2">
-      <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here" rows="4" cols="50"></textarea>
+      <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here"></textarea>
     </div>
     
     <div class="upload-section">
@@ -32,7 +32,7 @@
     </div>
 
     <div class="image-container">
-      <img v-if="imageSrc" :src="imageSrc" alt="DotPlot Image" class="image" style="width: 100%; height: auto;" />
+      <img v-if="imageSrc" :src="imageSrc" alt="DotPlot Image" class="image" />
     </div>
   </div>
 </template>
@@ -91,10 +91,10 @@ export default {
 
 <style scoped>
 .container {
-  width: 100%;
+  width: 90%;
   max-width: 900px;
   margin: 5vh auto;
-  padding: 3.5vw;
+  padding: 2vw;
   border: 0.3vw solid #ebebeb;
   background-color: rgba(244, 244, 244, 0.6); /* Slightly transparent background */
   border-radius: 2vw;
@@ -105,7 +105,8 @@ export default {
 }
 
 h1 {
-  margin-bottom: 40px; /* Increase space below the title */
+  margin-bottom: 2vw; /* Increase space below the title */
+  font-size: 2.5vw; /* Responsive font size */
 }
 
 .txt1, .txt2 {
@@ -115,13 +116,13 @@ h1 {
 }
 
 .txt2 {
-  margin-top: 20px; /* Add space between the two text boxes */
+  margin-top: 2vw; /* Add space between the two text boxes */
 }
 
 .textarea {
   background-color: #fff4ee;
   color: #a81414;
-  padding: 0.5em; /* Reduced padding for thinner height */
+  padding: 1em; /* Reduced padding for thinner height */
   border-radius: 1vw;
   border: 0.2vw solid transparent;
   outline: none;
@@ -145,23 +146,27 @@ h1 {
 
 .upload-section {
   text-align: center;
-  margin: 20px 0;
+  margin: 2vw 0;
 }
 
 .file-group {
   display: flex;
   justify-content: space-evenly; /* Distribute space evenly */
   align-items: center; /* Align items vertically in the center */
+  flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+  gap: 2vw; /* Gap between the file inputs */
 }
 
 .file-label-input {
   display: flex;
   flex-direction: column; /* Stack label and input vertically */
   align-items: center; /* Center-align the contents */
+  width: 45%; /* Responsive width */
 }
 
 .upload-label {
-  margin-bottom: 5px; /* Space between label and input */
+  margin-bottom: 0.5vw; /* Space between label and input */
+  font-size: 1.2vw; /* Responsive font size */
 }
 
 .upload-box {
@@ -169,7 +174,7 @@ h1 {
   background: #ebebeb;
   border-radius: 50px;
   box-shadow: 0.3vw 0.3vw 0.5vw rgb(110, 110, 110);
-  width: 80%;
+  width: 100%;
   outline: none;
   padding: 0.5vw 1vw;
 }
@@ -200,11 +205,12 @@ h1 {
   display: flex;
   justify-content: center; /* Centers the button horizontally */
   width: 100%; /* Ensure the flex container spans the full width */
+  margin-top: 2vw; /* Add margin for spacing */
 }
 
 button {
   font: inherit;
-  padding: 20px 30px;
+  padding: 1vw 2vw;
   background: #166844;
   border: 0.1em solid hsl(186, 54%, 19%);
   border-radius: 100vw;
@@ -275,11 +281,66 @@ button:has(:last-child:active)::before {
 
 .image-container {
   margin-top: 8vh;
+  width: 100%;
 }
 
 .image {
   max-width: 100%;
   height: auto;
   border-radius: 5px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 2vw 1vw;
+  }
+
+  h1 {
+    font-size: 2vw;
+  }
+
+  .textarea {
+    font-size: 1.5vw;
+    padding: 0.5em;
+  }
+
+  .upload-label {
+    font-size: 1.5vw;
+  }
+
+  .upload-box {
+    padding: 0.5vw;
+  }
+
+  .btn button {
+    padding: 1vw 1.5vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 2vw 0.5vw;
+  }
+
+  h1 {
+    font-size: 1.5vw;
+  }
+
+  .textarea {
+    font-size: 1.2vw;
+    padding: 0.3em;
+  }
+
+  .upload-label {
+    font-size: 1.2vw;
+  }
+
+  .upload-box {
+    padding: 0.3vw;
+  }
+
+  .btn button {
+    padding: 0.5vw 1vw;
+  }
 }
 </style>
