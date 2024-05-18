@@ -1,10 +1,11 @@
 <template>
   <div class="container">
-    <h1>Gene Structure</h1>
-    <form @submit.prevent="fetchGeneStructure">
-      <label for="geneId">Enter Gene ID:</label>
-      <input type="text" id="geneId" v-model="geneId">
-      <button type="submit">Search Gene Structure</button>
+    <h1>Find Gene Structure</h1>
+    <form @submit.prevent="fetchGeneStructure" class="input-container">
+      <div class="input-button-wrapper">
+        <input class="textarea" type="text" v-model="geneId" placeholder="Enter Hrer Gene ID Please...">
+        <button type="submit" class="search-button">➔</button>
+      </div>
     </form>
 
     <!-- Display success message if the gene is found -->
@@ -17,8 +18,8 @@
       Gene ID not found or incorrect
     </div>
 
-    <!-- Display the exonsPositions array -->
-    <div v-if="geneStructureFound === true && exonsPositions">
+    <!-- Display the exonsPositions array in a resizable, scrollable text box -->
+    <div v-if="geneStructureFound === true && exonsPositions" class="scrollable-textbox">
       <h2>Exons Positions:</h2>
       <div> [{{ formatExonsPositions() }}] </div>
     </div>
@@ -32,13 +33,10 @@
     <div v-if="geneStructureFound === true && exonsPositions && imageSrc" class="gene-image-container">
       <img :src="imageSrc" alt="Gene Image">
     </div>
-    
-
   </div>
 </template>
 
 <script>
-
 export default {
   data() {
     return {
@@ -132,31 +130,109 @@ export default {
 
 <style scoped>
 .container {
+  width: 100%;
+  max-width: 900px;
+  margin: 3vh auto;
+  padding: 3vw;
+  border: 0.3vw solid #ebebeb;
+  background-color: rgba(244, 244, 244, 0.6);
+  border-radius: 2vw;
+  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+/* .container { original
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  width: 100%;
+  max-width: 900px; 
+  margin: 0 auto; 
+  padding: 20px; 
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+  border-radius: 8px;
+  background-color: #fff; 
+} */
+
+.input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70%;
 }
 
-/* Style for the API response window */
-/* .api-response-window {
-  margin-top: 20px;
-  background-color: #f4f4f4;
-  border: 1px solid #ddd;
-  padding: 10px;
-  overflow: auto;
-  max-height: 400px; /* Adjust based on your needs 
-} */
+.input-button-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.textarea {
+  background-color: #fff4ee;
+  color: #256937;
+  padding: 0.5em; /* Reduced padding for thinner height */
+  border-radius: 1vw;
+  border: 0.2vw solid transparent;
+  outline: none;
+  font-family: "Heebo", sans-serif;
+  font-size: 1vw; /* Reduced font size for thinner height */
+  line-height: 1.2; /* Adjusted line-height for thinner height */
+  width: 98.2%;
+  transition: all 0.2s;
+  box-shadow: 0.5vw 0.3vw 0.5vw rgba(144, 143, 143, 0.5);
+}
+
+.textarea:hover {
+  background-color: #ffd3aa;
+}
+
+.textarea:focus {
+  color: #333;
+  background-color: #fff;
+  border-color: #333;
+}
+
+
+.search-button {
+  position: absolute;
+  right: 0.7vw;
+  background-color: #166844;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 2.4vw;
+  height: 2.3vw;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button:hover {
+  background-color: #22a66d;
+}
+
+#lbl {
+  padding: 0em 2em;
+}
 
 .error-message {
   margin-top: 20px;
   color: red;
+  width: 100%; /* Ensure message width doesn't exceed container */
+  text-align: center; /* Center align the text */
 }
 
 .success-message {
   margin-top: 20px;
   color: green;
+  width: 100%; /* Ensure message width doesn't exceed container */
+  text-align: center; /* Center align the text */
 }
 
 .success-message::before {
@@ -167,14 +243,41 @@ export default {
   margin-top: 20px;
   display: flex;
   align-items: center;
+  justify-content: center; /* Center the button horizontally */
 }
 
 .plot-button {
   margin-bottom: 10px; /* Add margin to the button */
 }
 
-.gene-image-container img {
-  width: 100%; /* Ensure image fills its container */
+.gene-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the image horizontally */
+  margin-top: 20px; /* Add top margin */
+  width: 100%;
 }
 
+h1 {
+  margin-bottom: 40px; /* Increase space below the title */
+}
+
+.gene-image-container img {
+  width: 100%; /* Ensure image fills its container */
+  max-width: 100%; /* Ensure image does not exceed its container */
+}
+
+/* Scrollable text box for exonsPositions */
+.scrollable-textbox {
+  max-height: 200px;
+  min-height: 100px; /* Ensures at least 5 lines of text are visible by default */
+  overflow-y: auto;
+  width: 100%;
+  border: 1px solid #ddd;
+  padding: 10px;
+  background-color: #f9f9f9;
+  margin-top: 20px;
+  border-radius: 5px;
+  resize: both; /* Allows the text box to be resizable */
+}
 </style>
