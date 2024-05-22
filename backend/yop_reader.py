@@ -68,7 +68,7 @@ def generate_list(fields):#Generates a list of tuples (index1, index2, intensity
         index1, index2 = start1, start2
         step = 1
     else:
-        index1, index2 = end1, end2#in case the direction is reverse we do the same but in the opposite direction
+        index1, index2 = start1, start2#in case the direction is reverse we do the same but in the opposite direction
         step = -1
 
     for char in mutation_line:
@@ -170,11 +170,12 @@ def plot_dotplot(yop_path, output_path):
     print(f"Setting axis limits: X({min_x}, {max_x}), Y({min_y}, {max_y})")
     ax.set_xlim(min_x, max_x)
     ax.set_ylim(min_y, max_y)
+ 
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title('Dot Plot of Gene Similarities')
     ax.legend()
-    ax.grid(True)
+    ax.grid(False)
 
     plt.savefig(output_path, dpi=150)  # Reduced DPI for quicker rendering
     print(f"Plot saved as '{output_path}'.")
