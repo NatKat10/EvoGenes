@@ -9,6 +9,19 @@ import logging
 from flask_cors import CORS
 from flask_cors import cross_origin
 
+import os
+import mpld3
+
+
+# #--------------------
+# from .GeneImage import GeneImage
+# import matplotlib
+# matplotlib.use('Agg')  # Use the 'Agg' backend for non-interactive mode
+# import matplotlib.pyplot as plt
+# import io
+# from flask import send_file
+# #--------------------
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
@@ -84,6 +97,7 @@ def run_yass():
     yass_output_path = 'yass_output.yop'
     dp_output_path = 'dp.png'
     yass_executable = './yass-Win64.exe'
+
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
     subprocess.run(command, check=True)
     
@@ -91,8 +105,15 @@ def run_yass():
     # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
     
 
-    python_executable = 'python'
-    yop_reader_script = 'yop_reader.py'
+    # python_executable = 'python'
+    python_executable = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'python.exe')  # For Windows
+    yop_reader_script = './yop_reader.py'
+
+    # yop_reader_script = os.getcwd()+'\\backend\\yop_reader.py'
+
+    # yop_reader_script = os.path.join(os.getcwd(), 'backend', 'yop_reader.py')
+
+
     command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
     subprocess.run(command, check=True)
 
@@ -245,14 +266,10 @@ def plot_gene_image():
     exons_positions = data.get('exonsPositions', [])
     
     # Generate the gene image plot
-    gene = GeneImage(exons_positions, exons_positions[0])
-
-    # Ensure the directory exists
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.makedirs(UPLOAD_FOLDER)
-
-    image_path = os.path.join(UPLOAD_FOLDER, 'gene_image.png')
-    gene.save_plot(image_path)  # Save the image file
+    gene = GeneImage(exons_positions[0], exons_positions[0][0])
     
-    # Return the image file as a response
-    return send_file(image_path, mimetype='image/png')
+    # Get the HTML code for the interactive figure
+    figure_html = gene.get_figure_html()
+    
+    # Return the HTML code as a response
+    return Response(figure_html, content_type='text/html')

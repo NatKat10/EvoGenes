@@ -47,9 +47,10 @@ def create_app():
     CORS(app)
 
     # CORS(app, resources={"/gene-image": {"origins": "http://localhost:8080"}})
+    # CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
-    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:F14g258h369!@localhost/mydb'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:ayenat1@localhost/mydb'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:F14g258h369!@localhost/mydb'
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:ayenat1@localhost/mydb'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)

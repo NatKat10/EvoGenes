@@ -17,6 +17,7 @@
     "bootstrap-vue-3": "^0.5.1",
     "core-js": "^3.8.3",
     "jquery": "^3.7.1",
+    "matplotlib": "^1.0.0",
     "popper.js": "^1.16.1",
     "slick-carousel": "^1.8.1",
     "vue": "^3.2.13",

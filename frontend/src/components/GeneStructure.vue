@@ -27,12 +27,13 @@
     <div v-if="geneStructureFound === true && exonsPositions" class="button-image-container">
       <!-- Button to trigger the plot function -->
       <button @click="plotGeneImage" class="plot-button">Plot Gene Image</button>
+
     </div>
 
-    <!-- Display the gene image -->
-    <div v-if="geneStructureFound === true && exonsPositions && imageSrc" class="gene-image-container">
-      <img :src="imageSrc" alt="Gene Image">
+    <div v-if="geneStructureFound === true && exonsPositions && figureHtml" class="gene-image-container">
+      <iframe :srcdoc="figureHtml" class="figure-iframe"></iframe>
     </div>
+    
   </div>
 </template>
 
@@ -46,39 +47,76 @@ export default {
       exonsPositions: null,
       imageSrc: null,
       geneStructureFound: null,
+      figureHtml: null,
     };
   },
   methods: {
+    
     processExonsPositions() {
       if (this.geneStructure) {
-        // Extract "start" and "end" fields from each gene and create exonsPositions array
-        this.exonsPositions = this.geneStructure.map(gene => {
-          return [gene.start, gene.end];
+        // Create an object to store exons positions grouped by Parent
+        const exonsByParent = {};
+
+        // Iterate through the gene structure data
+        this.geneStructure.forEach(gene => {
+          const { Parent, start, end } = gene;
+
+          // If the Parent doesn't exist in the object, initialize it with an empty array
+          if (!exonsByParent[Parent]) {
+            exonsByParent[Parent] = [];
+          }
+
+          // Push the start and end positions to the corresponding Parent array
+          exonsByParent[Parent].push([start, end]);
         });
+
+        // Convert the object to an array of arrays
+        this.exonsPositions = Object.values(exonsByParent);
 
         // Log the result to the console
         console.log('Exons Positions:', this.exonsPositions);
       }
     },
 
+    // plotGeneImage() {
+    //   const firstExonPositions = this.exonsPositions.length > 0 ? [this.exonsPositions[0]] : [];
+
+    //   // Make an HTTP request to the Flask endpoint
+    //   fetch('http://localhost:5000/generate/gene-image', {
+    //     method: 'POST',  // You may need to adjust the method based on your Flask route
+    //     headers: { 'Content-Type': 'application/json' },
+    //     // body: JSON.stringify({ exonsPositions: this.exonsPositions }),
+    //     body: JSON.stringify({ exonsPositions: firstExonPositions }),
+    //     mode: 'cors',
+    //   })
+    //   .then(response => response.blob())
+    //   .then(blob => {
+    //     // Create a Blob URL and set it as the image source
+    //     const imageUrl = URL.createObjectURL(blob);
+    //     this.imageSrc = imageUrl;
+    //     console.log('Image URL:', imageUrl);
+    //   })
+    //   .catch(error => {
+    //     console.error('Error fetching gene image:', error);
+    //   });
+    // },
+
     plotGeneImage() {
-      // Make an HTTP request to the Flask endpoint
+      const firstExonPositions = this.exonsPositions.length > 0 ? [this.exonsPositions[0]] : [];
+
       fetch('http://localhost:5000/generate/gene-image', {
-        method: 'POST',  // You may need to adjust the method based on your Flask route
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exonsPositions: this.exonsPositions }),
+        body: JSON.stringify({ exonsPositions: firstExonPositions }),
         mode: 'cors',
       })
-      .then(response => response.blob())
-      .then(blob => {
-        // Create a Blob URL and set it as the image source
-        const imageUrl = URL.createObjectURL(blob);
-        this.imageSrc = imageUrl;
-        console.log('Image URL:', imageUrl);
-      })
-      .catch(error => {
-        console.error('Error fetching gene image:', error);
-      });
+        .then(response => response.text())
+        .then(data => {
+          this.figureHtml = data;
+        })
+        .catch(error => {
+          console.error('Error fetching gene image:', error);
+        });
     },
 
     fetchGeneStructure() {
@@ -118,11 +156,15 @@ export default {
       });
     },
 
+
     formatExonsPositions() {
       if (!this.exonsPositions) return '';
 
-      return this.exonsPositions.map(positions => `(${positions.join(',')})`).join(', ');
-    }
+      return this.exonsPositions.map(positionsArray => {
+        return `[${positionsArray.map(positions => `(${positions.join(',')})`).join(', ')}]`;
+      }).join('\n');
+    },
+    
 
   },
 };
@@ -264,4 +306,17 @@ h1 {
   resize: both; /* Allows the text box to be resizable */
   box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
+
+.figure-iframe {
+  width: 100%;
+  height: 100%; /* Allow the height to adjust based on the aspect ratio */
+  border: none;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.figure-container {
+  flex-grow: 1; /* Allow the figure container to grow and match the size of its parent */
+}
+
 </style>

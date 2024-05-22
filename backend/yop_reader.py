@@ -1,7 +1,14 @@
 import re
+import sys
+# import matplotlib
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # for progress bar
-import sys
+
+
+# print("Python executable:", sys.executable)
+# print("sys.path:", sys.path)
+# print("matplotlib version:", matplotlib.__version__)
+
 
 def parse_yop(file_path):
     sequences = []
