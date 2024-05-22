@@ -23,6 +23,20 @@
       </div>
     </div>
 
+    <div class="ensemble-section">
+      <h3>Or Enter Ensemble Gene ID:</h3>
+      <div class="file-group">
+        <div class="file-label-input">
+          <label for="file1" class="upload-label">Enter Gene ID for Gene 1:</label>
+          <textarea class="textarea" v-model="GeneID1" placeholder="Enter Gene ID 1 here"></textarea>
+        </div>
+        <div class="file-label-input">
+          <label for="file2" class="upload-label">Enter Gene ID for Gene 2:</label>
+          <textarea class="textarea" v-model="GeneID2" placeholder="Enter Gene ID 2 here"></textarea>
+        </div>
+      </div>
+    </div>
+
     <div class="btn">
       <button @click="runYASS">
         <span></span>
@@ -44,6 +58,8 @@ export default {
     return {
       sequence1: '',
       sequence2: '',
+      GeneID1: '',
+      GeneID2: '',
       file1: null,
       file2: null,
       imageSrc: null
@@ -54,6 +70,7 @@ export default {
       const file = this.$refs[refName].files[0];
       this[refName] = file;
     },
+
     async runYASS() {
       console.log('Run YASS method called');
       const formData = new FormData();
@@ -65,7 +82,12 @@ export default {
       } else if (this.sequence1 && this.sequence2) {
         formData.append('sequence1', this.sequence1);
         formData.append('sequence2', this.sequence2);
-      } else {
+      } else if (this.GeneID1 && this.GeneID2) {
+
+        formData.append('GeneID1', this.GeneID1);
+        formData.append('GeneID2', this.GeneID2);
+      }
+       else {
         alert("Please provide two sequences or two FASTA files.");
         return;
       }
