@@ -54,6 +54,7 @@
     z-index: -1; /* Ensures the background is behind the content */
   }
   
+  /* hi */
   .yassComp {
     position: relative; /* Ensure this content is on top of the background */
     z-index: 1;
