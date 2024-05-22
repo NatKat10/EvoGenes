@@ -18,28 +18,28 @@ def parse_yop(file_path):
     sequence_start_pattern = re.compile(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ [fr]")
 
     with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:
-            if sequence_start_pattern.match(line):
+        for line in file:#reading each line in the yop file.
+            if sequence_start_pattern.match(line):# if the line matches the start pattern
                 if current_sequence:
                     sequences.append(current_sequence)
                     current_sequence = []
             current_sequence.append(line.strip())
 
-        if current_sequence:
+        if current_sequence:# puts all the lines that related to single sequance and making a list of sequances
             sequences.append(current_sequence)
 
-    return sequences
+    return sequences #Returns a list of sequences
 
 def extract_fields(sequence):
     fields = {}
 
     # Extract the indexes and direction from the first line
     first_line = sequence[0]
-    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", first_line)
+    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", first_line)#check if the first line indid matches the beggining pattern.
     if not match:
         return None
 
-    start1, end1, start2, end2, direction = match.groups()
+    start1, end1, start2, end2, direction = match.groups()#extracting the needed fields " (25136-25194)(29160-29218) Ev: 0.000135011 s: 59/59 f "
     fields['indexes'] = (int(start1), int(end1), int(start2), int(end2))
     fields['direction'] = direction
 
@@ -64,25 +64,25 @@ def extract_fields(sequence):
         return None
     fields['mutation_line'] = mutation_line
 
-    return fields
+    return fields # returning only the needed fields for the dotplot creation (2 start, 2 end, direction, labels and the mutation line)
 
-def generate_list(fields):
-    start1, end1, start2, end2 = fields['indexes']
+def generate_list(fields):#Generates a list of tuples (index1, index2, intensity) based on the mutation symbols.
+    start1, end1, start2, end2 = fields['indexes']# get the fields we need
     mutation_line = fields['mutation_line']
 
     result_list = []
-    if fields['direction'] == 'f':
+    if fields['direction'] == 'f':# in case the direction is farward we start from beggining and going up 
         index1, index2 = start1, start2
         step = 1
     else:
-        index1, index2 = end1, end2
+        index1, index2 = start1, start2#in case the direction is reverse we do the same but in the opposite direction
         step = -1
 
     for char in mutation_line:
         if char == ' ':
             continue
         elif char == '|':
-            result_list.append((index1, index2, 3))
+            result_list.append((index1, index2, 3)) # if the aligment result is "match" we give the highest score etc.
         elif char == ':':
             result_list.append((index1, index2, 2))
         elif char == '.':
@@ -120,7 +120,7 @@ def process_sequences(file_path):
         directions.append((result_list, fields['direction']))
 
         # Update axis limits
-        for x, y, _ in result_list:
+        for x, y, _ in result_list:# updating the min and max for the dotplot according to the results 
             if x < min_x:
                 min_x = x
             if x > max_x:
@@ -133,7 +133,7 @@ def process_sequences(file_path):
     return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
 
 def plot_dotplot(yop_path, output_path):
-    result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yop_path)
+    result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yop_path)#Processes the YOP file to get sequences and directions.
 
     # Print results for debugging
     print("Finished processing sequences.")
@@ -147,7 +147,7 @@ def plot_dotplot(yop_path, output_path):
     print(f"Plotting {len(result_sequences)} sequences.")
     
     # Prepare data for batch plotting
-    x_vals = {'f': [], 'r': []}
+    x_vals = {'f': [], 'r': []}#putting the x values in the correct direction to know which color to use.
     y_vals = {'f': [], 'r': []}
     colors = {'f': [], 'r': []}
 
@@ -166,9 +166,9 @@ def plot_dotplot(yop_path, output_path):
     # Plot the dot plot in batches
     fig, ax = plt.subplots(figsize=(10, 10))
 
-    dot_size = 5  # Increased dot size
+    dot_size = 5  # Increase dot size
 
-    if x_vals['f']:
+    if x_vals['f']:#Creates a scatter plot with different colors and sizes based on the direction and intensity.
         ax.scatter(x_vals['f'], y_vals['f'], c=colors['f'], s=dot_size, label='forward', alpha=0.6, edgecolors='none')
     if x_vals['r']:
         ax.scatter(x_vals['r'], y_vals['r'], c=colors['r'], s=dot_size, label='reverse', alpha=0.6, edgecolors='none')
@@ -177,15 +177,16 @@ def plot_dotplot(yop_path, output_path):
     print(f"Setting axis limits: X({min_x}, {max_x}), Y({min_y}, {max_y})")
     ax.set_xlim(min_x, max_x)
     ax.set_ylim(min_y, max_y)
+ 
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title('Dot Plot of Gene Similarities')
     ax.legend()
-    ax.grid(True)
+    ax.grid(False)
 
     plt.savefig(output_path, dpi=150)  # Reduced DPI for quicker rendering
     print(f"Plot saved as '{output_path}'.")
-    plt.show()
+    # plt.show()
     print("Plot displayed.")
 
 if __name__ == "__main__":
