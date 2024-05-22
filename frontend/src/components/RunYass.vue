@@ -2,14 +2,16 @@
   <div class="container">
     <h1>Run YASS Algorithm</h1>
     <!-- Sequence text inputs -->
+  <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
     <div class="txt1">
-      <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here"></textarea>
+      <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here" @input="handleInput('sequence')"></textarea>
     </div>
     <div class="txt2">
-      <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here"></textarea>
+      <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here" @input="handleInput('sequence')"></textarea>
     </div>
+  </div>
     
-    <div class="upload-section">
+  <div class="upload-section" :class="{ disabled: disableOtherSections && activeSection !== 'upload' }">
       <h3>Or upload files:</h3>
       <div class="file-group">
         <div class="file-label-input">
@@ -23,16 +25,16 @@
       </div>
     </div>
 
-    <div class="ensemble-section">
+    <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble'}">
       <h3>Or Enter Ensemble Gene ID:</h3>
       <div class="file-group">
         <div class="file-label-input">
           <label for="file1" class="upload-label">Enter Gene ID for Gene 1:</label>
-          <textarea class="textarea" v-model="GeneID1" placeholder="Enter Gene ID 1 here"></textarea>
+          <textarea class="textarea" v-model="GeneID1" placeholder="Enter Gene ID 1 here" @input="handleInput('ensemble')"></textarea>
         </div>
         <div class="file-label-input">
           <label for="file2" class="upload-label">Enter Gene ID for Gene 2:</label>
-          <textarea class="textarea" v-model="GeneID2" placeholder="Enter Gene ID 2 here"></textarea>
+          <textarea class="textarea" v-model="GeneID2" placeholder="Enter Gene ID 2 here" @input="handleInput('ensemble')"></textarea>
         </div>
       </div>
     </div>
@@ -45,6 +47,8 @@
       </button>
     </div>
 
+    <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
+
     <div class="image-container">
       <img v-if="imageSrc" :src="imageSrc" alt="DotPlot Image" class="image" />
     </div>
@@ -56,19 +60,32 @@ export default {
   name: 'RunYass',
   data() {
     return {
+      errorMessage: '',
       sequence1: '',
       sequence2: '',
       GeneID1: '',
       GeneID2: '',
       file1: null,
       file2: null,
-      imageSrc: null
+      imageSrc: null,
+      activeSection: null, 
     };
   },
+  computed: {
+    disableOtherSections() {
+      return this.sequence1 || this.sequence2 || this.file1 || this.file2 || this.GeneID1 || this.GeneID2;
+    },
+  },
   methods: {
+
+    handleInput(section) {
+      this.activeSection = section;
+    },
+
     handleFileChange(refName) {
       const file = this.$refs[refName].files[0];
       this[refName] = file;
+      this.handleInput('upload');
     },
 
     async runYASS() {
@@ -88,7 +105,7 @@ export default {
         formData.append('GeneID2', this.GeneID2);
       }
        else {
-        alert("Please provide two sequences or two FASTA files.");
+        this.errorMessage = "Please provide two sequences or two FASTA files or two ensemble GeneID.";
         return;
       }
 
@@ -104,7 +121,7 @@ export default {
         this.imageSrc = URL.createObjectURL(blob);
       } catch (error) {
         console.error('Error running YASS:', error);
-        alert("Incorrect Input");
+        this.errorMessage = "Incorrect Input"
       }
     }
   }
@@ -112,6 +129,25 @@ export default {
 </script>
 
 <style scoped>
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+.sequence-section.disabled, 
+.upload-section.disabled, 
+.ensemble-section.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.sequence-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
 .container {
   width: 90%;
   max-width: 900px;
