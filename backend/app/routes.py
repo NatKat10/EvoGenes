@@ -131,40 +131,6 @@ def run_yass():
     return Response(image_data, mimetype='image/png')
 
 
-    # code for file input only
-    # fasta_file1 = request.files['fasta1']
-    # fasta_file2 = request.files['fasta2']
-    
-    # # Save files to temporary paths
-    # fasta_file1_path = 'temp_sequence1.fasta'
-    # fasta_file2_path = 'temp_sequence2.fasta'
-    # fasta_file1.save(fasta_file1_path)
-    # fasta_file2.save(fasta_file2_path)
-    
-    # # Define output paths
-    # yass_output_path = 'yass_output.yop'
-    # dp_output_path = 'dp.png'
-    
-    # # Run YASS with the FASTA files
-    # yass_executable = './yass-Win64.exe'
-    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-    # subprocess.run(command, check=True)
-    
-    # # Convert YOP to DotPlot
-    # php_script = 'yass2dotplot.php'  # Make sure this script is executable and has a .php extension
-    # subprocess.run(['php', php_script, yass_output_path, 'filename1="gene1"', 'filename2="gene2"', dp_output_path], check=True)
-    
-    # # Send the DotPlot image file as a response
-    # with open(dp_output_path, 'rb') as file:
-    #     image_data = file.read()
-    
-    # # Delete temporary files
-    # os.remove(fasta_file1_path)
-    # os.remove(fasta_file2_path)
-    # os.remove(yass_output_path)
-    # os.remove(dp_output_path)
-    
-    # return Response(image_data, mimetype='image/png')
 
 
 @main.route('/add', methods=['POST'])
