@@ -128,9 +128,9 @@ def run_yass():
     # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
     
 
-    # python_executable = 'python'
-    python_executable = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'python.exe')  # For Windows
-    yop_reader_script = './yop_reader.py'
+    python_executable = 'python'
+    # python_executable = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'python.exe')  # For Windows
+    yop_reader_script = 'yop_reader.py'
 
     # yop_reader_script = os.getcwd()+'\\backend\\yop_reader.py'
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template, Flask
 # from . import db
-from .models import Gene
-from .schemas import gene_schema, genes_schema
+from .models import Gene 
+from .schemas import gene_schema, genes_schema 
 # import requests, sys, json
 import requests, sys, json
 import logging
@@ -97,25 +97,22 @@ def run_yass():
     yass_output_path = 'yass_output.yop'
     dp_output_path = 'dp.png'
     yass_executable = './yass-Win64.exe'
-
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
     subprocess.run(command, check=True)
     
     # php_script = 'yass2dotplot.php'
     # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
     
-
-    # python_executable = 'python'
-    python_executable = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'python.exe')  # For Windows
-    yop_reader_script = './yop_reader.py'
+    python_executable = 'python'
+    yop_reader_script = 'yop_reader.py'
 
     # yop_reader_script = os.getcwd()+'\\backend\\yop_reader.py'
 
     # yop_reader_script = os.path.join(os.getcwd(), 'backend', 'yop_reader.py')
 
 
-    command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
-    subprocess.run(command, check=True)
+    # command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
+    # subprocess.run(command, check=True)
 
     with open(dp_output_path, 'rb') as file:
         image_data = file.read()
