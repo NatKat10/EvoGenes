@@ -9,7 +9,7 @@
         <router-link to="/run-yass" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-play"></i><span>Run Yass</span></router-link>
         <router-link to="/gene-sequence/:geneId" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-list"></i><span>Search Gene Sequence</span></router-link>
         <router-link to="/gene-structure" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-project-diagram"></i><span>Gene Structure</span></router-link>
-        <router-link to="/" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-info-circle"></i><span>About</span></router-link>
+        <router-link to="/about" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-info-circle"></i><span>Help</span></router-link>
       </nav>
     </div>
   </div>

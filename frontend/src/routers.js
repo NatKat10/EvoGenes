@@ -1,7 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import Home  from './pages/HomePage.vue';
 
-import About from './components/About.vue';
+// import About from './components/About.vue';
 // import GeneInput from './components/GeneInput.vue';
 // import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
 import GeneStructure from './components/GeneStructure.vue';
@@ -9,6 +9,7 @@ import GeneStructure from './components/GeneStructure.vue';
 import RunYass from './pages/YassPage.vue';
 import GeneInput from './pages/GeneInPage.vue';
 import GeneSequenceDisplay from './pages/GeneSeqPage.vue';
+import About from './pages/HelpPage.vue';
 
 
 

@@ -1,9 +1,7 @@
 <template>
   <div class="home-page">
-    <!-- Fixed Header -->
     <header class="header">
       <svg class="gene-title" viewBox="0 0 1000 100">
-        <!-- Title Text with Logo -->
         <text x="31%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">EVO</text>
         <image x="45%" y="30%" width="54" height="54" xlink:href="../assets/circle_logo.png" alt="Logo" />
         <text x="70%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">GENES</text>
@@ -54,7 +52,6 @@ export default {
   position: fixed;
   top: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
   z-index: 1; /* Lower z-index to ensure it is behind the menu */
   display: flex;
   justify-content: center;
