@@ -10,21 +10,16 @@ from flask_cors import CORS
 from flask_cors import cross_origin
 
 import os
-import mpld3
+from flask import Response, render_template
+from .dash_app import create_dash_app
 
-
-# #--------------------
-# from .GeneImage import GeneImage
-# import matplotlib
-# matplotlib.use('Agg')  # Use the 'Agg' backend for non-interactive mode
-# import matplotlib.pyplot as plt
-# import io
-# from flask import send_file
-# #--------------------
 
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
+
+dash_app, create_gene_plot = create_dash_app(app)
+
 
 #Blueprints
 main = Blueprint('main', __name__)
@@ -248,17 +243,48 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
         return None  # Return None to indicate failure
     
 
+# @generate.route('/gene-image', methods=['POST'])
+# @cross_origin()
+# def plot_gene_image():
+#     data = request.json
+#     exons_positions = data.get('exonsPositions', [])
+    
+#     # # Generate the gene image plot
+#     gene = GeneImage(exons_positions[0], exons_positions[0][0])
+
+    
+#     # Get the HTML code for the interactive figure
+#     figure_html = gene.get_figure_html()
+    
+#     # Return the HTML code as a response
+#     return Response(figure_html, content_type='text/html')
+
+
 @generate.route('/gene-image', methods=['POST'])
 @cross_origin()
 def plot_gene_image():
     data = request.json
     exons_positions = data.get('exonsPositions', [])
     
-    # Generate the gene image plot
-    gene = GeneImage(exons_positions[0], exons_positions[0][0])
-    
-    # Get the HTML code for the interactive figure
-    figure_html = gene.get_figure_html()
-    
-    # Return the HTML code as a response
-    return Response(figure_html, content_type='text/html')
+    if not exons_positions:
+        return jsonify({"error": "No exon positions provided"}), 400
+
+    # Generate the Plotly figure using the provided exon positions
+    figure = create_gene_plot(exons_positions[0])
+
+    # Return the HTML representation of the figure
+    return Response(figure.to_html(), content_type='text/html')
+
+# Define the update and plot endpoints
+@main.route('/dash/update', methods=['POST'])
+def update_exon_positions():
+    data = request.json
+    exons_positions = data.get('exonsPositions', [])
+    return jsonify(success=True)
+
+@main.route('/dash/plot', methods=['GET'])
+def plot_gene_structure():
+    positions = request.args.get('positions')
+    exons_positions = json.loads(positions) if positions else []
+    fig = create_gene_plot(exons_positions)
+    return fig.to_html()

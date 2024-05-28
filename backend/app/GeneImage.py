@@ -3,6 +3,12 @@ import matplotlib.pyplot as plt
 import mpld3
 import numpy as np 
 
+import os
+import sys
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(project_root)
+
+from yop_reader import process_sequences
 
 
 """
@@ -50,15 +56,24 @@ class GeneImage(object):
         self.totalSpan = self.exonIntervals[-1][1] - self.exonIntervals[0][0]
         self.minExonLen = self.totalSpan * 0.005
         self.ylims = {'exon_max': 1, 'exon_min': -1.5}
-        self.figure, self.canvas = plt.subplots(figsize=(15, 0.5))
+        self.figure, self.canvas = plt.subplots(figsize=(7, 1))
         self.canvas.set_facecolor(self.bgColor)
+
         self._draw()
 
+    # def _set_limits(self):
+    #     self.ylims['intron_max'] = self.ylims['exon_max'] * 0.9
+    #     self.ylims['intron_min'] = (self.ylims['exon_max'] + self.ylims['exon_min']) / 2.0
+    #     self.ylims['bar_min'] = self.ylims['exon_max'] + 0.2
+    #     self.ylims['bar_max'] = self.ylims['bar_min'] + (self.ylims['exon_max'] - self.ylims['exon_min']) / 5.0
+
     def _set_limits(self):
-        self.ylims['intron_max'] = self.ylims['exon_max'] * 0.9
-        self.ylims['intron_min'] = (self.ylims['exon_max'] + self.ylims['exon_min']) / 2.0
-        self.ylims['bar_min'] = self.ylims['exon_max'] + 0.2
-        self.ylims['bar_max'] = self.ylims['bar_min'] + (self.ylims['exon_max'] - self.ylims['exon_min']) / 5.0
+        self.ylims['exon_max'] = 1
+        self.ylims['exon_min'] = -1
+        self.ylims['intron_max'] = 0.9
+        self.ylims['intron_min'] = -0.1
+        self.ylims['bar_min'] = 1.2
+        self.ylims['bar_max'] = 1.4
 
     def _transform_spans(self):
         span_lens = [x[1] - x[0] for x in self.exonIntervals]
@@ -88,17 +103,18 @@ class GeneImage(object):
                     transformed_intervals.append(self.exonIntervals[i])
         self.exonIntervals = transformed_intervals[:]
 
+
     def _draw_exon(self, span):
         self.canvas.fill_between(span, self.ylims['exon_min'], self.ylims['exon_max'],
-                                 edgecolor=self.bgColor, facecolor=self.exonColor)
+                                edgecolor=self.bgColor, facecolor=self.exonColor, alpha=0.6)
         return True
 
     def _draw_intron(self, span):
         mid = (span[0] + span[1]) / 2.0
         self.canvas.plot([span[0], mid], [self.ylims['intron_min'], self.ylims['intron_max']],
-                         c=self.intronColor, lw=self.intronWeight, ls=self.intronStyle)
+                        c=self.intronColor, lw=self.intronWeight, ls=self.intronStyle, alpha=0.6)
         self.canvas.plot([mid, span[1]], [self.ylims['intron_max'], self.ylims['intron_min']],
-                         c=self.intronColor, lw=self.intronWeight, ls=self.intronStyle)
+                        c=self.intronColor, lw=self.intronWeight, ls=self.intronStyle, alpha=0.6)
         return True
 
     def _draw_markers(self):
@@ -114,61 +130,47 @@ class GeneImage(object):
             self.canvas.scatter(p, self.ylims['bar_max'] + h + 1,  c=c,
                                  alpha=1)
 
-    # def _clean_axes(self):
-    #     # self.canvas.set_ylim((self.ylims['exon_min'], self.ylims['bar_max']))
-    #     self.canvas.set_yticks([], [])
-    #     self.canvas.get_xaxis().tick_top()
-    #     self.canvas.tick_params(axis='x', direction='out')
-    #     self.canvas.set_xticks([])
-    #     for o in ["top", "bottom", "left", "right"]:
-    #         self.canvas.spines[o].set_visible(False)
-    #     min_pos = int(self.exonIntervals[0][0] - self.totalSpan * 0.1)
-    #     if min_pos < 0:
-    #         min_pos = 0
-    #     max_pos = int(self.exonIntervals[-1][1] + self.totalSpan * 0.1)
-    #     minortick_pos = [x for x in range(min_pos, max_pos, int((max_pos - min_pos) / 20))][1:]
-    #     for i in minortick_pos:
-    #         self.canvas.axvline(i, alpha=0.2, c='black', ls='--')
-    #     self.canvas.text(minortick_pos[0], self.ylims['exon_min'] - 0.5,
-    #                      minortick_pos[0], fontsize=8, ha='center')
-    #     self.canvas.text(minortick_pos[-1], self.ylims['exon_min'] - 0.5,
-    #                      minortick_pos[-1], fontsize=8, ha='center')
-    #     self.canvas.set_xlim(minortick_pos[0] - (minortick_pos[1] - minortick_pos[0]),
-    #                          minortick_pos[-1] + (minortick_pos[-1] - minortick_pos[-2]))
-    
-    
+
     def _clean_axes(self):
         self.canvas.set_yticks([], [])
-        self.canvas.get_xaxis().tick_top()
+        self.canvas.get_xaxis().tick_bottom()  # Set the x-axis ticks to be at the bottom
         self.canvas.tick_params(axis='x', direction='out')
         self.canvas.set_xticks([])
-        for o in ["top", "bottom", "left", "right"]:
+        for o in ["top", "left", "right"]:  # Remove the top and left spines
             self.canvas.spines[o].set_visible(False)
 
-        # Calculate the minimum and maximum x-axis limits
+        # Set the x-axis limits based on the exon intervals
         min_pos = self.exonIntervals[0][0]
         max_pos = self.exonIntervals[-1][1]
-
-        # Adjust the minimum and maximum x-axis limits
         x_range = max_pos - min_pos
-        adjusted_min_pos = min_pos - 0.05 * x_range
-        adjusted_max_pos = max_pos + 0.05 * x_range
+        adjusted_min_pos = min_pos - 0.1 * x_range  # Adjust the x-axis limits to match yop_reader.py
+        adjusted_max_pos = max_pos + 0.1 * x_range
 
-        # Set the adjusted x-axis limits
         self.canvas.set_xlim(adjusted_min_pos, adjusted_max_pos)
 
-        # Calculate minor tick positions
-        num_minor_ticks = 20  # You can adjust this value as needed
-        minor_tick_step = x_range / (num_minor_ticks - 1)
-        minor_tick_positions = np.arange(min_pos, max_pos + minor_tick_step, minor_tick_step)
+        # Draw minor ticks and labels
+        self._draw_minor_ticks_and_labels(adjusted_min_pos, adjusted_max_pos)
+
+    def _draw_minor_ticks_and_labels(self, x_min, x_max):
+        # Set the number of minor ticks and their positions
+        num_minor_ticks = 10  # Adjust this value as needed
+        minor_tick_positions = np.linspace(x_min, x_max, num_minor_ticks)
 
         # Draw minor ticks
         for pos in minor_tick_positions:
-            self.canvas.axvline(pos, alpha=0.2, c='black', ls='--')
+            self.canvas.axvline(pos, alpha=0, c='black', ls='--', clip_on=False)
 
-        # Add labels for the first and last minor tick positions
-        self.canvas.text(min_pos, self.ylims['exon_min'] - 0.5, int(min_pos), fontsize=8, ha='left')
-        self.canvas.text(max_pos, self.ylims['exon_min'] - 0.5, int(max_pos), fontsize=8, ha='right')
+        # Set x-axis tick locations and labels
+        self.canvas.set_xticks(minor_tick_positions)
+        minor_tick_labels = [int(pos) for pos in minor_tick_positions]
+        self.canvas.set_xticklabels(minor_tick_labels, fontsize=8)
+
+        # Ensure x-axis tick labels are visible
+        plt.subplots_adjust(bottom=0.2)  # Adjust the bottom margin
+
+        # Remove y-axis tick labels
+        self.canvas.set_yticks([])
+
 
     def _draw(self):
         self._set_limits()
@@ -177,10 +179,6 @@ class GeneImage(object):
             if i > 0:
                 self._draw_intron([self.exonIntervals[i - 1][1], self.exonIntervals[i][0]])
             self._draw_exon(self.exonIntervals[i])
-        # self.canvas.fill_between([self.exonIntervals[0][0], self.exonIntervals[-1][1]],
-        #                          self.ylims['bar_min'], self.ylims['bar_max'],
-        #                          edgecolor=self.bgColor, facecolor=self.barColor)
-        # self._draw_fs()
         self._clean_axes()
 
     def show(self):
@@ -198,7 +196,7 @@ class GeneImage(object):
 
     def get_figure_html(self):
         # Create the Matplotlib figure
-        self.figure, self.canvas = plt.subplots(figsize=(15, 0.5))
+        self.figure, self.canvas = plt.subplots(figsize=(7, 1))
         self.canvas.set_facecolor(self.bgColor)
 
         # Call the internal functions to draw the plot
@@ -207,17 +205,7 @@ class GeneImage(object):
         self._draw()
 
         # Convert the figure to HTML using mpld3
-        figure_html = mpld3.fig_to_html(self.figure)
+        figure_html = mpld3.fig_to_html(self.figure, d3_url=None, mpld3_url=None, no_extras=True)
 
         return figure_html
 
-
-
-# geneImage = GeneImage() 
-# if  __name__ == "__main__":
-#     #exons positions
-#     exon_pos = [97543299,97544702], [97547885,97548026], [97564044,97564188], [97658624,97658804], [97700407,97700550], [97770814,97770934], [97771732,97771853], [97839116,97839200], [97847948,97848017], [97915614,97915779], [97981281,97981497], [98015115,98015300], [98039315,98039526], [98058773,98058943], [98060614,98060722], [98144650,98144738], [98157272,98157354], [98164906,98165103], [98187065,98187227], [98205947,98206035], [98293669,98293752], [98348819,98348930], [98386439,98386615]
-#     #marker positions
-#     marker_pos = [97947885, 98247485]
-#     gene = GeneImage(exon_pos, marker_pos)
-#     gene.show()

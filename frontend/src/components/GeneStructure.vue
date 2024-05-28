@@ -30,8 +30,13 @@
 
     </div>
 
-    <div v-if="geneStructureFound === true && exonsPositions && figureHtml" class="gene-image-container">
+    <!-- <div v-if="geneStructureFound === true && exonsPositions && figureHtml" class="gene-image-container">
       <iframe :srcdoc="figureHtml" class="figure-iframe"></iframe>
+    </div> -->
+
+
+    <div v-if="geneStructureFound === true && exonsPositions && dashAppUrl" class="gene-image-container">
+      <iframe :src="dashAppUrl" class="figure-iframe" width="800" height="400"></iframe>
     </div>
     
   </div>
@@ -47,9 +52,12 @@ export default {
       exonsPositions: null,
       imageSrc: null,
       geneStructureFound: null,
-      figureHtml: null,
+      // figureHtml: null,
+      dashAppUrl: null,
+
     };
   },
+
   methods: {
     
     processExonsPositions() {
@@ -78,41 +86,18 @@ export default {
       }
     },
 
-    // plotGeneImage() {
-    //   const firstExonPositions = this.exonsPositions.length > 0 ? [this.exonsPositions[0]] : [];
-
-    //   // Make an HTTP request to the Flask endpoint
-    //   fetch('http://localhost:5000/generate/gene-image', {
-    //     method: 'POST',  // You may need to adjust the method based on your Flask route
-    //     headers: { 'Content-Type': 'application/json' },
-    //     // body: JSON.stringify({ exonsPositions: this.exonsPositions }),
-    //     body: JSON.stringify({ exonsPositions: firstExonPositions }),
-    //     mode: 'cors',
-    //   })
-    //   .then(response => response.blob())
-    //   .then(blob => {
-    //     // Create a Blob URL and set it as the image source
-    //     const imageUrl = URL.createObjectURL(blob);
-    //     this.imageSrc = imageUrl;
-    //     console.log('Image URL:', imageUrl);
-    //   })
-    //   .catch(error => {
-    //     console.error('Error fetching gene image:', error);
-    //   });
-    // },
-
     plotGeneImage() {
-      const firstExonPositions = this.exonsPositions.length > 0 ? [this.exonsPositions[0]] : [];
+      const firstExonPositions = this.exonsPositions.length > 0 ? this.exonsPositions[0] : [];
 
-      fetch('http://localhost:5000/generate/gene-image', {
+      fetch('http://localhost:5000/dash/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exonsPositions: firstExonPositions }),
         mode: 'cors',
       })
-        .then(response => response.text())
-        .then(data => {
-          this.figureHtml = data;
+        .then(response => response.json())
+        .then(() => {
+          this.dashAppUrl = `http://localhost:5000/dash/plot?positions=${encodeURIComponent(JSON.stringify(firstExonPositions))}`;
         })
         .catch(error => {
           console.error('Error fetching gene image:', error);
@@ -309,7 +294,7 @@ h1 {
 
 .figure-iframe {
   width: 100%;
-  height: 100%; /* Allow the height to adjust based on the aspect ratio */
+  height: 100px; /* Allow the height to adjust based on the aspect ratio */
   border: none;
   overflow: hidden;
   flex-grow: 1;

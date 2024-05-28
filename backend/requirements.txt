@@ -9,3 +9,4 @@ packaging==23.2
 pytest
 pytest-cov
 flask-testing
+dash

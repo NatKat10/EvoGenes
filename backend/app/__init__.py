@@ -33,22 +33,22 @@
 #     #     #     return response
 
 #     # return app
-    
+
 from flask import Flask
 from .extensions import db, ma
 from .routes import generate as generate_blueprint
 from .routes import main as main_blueprint
 
 from flask_cors import CORS
+from .dash_app import create_dash_app
 
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
 
-    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:F14g258h369!@localhost/mydb'
-    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Maor1234@localhost/mydb'
-    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:ayenat1@localhost/mydb'
+    # Initialize Dash app
+    dash_app = create_dash_app(app)  
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
