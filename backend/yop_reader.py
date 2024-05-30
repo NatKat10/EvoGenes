@@ -4,11 +4,11 @@ import sys
 import matplotlib.pyplot as plt
 from tqdm import tqdm  # for progress bar
 import numpy as np
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import plotly.graph_objs as go
 
 
-# print("Python executable:", sys.executable)
-# print("sys.path:", sys.path)
-# print("matplotlib version:", matplotlib.__version__)
+
 
 
 def parse_yop(file_path):
@@ -81,6 +81,8 @@ def generate_list(fields):#Generates a list of tuples (index1, index2, intensity
 
     for char in mutation_line:
         if char == ' ':
+            index1 += step
+            index2 += step
             continue
         elif char == '|':
             result_list.append((index1, index2, 3)) # if the aligment result is "match" we give the highest score etc.
@@ -147,10 +149,7 @@ def plot_dotplot(yop_path, output_path):
     
     print(f"Plotting {len(result_sequences)} sequences.")
     
-    # Prepare data for batch plotting
-    # x_vals = {'f': [], 'r': []}#putting the x values in the correct direction to know which color to use.
-    # y_vals = {'f': [], 'r': []}
-    # colors = {'f': [], 'r': []}
+
     x_vals_f, y_vals_f, colors_f = [], [], []
     x_vals_r, y_vals_r, colors_r = [], [], []
 
@@ -159,13 +158,6 @@ def plot_dotplot(yop_path, output_path):
         'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
         'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
     }
-
-    # for seq_list, direction in directions:
-    #     for x, y, intensity in seq_list:
-    #         x_vals[direction].append(x)
-    #         y_vals[direction].append(y)
-    #         colors[direction].append(color_map[direction][intensity])
-
 
     for seq_list, direction in directions:
         for x, y, intensity in seq_list:
@@ -184,11 +176,6 @@ def plot_dotplot(yop_path, output_path):
 
     dot_size = 10  # Increase dot size
 
-    # if x_vals['f']:#Creates a scatter plot with different colors and sizes based on the direction and intensity.
-    #     ax.scatter(x_vals['f'], y_vals['f'], c=colors['f'], s=dot_size, label='forward', alpha=0.6, edgecolors='none')
-    # if x_vals['r']:
-    #     ax.scatter(x_vals['r'], y_vals['r'], c=colors['r'], s=dot_size, label='reverse', alpha=0.6, edgecolors='none')
-
     line_length = 20  # Length of the lines
 
     # if x_vals['f']:
@@ -197,22 +184,24 @@ def plot_dotplot(yop_path, output_path):
     #     ax.hlines(y=y_vals['r'], xmin=[x for x in x_vals['r']], xmax=[x + line_length for x in x_vals['r']], colors=colors['r'], alpha=0.6, label='reverse')
 
     if x_vals_f:
-        ax.hlines(y=y_vals_f, xmin=np.array(x_vals_f), xmax=np.array(x_vals_f) + line_length, colors=colors_f,
-                  alpha=0.6, label='forward')
+        ax.hlines(y=y_vals_f, xmin=np.array(x_vals_f), xmax=np.array(x_vals_f) + line_length, colors=colors_f, alpha=0.6, label='forward')
     if x_vals_r:
-        ax.hlines(y=y_vals_r, xmin=np.array(x_vals_r) - line_length, xmax=np.array(x_vals_r), colors=colors_r,
-                  alpha=0.6, label='reverse')
+        ax.hlines(y=y_vals_r, xmin=np.array(x_vals_r) - line_length, xmax=np.array(x_vals_r), colors=colors_r, alpha=0.6, label='reverse')
 
-    # Set axis limits based on extracted indexes
-    # ax.set_xlim(min_x, max_x)
-    # ax.set_ylim(min_y, max_y)
+
+    tick_interval = 5000
     axis_min = min(min_x, min_y)
     axis_max = max(max_x, max_y)
 
-    ax.set_xlim(axis_min, axis_max)
-    ax.set_ylim(axis_max, axis_min) 
+    # ax.set_xlim(axis_min, axis_max)
+    # ax.set_ylim(axis_max, axis_min) 
 
- 
+    axis_min = (axis_min // tick_interval) * tick_interval
+    axis_max = ((axis_max + tick_interval - 1) // tick_interval) * tick_interval
+
+    ax.set_xlim(axis_min, axis_max)
+    ax.set_ylim(axis_max, axis_min)
+
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title('Dot Plot of Gene Similarities')
@@ -221,21 +210,14 @@ def plot_dotplot(yop_path, output_path):
     ax.legend()
     ax.grid(False)
 
-    # tick_interval = (axis_max - axis_min) // 10
-    # ticks = range(axis_min, axis_max, tick_interval)
-    # ax.set_xticks(ticks)
-    # ax.set_yticks(ticks)
 
-    # ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: '{:.0f}'.format(val)))
-    # ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: '{:.0f}'.format(val)))
-    tick_interval = 5000  # Set to 1000 to ensure even jumps in X and Y axes
     x_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
     y_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
     ax.set_xticks(x_ticks)
     ax.set_yticks(y_ticks)
 
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: '{:.0f}'.format(val)))
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: '{:.0f}'.format(val)))
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
 
     plt.xticks(rotation=90)  # Rotate X-axis labels to prevent overlap
 
@@ -245,6 +227,8 @@ def plot_dotplot(yop_path, output_path):
     print(f"Plot saved as '{output_path}'.")
     # plt.show()
     print("Plot displayed.")
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
