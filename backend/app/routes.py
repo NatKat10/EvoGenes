@@ -243,23 +243,6 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
         return None  # Return None to indicate failure
     
 
-# @generate.route('/gene-image', methods=['POST'])
-# @cross_origin()
-# def plot_gene_image():
-#     data = request.json
-#     exons_positions = data.get('exonsPositions', [])
-    
-#     # # Generate the gene image plot
-#     gene = GeneImage(exons_positions[0], exons_positions[0][0])
-
-    
-#     # Get the HTML code for the interactive figure
-#     figure_html = gene.get_figure_html()
-    
-#     # Return the HTML code as a response
-#     return Response(figure_html, content_type='text/html')
-
-
 @generate.route('/gene-image', methods=['POST'])
 @cross_origin()
 def plot_gene_image():

@@ -30,13 +30,17 @@
 
     </div>
 
-    <!-- <div v-if="geneStructureFound === true && exonsPositions && figureHtml" class="gene-image-container">
-      <iframe :srcdoc="figureHtml" class="figure-iframe"></iframe>
-    </div> -->
-
 
     <div v-if="geneStructureFound === true && exonsPositions && dashAppUrl" class="gene-image-container">
       <iframe :src="dashAppUrl" class="figure-iframe" width="800" height="400"></iframe>
+    </div>
+
+    <!-- Dropdown to select Parent -->
+    <div v-if="geneStructureFound === true && exonsPositions" class="dropdown-container">
+      <label for="parent-select">Select Parent:</label>
+      <select id="parent-select" v-model="selectedParent" @change="updateGeneVisualization">
+        <option v-for="(positions, parent) in exonsPositions" :key="parent" :value="parent">{{ parent }}</option>
+      </select>
     </div>
     
   </div>
@@ -54,6 +58,7 @@ export default {
       geneStructureFound: null,
       // figureHtml: null,
       dashAppUrl: null,
+      selectedParent: null
 
     };
   },
@@ -62,42 +67,42 @@ export default {
     
     processExonsPositions() {
       if (this.geneStructure) {
-        // Create an object to store exons positions grouped by Parent
         const exonsByParent = {};
 
-        // Iterate through the gene structure data
         this.geneStructure.forEach(gene => {
           const { Parent, start, end } = gene;
 
-          // If the Parent doesn't exist in the object, initialize it with an empty array
           if (!exonsByParent[Parent]) {
             exonsByParent[Parent] = [];
           }
 
-          // Push the start and end positions to the corresponding Parent array
           exonsByParent[Parent].push([start, end]);
         });
 
-        // Convert the object to an array of arrays
-        this.exonsPositions = Object.values(exonsByParent);
+        this.exonsPositions = exonsByParent;
 
-        // Log the result to the console
+        if (Object.keys(this.exonsPositions).length > 0) {
+          this.selectedParent = Object.keys(this.exonsPositions)[0];
+        }
+
         console.log('Exons Positions:', this.exonsPositions);
       }
     },
 
     plotGeneImage() {
-      const firstExonPositions = this.exonsPositions.length > 0 ? this.exonsPositions[0] : [];
+      if (!this.selectedParent) return;
+
+      const selectedExonPositions = this.exonsPositions[this.selectedParent];
 
       fetch('http://localhost:5000/dash/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exonsPositions: firstExonPositions }),
+        body: JSON.stringify({ exonsPositions: selectedExonPositions }),
         mode: 'cors',
       })
         .then(response => response.json())
         .then(() => {
-          this.dashAppUrl = `http://localhost:5000/dash/plot?positions=${encodeURIComponent(JSON.stringify(firstExonPositions))}`;
+          this.dashAppUrl = `http://localhost:5000/dash/plot?positions=${encodeURIComponent(JSON.stringify(selectedExonPositions))}`;
         })
         .catch(error => {
           console.error('Error fetching gene image:', error);
@@ -105,9 +110,7 @@ export default {
     },
 
     fetchGeneStructure() {
-      // Log the geneId before making the request
       console.log('Gene ID:', this.geneId);
-      // this.geneStructureFound = false;
 
       const requestData = { gene_id: this.geneId };
 
@@ -115,7 +118,6 @@ export default {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
-        // credentials: 'include',
         mode: 'cors',
       })
       .then(response => {
@@ -126,13 +128,12 @@ export default {
       })
       .then(data => {
         if (data) {
-          this.geneStructure = data; // Assuming data contains gene structure information
-          this.rawApiResponse = JSON.stringify(data, null, 2); // Format JSON for display
-          this.geneStructureFound = true; // Set flag to true when gene structure is found
-          // Call the method to process exons positions
+          this.geneStructure = data;
+          this.rawApiResponse = JSON.stringify(data, null, 2);
+          this.geneStructureFound = true;
           this.processExonsPositions();
         } else {
-          this.geneStructureFound = false; // Set flag to false if gene structure is not found
+          this.geneStructureFound = false;
         }
       })
       .catch(error => {
@@ -141,12 +142,15 @@ export default {
       });
     },
 
+    updateGeneVisualization() {
+      this.plotGeneImage();
+    },
 
     formatExonsPositions() {
       if (!this.exonsPositions) return '';
 
-      return this.exonsPositions.map(positionsArray => {
-        return `[${positionsArray.map(positions => `(${positions.join(',')})`).join(', ')}]`;
+      return Object.entries(this.exonsPositions).map(([parent, positionsArray]) => {
+        return `${parent}: [${positionsArray.map(positions => `(${positions.join(',')})`).join(', ')}]`;
       }).join('\n');
     },
     
