@@ -1,18 +1,18 @@
 <template>
   <div class="container">
-    <h1>Run YASS Algorithm</h1>
+    <h1>Run Evo Genes</h1>
     <!-- Sequence text inputs -->
-  <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
+  <!-- <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
     <div class="txt1">
       <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here" @input="handleInput('sequence')"></textarea>
     </div>
     <div class="txt2">
       <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here" @input="handleInput('sequence')"></textarea>
     </div>
-  </div>
+  </div> -->
     
   <div class="upload-section" :class="{ disabled: disableOtherSections && activeSection !== 'upload' }">
-      <h3>Or upload files:</h3>
+      <!-- <h3>Or upload files:</h3> -->
       <div class="file-group">
         <div class="file-label-input">
           <label for="file1" class="upload-label">Choose FASTA file for Gene1:</label>
@@ -26,7 +26,7 @@
     </div>
 
     <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble'}">
-      <h3>Or Enter Ensemble Gene ID:</h3>
+      <h3>Enter Ensemble Gene ID:</h3>
       <div class="file-group">
         <div class="file-label-input">
           <label for="file1" class="upload-label">Enter Gene ID for Gene 1:</label>
@@ -42,7 +42,7 @@
     <div class="btn">
       <button @click="runYASS">
         <span></span>
-        Run Yass
+        Run Evo Genes
         <span></span>
       </button>
     </div>
@@ -166,6 +166,13 @@ h1 {
   margin-bottom: 2vw; /* Increase space below the title */
   font-size: 2.5vw; /* Responsive font size */
 }
+h3 {
+  margin-bottom: 2vw; /* Increase space below the title */
+  font-size: 2vw; /* Responsive font size */
+  text-align: center;
+
+ 
+}
 
 .txt1, .txt2 {
   display: flex;
@@ -224,7 +231,7 @@ h1 {
 
 .upload-label {
   margin-bottom: 0.5vw; /* Space between label and input */
-  font-size: 1.2vw; /* Responsive font size */
+  font-size: 1vw; /* Responsive font size */
 }
 
 .upload-box {
