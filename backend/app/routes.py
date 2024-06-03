@@ -44,11 +44,7 @@ def fetch_sequence_from_ensembl(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
     if response.ok:
-        # Extract the sequence part from the FASTA content
-        fasta_content = response.text
-        sequence_lines = fasta_content.split('\n')[1:]  # Skip the FASTA header
-        sequence = ''.join(sequence_lines)  # Join lines to form the full sequence
-        return sequence
+        return response.content
     else:
         return None
 
@@ -83,22 +79,19 @@ def run_yass():
     elif 'GeneID1' in request.form and 'GeneID2' in request.form:
         gene_id1 = request.form['GeneID1']
         gene_id2 = request.form['GeneID2']
-        
+    
         # Fetch sequences corresponding to GeneIDs from Ensembl API
         sequence1 = fetch_sequence_from_ensembl(gene_id1)
         sequence2 = fetch_sequence_from_ensembl(gene_id2)
-
-        # Validate sequence input
-        if not sequence1 or not sequence2:
-            return jsonify({'error': 'Failed to fetch sequences from Ensembl. Please check the GeneID inputs.'}), 400
-        if not re.match('^[ACGTacgt]*$', sequence1) or not re.match('^[ACGTacgt]*$', sequence2):
-            return jsonify({'error': 'Invalid sequence input. Sequences should only contain A, C, G, T characters.'}), 400
-        with open(fasta_file1_path, 'w') as file1, open(fasta_file2_path, 'w') as file2:
-            file1.write(f'>Sequence1\n{sequence1}\n')
-            file2.write(f'>Sequence2\n{sequence2}\n')
-
-    else:
-        return jsonify({'error': 'No valid sequence or file input provided'}), 400
+        
+        # Check if sequences were fetched successfully
+        if sequence1 and sequence2:
+            # Write the fetched sequences to files
+            with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
+                file1.write(sequence1)
+                file2.write(sequence2)
+        else:
+            return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
 
 
