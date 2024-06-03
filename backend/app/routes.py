@@ -1,19 +1,21 @@
-from flask import Blueprint, request, jsonify, render_template, Flask
+from flask import Blueprint, request, jsonify, render_template, Flask,send_file,current_app,send_from_directory,Response
 # from . import db
 from .models import Gene
 from .schemas import gene_schema, genes_schema
-# import requests, sys, json
 import requests, sys, json
 import logging
 
-from flask_cors import CORS
-from flask_cors import cross_origin
-
+from flask_cors import CORS,cross_origin
 import os
-from flask import Response, render_template
 from .dash_app import create_dash_app
 
+from .extensions import db  # Make sure this import is correct based on your setup
+from .GeneImage import GeneImage  # Import the GeneImage class
 
+import subprocess
+import tempfile
+import io  
+import re
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
@@ -32,23 +34,11 @@ def test():
 def get_data():
     return jsonify({"Hello": "World"})
 
-import os
-from flask import send_file,send_from_directory
 
-from flask import jsonify, request,send_file,current_app
-from .extensions import db  # Make sure this import is correct based on your setup
-from .models import Gene  # Adjust this import if necessary
-
-from .GeneImage import GeneImage  # Import the GeneImage class
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', '..', 'backend')
 
-import subprocess
-import os
-import tempfile
-from flask import Response
-import io  
-import re
+
 
 def fetch_sequence_from_ensembl(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
