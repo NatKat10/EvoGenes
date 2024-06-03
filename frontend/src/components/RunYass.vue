@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <LoaderOverlay :visible="loading" />
     <h1>Run YASS Algorithm</h1>
     <!-- Sequence text inputs -->
   <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
@@ -56,8 +57,13 @@
 </template>
 
 <script>
+import LoaderOverlay from './LoaderOverlay.vue';
+
 export default {
   name: 'RunYass',
+  components: {
+    LoaderOverlay
+  },
   data() {
     return {
       errorMessage: '',
@@ -68,7 +74,8 @@ export default {
       file1: null,
       file2: null,
       imageSrc: null,
-      activeSection: null, 
+      activeSection: null,
+      loading: false,
     };
   },
   computed: {
@@ -81,6 +88,21 @@ export default {
     handleInput(section) {
       this.activeSection = section;
     },
+
+  clearInputs() {
+    this.file1 = null;
+    this.file2 = null;
+    this.sequence1 = '';
+    this.sequence2 = '';
+    this.GeneID1 = '';
+    this.GeneID2 = '';
+    this.errorMessage = '';
+      // Clear file input fields
+  const fileInput1 = this.$refs.file1;
+  const fileInput2 = this.$refs.file2;
+  if (fileInput1) fileInput1.value = '';
+  if (fileInput2) fileInput2.value = '';
+},
 
     handleFileChange(refName) {
       const file = this.$refs[refName].files[0];
@@ -109,6 +131,8 @@ export default {
         return;
       }
 
+      this.loading = true;
+
       try {
         const response = await fetch('http://localhost:5000/run-yass', {
           method: 'POST',
@@ -119,12 +143,18 @@ export default {
         }
         const blob = await response.blob();
         this.imageSrc = URL.createObjectURL(blob);
+        this.clearInputs(); // Clear the inputs after successful run
       } catch (error) {
         console.error('Error running YASS:', error);
         this.errorMessage = "Incorrect Input"
       }
+      finally{
+        this.loading=false;
+        this.clearInputs();
+      }
     }
   }
+  
 };
 </script>
 
