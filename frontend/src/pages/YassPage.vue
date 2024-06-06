@@ -1,40 +1,35 @@
 <template>
   <div class="container1">
     <div class="run-yass">
-    <div class="yassComp">
-      <div class="components-container">
-        <GeneStructure />
-        <RunYass />
+      <div class="yassComp">
+        <div class="components-container">
+          <RunYass />
+        </div>
       </div>
     </div>
   </div>
-
-  </div>
-  
 </template>
 
 <script>
 import RunYass from "@/components/RunYass.vue";  
-import GeneStructure from "@/components/GeneStructure.vue";
 
 export default {
   components: {
-    RunYass,
-    GeneStructure  
+    RunYass
   }
 };
 </script>
 
 <style>
 .run-yass {
-  position: relative; /* Needed for absolute positioning of the pseudo-element */
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 100vh; /* Ensure the container takes at least the full viewport height */
-  background: none; /* No background image here */
-  overflow-y: auto; /* Allow vertical scrolling */
+  min-height: 100vh;
+  background: none;
+  overflow-y: auto;
 }
 
 .run-yass::before {
@@ -47,21 +42,21 @@ export default {
   background-image: url('../assets/evo5.jpg');
   background-size: cover;
   background-position: center;
-  opacity: 0.3; /* Opacity only applies to the background image */
-  z-index: -1; /* Ensures the background is behind the content */
+  opacity: 0.3;
+  z-index: -1;
 }
 
 .yassComp {
-  position: relative; /* Ensure this content is on top of the background */
+  position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 1200px; /* Ensure the container does not exceed this width */
-  margin: 0 auto; /* Center the container horizontally */
-  padding: 20px; /* Add padding for better spacing */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .components-container {
@@ -69,11 +64,11 @@ export default {
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 20px; /* Add space between components */
+  gap: 20px;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 20px; /* Add some space below the heading */
+  margin-bottom: 20px;
 }
 </style>
