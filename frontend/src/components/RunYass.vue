@@ -1,8 +1,8 @@
 <template>
   <div class="container">
     <LoaderOverlay :visible="loading" />
-    <h1>Run YASS Algorithm</h1>
     <h1>Run Evo Genes</h1>
+
     <!-- Sequence text inputs -->
   <!-- <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
     <div class="txt1">
@@ -12,9 +12,7 @@
       <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here" @input="handleInput('sequence')"></textarea>
     </div>
   </div> -->
-    
-  <div class="upload-section" :class="{ disabled: disableOtherSections && activeSection !== 'upload' }">
-      <!-- <h3>Or upload files:</h3> -->
+    <!-- <div class="upload-section" :class="{ disabled: disableOtherSections && activeSection !== 'upload' }">
       <div class="file-group">
         <div class="file-label-input">
           <label for="file1" class="upload-label">Choose FASTA file for Gene1:</label>
@@ -25,10 +23,10 @@
           <input type="file" id="file2" class="upload-box" ref="file2" @change="handleFileChange('file2')" accept=".fa, .fasta"/>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble'}">
-      <h3>Enter Ensemble Gene ID:</h3>
+      <h3>Enter Ensembl Gene ID:</h3>
       <div class="file-group">
         <div class="file-label-input">
           <label for="file1" class="upload-label">Enter Gene ID for Gene 1:</label>
@@ -42,7 +40,7 @@
     </div>
 
     <div class="btn">
-      <button @click="runYASS">
+      <button @click="runEvoGenes">
         <span></span>
         Run Evo Genes
         <span></span>
@@ -51,8 +49,26 @@
 
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
-    <div class="image-container">
-      <img v-if="imageSrc" :src="imageSrc" alt="DotPlot Image" class="image" />
+    <div class="visualization-container" v-if="visualizations">
+      <div class="dotplot-container">
+        <img :src="visualizations.dotplot_image" alt="Dot Plot Image" class="image" />
+      </div>
+      <div class="gene-structure-container">
+        <div>
+          <label for="parent-select1">Select Parent for Gene 1:</label>
+          <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)">
+            <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
+          </select>
+        </div>
+        <div ref="geneStructure1"></div>
+        <div>
+          <label for="parent-select2">Select Parent for Gene 2:</label>
+          <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)">
+            <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
+          </select>
+        </div>
+        <div ref="geneStructure2"></div>
+      </div>
     </div>
   </div>
 </template>
@@ -61,7 +77,7 @@
 import LoaderOverlay from './LoaderOverlay.vue';
 
 export default {
-  name: 'RunYass',
+  name: 'RunEvoGenes',
   components: {
     LoaderOverlay
   },
@@ -74,7 +90,9 @@ export default {
       GeneID2: '',
       file1: null,
       file2: null,
-      imageSrc: null,
+      visualizations: null,
+      selectedParent1: null,
+      selectedParent2: null,
       activeSection: null,
       loading: false,
     };
@@ -85,37 +103,30 @@ export default {
     },
   },
   methods: {
-
     handleInput(section) {
       this.activeSection = section;
     },
-
-  clearInputs() {
-    this.file1 = null;
-    this.file2 = null;
-    this.sequence1 = '';
-    this.sequence2 = '';
-    this.GeneID1 = '';
-    this.GeneID2 = '';
-    this.errorMessage = '';
-      // Clear file input fields
-  const fileInput1 = this.$refs.file1;
-  const fileInput2 = this.$refs.file2;
-  if (fileInput1) fileInput1.value = '';
-  if (fileInput2) fileInput2.value = '';
-},
-
+    clearInputs() {
+      this.file1 = null;
+      this.file2 = null;
+      this.sequence1 = '';
+      this.sequence2 = '';
+      this.GeneID1 = '';
+      this.GeneID2 = '';
+      this.errorMessage = '';
+      const fileInput1 = this.$refs.file1;
+      const fileInput2 = this.$refs.file2;
+      if (fileInput1) fileInput1.value = '';
+      if (fileInput2) fileInput2.value = '';
+    },
     handleFileChange(refName) {
       const file = this.$refs[refName].files[0];
       this[refName] = file;
       this.handleInput('upload');
     },
-
-    async runYASS() {
-      console.log('Run YASS method called');
+    async runEvoGenes() {
+      console.log('Run Evo Genes method called');
       const formData = new FormData();
-
-      // Append sequences as text or files based on user input
       if (this.file1 && this.file2) {
         formData.append('fasta1', this.file1);
         formData.append('fasta2', this.file2);
@@ -123,44 +134,82 @@ export default {
         formData.append('sequence1', this.sequence1);
         formData.append('sequence2', this.sequence2);
       } else if (this.GeneID1 && this.GeneID2) {
-
         formData.append('GeneID1', this.GeneID1);
         formData.append('GeneID2', this.GeneID2);
-      }
-       else {
-        this.errorMessage = "Please provide two sequences or two FASTA files or two ensemble GeneID.";
+      } else {
+        this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
         return;
       }
 
       this.loading = true;
 
       try {
-        const response = await fetch('http://localhost:5000/run-yass', {
+        const response = await fetch('http://localhost:5000/run-evo-genes', {
           method: 'POST',
           body: formData
         });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const blob = await response.blob();
-        this.imageSrc = URL.createObjectURL(blob);
-        this.clearInputs(); // Clear the inputs after successful run
-      } catch (error) {
-        console.error('Error running YASS:', error);
-        this.errorMessage = "Incorrect Input"
-      }
-      finally{
-        this.loading=false;
+        const data = await response.json();
+        console.log("Response Data: ", data); // Debugging: Log the response data
+        this.visualizations = {
+          dotplot_image: `data:image/png;base64,${btoa(data.dotplot_image)}`,
+          gene_structure1_html: data.gene_structure1_html,
+          gene_structure2_html: data.gene_structure2_html,
+          exon_intervals1: data.exon_intervals1,
+          exon_intervals2: data.exon_intervals2
+        };
+        this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
+        this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
+        this.$nextTick(() => {
+          this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
+          this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
+        });
         this.clearInputs();
+      } catch (error) {
+        console.error('Error running Evo Genes:', error);
+        this.errorMessage = "Incorrect Input";
+      } finally {
+        this.loading = false;
+        this.clearInputs();
+      }
+    },
+    updateGeneStructure(containerRef, selectedParent) {
+      const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
+      fetch('http://localhost:5000/dash/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exonsPositions: exonIntervals }),
+        mode: 'cors',
+      })
+        .then(response => response.json())
+        .then(() => {
+          const plotUrl = `http://localhost:5000/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
+          fetch(plotUrl)
+            .then(response => response.text())
+            .then(html => {
+              this.insertGeneStructureHTML(this.$refs[containerRef], html);
+            });
+        })
+        .catch(error => {
+          console.error('Error updating gene structure:', error);
+        });
+    },
+    insertGeneStructureHTML(container, html) {
+      container.innerHTML = html;
+      const scripts = container.getElementsByTagName('script');
+      for (const script of scripts) {
+        const newScript = document.createElement('script');
+        newScript.text = script.text;
+        script.replaceWith(newScript);
       }
     }
   }
-  
 };
 </script>
 
 <style scoped>
-
 .error-message {
   color: red;
   margin-top: 10px;
@@ -201,8 +250,6 @@ h3 {
   margin-bottom: 2vw; /* Increase space below the title */
   font-size: 2vw; /* Responsive font size */
   text-align: center;
-
- 
 }
 
 .txt1, .txt2 {

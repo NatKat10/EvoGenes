@@ -17,6 +17,9 @@ import tempfile
 import io  
 import re
 
+from bs4 import BeautifulSoup
+
+
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
@@ -40,6 +43,7 @@ UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), '..', '..', 'backend')
 
 
 
+
 def fetch_sequence_from_ensembl(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
@@ -48,86 +52,81 @@ def fetch_sequence_from_ensembl(gene_id):
     else:
         return None
 
+def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+    server = "http://rest.ensembl.org"
+    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+    r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
 
-@main.route('/run-yass', methods=['POST'])
-def run_yass():
-    #to show the real output of yass you need to comment this lines.
-    # image_directory = '../'  # This navigates up from 'backend/app' to 'backend'
-    # image_filename = 'example.png'
-    # try:
-    #     return send_from_directory(image_directory, image_filename)
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
+    try:
+        r.raise_for_status()
+        gene_structure = r.json()
+        
+        exons = [{'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']} for exon in gene_structure]
+        return exons
+    except requests.exceptions.HTTPError as e:
+        print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+        return []
 
+@main.route('/run-evo-genes', methods=['POST'])
+def run_evo_genes():
     fasta_file1_path = 'temp_sequence1.fasta'
     fasta_file2_path = 'temp_sequence2.fasta'
 
-    if 'fasta1' in request.files and 'fasta2' in request.files:
-        fasta_file1 = request.files['fasta1']
-        fasta_file2 = request.files['fasta2']
-        fasta_file1.save(fasta_file1_path)
-        fasta_file2.save(fasta_file2_path)
-    elif 'sequence1' in request.form and 'sequence2' in request.form:
-        sequence1 = request.form['sequence1']
-        sequence2 = request.form['sequence2']
-        # Validate sequence input
-        if not re.match('^[ACGTacgt]*$', sequence1) or not re.match('^[ACGTacgt]*$', sequence2):
-            return jsonify({'error': 'Invalid sequence input. Sequences should only contain A, C, G, T characters.'}), 400
-        with open(fasta_file1_path, 'w') as file1, open(fasta_file2_path, 'w') as file2:
-            file1.write(f'>Sequence1\n{sequence1}\n')
-            file2.write(f'>Sequence2\n{sequence2}\n')
-    elif 'GeneID1' in request.form and 'GeneID2' in request.form:
+    if 'GeneID1' in request.form and 'GeneID2' in request.form:
         gene_id1 = request.form['GeneID1']
         gene_id2 = request.form['GeneID2']
     
-        # Fetch sequences corresponding to GeneIDs from Ensembl API
         sequence1 = fetch_sequence_from_ensembl(gene_id1)
         sequence2 = fetch_sequence_from_ensembl(gene_id2)
         
-        # Check if sequences were fetched successfully
         if sequence1 and sequence2:
-            # Write the fetched sequences to files
             with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
                 file1.write(sequence1)
                 file2.write(sequence2)
         else:
             return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
-
-
-    # Proceed with YASS processing if inputs are valid
     yass_output_path = 'yass_output.yop'
     dp_output_path = 'dp.png'
-    yass_executable ='./yass-Win64.exe'
+    yass_executable = './yass-Win64.exe'
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
     subprocess.run(command, check=True)
     
-    # php_script = 'yass2dotplot.php'
-    # subprocess.run(['php', php_script, yass_output_path, dp_output_path], check=True)
-    
-
     python_executable = 'python'
-    # python_executable = os.path.join(os.environ['VIRTUAL_ENV'], 'Scripts', 'python.exe')  # For Windows
     yop_reader_script = 'yop_reader.py'
-
-    # yop_reader_script = os.getcwd()+'\\backend\\yop_reader.py'
-
-    # yop_reader_script = os.path.join(os.getcwd(), 'backend', 'yop_reader.py')
-
-
     command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
     subprocess.run(command, check=True)
 
     with open(dp_output_path, 'rb') as file:
-        image_data = file.read()
-    
+        dotplot_image_data = file.read()
+
+    gene_structure1 = fetch_gene_structure(gene_id1)
+    gene_structure2 = fetch_gene_structure(gene_id2)
+
+    exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
+    exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
+
+    # Return the raw data along with HTML
+    gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]]).to_html()
+    gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]]).to_html()
+
+    soup1 = BeautifulSoup(gene_structure1_html, 'html.parser')
+    gene_structure1_body = soup1.body.decode_contents()
+    soup2 = BeautifulSoup(gene_structure2_html, 'html.parser')
+    gene_structure2_body = soup2.body.decode_contents()
+
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
     os.remove(yass_output_path)
     os.remove(dp_output_path)
     
-    return Response(image_data, mimetype='image/png')
-
+    return jsonify({
+        'dotplot_image': dotplot_image_data.decode('latin1'),
+        'gene_structure1_html': gene_structure1_body,
+        'gene_structure2_html': gene_structure2_body,
+        'exon_intervals1': exon_intervals1,
+        'exon_intervals2': exon_intervals2
+    })
 
 
 
@@ -212,18 +211,18 @@ def get_gene_structure():
     return jsonify(gene_structure)
 
 
-def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
-    server = "http://rest.ensembl.org"
-    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
-    r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+# def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+#     server = "http://rest.ensembl.org"
+#     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+#     r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
 
-    try:
-        r.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
-        gene_structure = r.json()  # Parse JSON response
-        return gene_structure
-    except requests.exceptions.HTTPError as e:
-        logging.error(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
-        return None  # Return None to indicate failure
+#     try:
+#         r.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+#         gene_structure = r.json()  # Parse JSON response
+#         return gene_structure
+#     except requests.exceptions.HTTPError as e:
+#         logging.error(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+#         return None  # Return None to indicate failure
     
 
 @generate.route('/gene-image', methods=['POST'])
