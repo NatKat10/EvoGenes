@@ -12,6 +12,7 @@ import 'slick-carousel/slick/slick-theme.css'; // Slick theme
 import 'vue-slick-carousel/dist/vue-slick-carousel.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue-3/dist/bootstrap-vue-3.css';
+import 'swiper/css';
 
 
 // import {

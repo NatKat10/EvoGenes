@@ -82,8 +82,8 @@ export default {
   font-family: 'Courier New', Courier, monospace;
   font-weight: 700; /* Increased font weight for thicker text */
   stroke: #000;
-  stroke-width: 2px;
-  animation: geneMove 5s infinite alternate;
+  stroke-width: 4px;
+  animation: geneMove 7s infinite alternate;
 }
 
 /* Animation */

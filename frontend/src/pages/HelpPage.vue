@@ -83,10 +83,12 @@
   
   .gene-text {
     font-size: 80px;
-    fill: #4caf50; /* Adjust color as needed */
+    fill: #ffffff; /* Adjust color as needed */
     font-family: 'Courier New', Courier, monospace;
     font-weight: 700; /* Increased font weight for thicker text */
-    animation: geneMove 5s infinite alternate;
+    animation: geneMove 7s infinite alternate;
+    stroke: #000;
+    stroke-width: 4px;
   }
   
   @keyframes geneMove {

@@ -33,6 +33,7 @@
 h1 {
   margin-bottom: 40px; /* Increase space below the title */
   text-align: center; /* Center-align the title */
+  font-size: 23px;
 }
 
 </style>

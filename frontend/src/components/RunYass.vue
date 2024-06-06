@@ -1,7 +1,9 @@
 <template>
   <div class="container">
-    <LoaderOverlay :visible="loading" />
-    <h1>Run Evo Genes</h1>
+    
+    <LoaderOverlay :visible="loading" :progress="progress" />
+    <!-- <LoaderOverlay :visible="loading" /> -->
+    
 
     <!-- Sequence text inputs -->
   <!-- <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
@@ -95,6 +97,7 @@ export default {
       selectedParent2: null,
       activeSection: null,
       loading: false,
+      progress: 0,
     };
   },
   computed: {
@@ -142,15 +145,27 @@ export default {
       }
 
       this.loading = true;
+      this.progress = 0;
+
+      
 
       try {
-        const response = await fetch('http://localhost:5000/run-evo-genes', {
+
+        const response = await this.fetchWithProgress('http://localhost:5000/run-evo-genes', {
           method: 'POST',
           body: formData
+        }, (loaded, total) => {
+          this.progress = Math.floor((loaded / total) * 100);
         });
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
+
+        
+
+
+
         const data = await response.json();
         console.log("Response Data: ", data); // Debugging: Log the response data
         this.visualizations = {
@@ -166,14 +181,63 @@ export default {
           this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
           this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
         });
+
+
+
+
+
         this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
         this.errorMessage = "Incorrect Input";
       } finally {
+        
+
+
+
         this.loading = false;
+        this.progress = 100; // Ensure progress reaches 100% when done
         this.clearInputs();
       }
+
+
+    },
+    async fetchWithProgress(url, options, onProgress) {
+      const response = await fetch(url, options);
+      const reader = response.body.getReader();
+      const contentLength = +response.headers.get('Content-Length');
+
+      let receivedLength = 0; // bytes received so far
+      let chunks = []; // array of received binary chunks (comprises the body)
+
+      let done = false;
+
+      while (!done) {
+        const { done: readerDone, value } = await reader.read();
+        done = readerDone;
+
+        if (value) {
+          chunks.push(value);
+          receivedLength += value.length;
+          onProgress(receivedLength, contentLength);
+        }
+      }
+
+
+      // concatenate chunks into single Uint8Array
+      let chunksAll = new Uint8Array(receivedLength);
+      let position = 0;
+      for(let chunk of chunks) {
+        chunksAll.set(chunk, position);
+        position += chunk.length;
+      }
+
+      return new Response(chunksAll, {
+        headers: { 'Content-Type': response.headers.get('Content-Type') }
+      });
+
+
+
     },
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
