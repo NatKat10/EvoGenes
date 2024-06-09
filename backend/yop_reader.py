@@ -7,8 +7,10 @@ import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import plotly.graph_objs as go
 
+# from dash import dcc
+# from dash import html
 
-
+# from backend.app import dash_app
 
 
 def parse_yop(file_path):
@@ -135,107 +137,107 @@ def process_sequences(file_path):
 
     return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
 
-def plot_dotplot(yop_path, output_path):
-    result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yop_path)#Processes the YOP file to get sequences and directions.
+# def plot_dotplot(yop_path, output_path):
+#     result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yop_path)#Processes the YOP file to get sequences and directions.
 
-    # Print results for debugging
-    print("Finished processing sequences.")
-    print(f"Number of sequences processed: {len(result_sequences)}")
+#     # Print results for debugging
+#     print("Finished processing sequences.")
+#     print(f"Number of sequences processed: {len(result_sequences)}")
 
-    # Check if there is any data to plot
-    if not result_sequences or not directions:
-        print("No data to plot.")
-        return
+#     # Check if there is any data to plot
+#     if not result_sequences or not directions:
+#         print("No data to plot.")
+#         return
     
-    print(f"Plotting {len(result_sequences)} sequences.")
+#     print(f"Plotting {len(result_sequences)} sequences.")
     
 
-    x_vals_f, y_vals_f, colors_f = [], [], []
-    x_vals_r, y_vals_r, colors_r = [], [], []
+#     x_vals_f, y_vals_f, colors_f = [], [], []
+#     x_vals_r, y_vals_r, colors_r = [], [], []
 
-    # Updated color map
-    color_map = {
-        'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
-        'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
-    }
+#     # Updated color map
+#     color_map = {
+#         'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
+#         'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
+#     }
 
-    for seq_list, direction in directions:
-        for x, y, intensity in seq_list:
-            if direction == 'f':
-                x_vals_f.append(x)
-                y_vals_f.append(y)
-                colors_f.append(color_map[direction][intensity])
-            else:
-                x_vals_r.append(x)
-                y_vals_r.append(y)
-                colors_r.append(color_map[direction][intensity])
-
-
-    # Plot the dot plot in batches
-    fig, ax = plt.subplots(figsize=(10, 10))
-
-    dot_size = 10  # Increase dot size
-
-    line_length = 20  # Length of the lines
-
-    # if x_vals['f']:
-    #     ax.hlines(y=y_vals['f'], xmin=[x for x in x_vals['f']], xmax=[x + line_length for x in x_vals['f']], colors=colors['f'], alpha=0.6, label='forward')
-    # if x_vals['r']:
-    #     ax.hlines(y=y_vals['r'], xmin=[x for x in x_vals['r']], xmax=[x + line_length for x in x_vals['r']], colors=colors['r'], alpha=0.6, label='reverse')
-
-    if x_vals_f:
-        ax.hlines(y=y_vals_f, xmin=np.array(x_vals_f), xmax=np.array(x_vals_f) + line_length, colors=colors_f, alpha=0.6, label='forward')
-    if x_vals_r:
-        ax.hlines(y=y_vals_r, xmin=np.array(x_vals_r) - line_length, xmax=np.array(x_vals_r), colors=colors_r, alpha=0.6, label='reverse')
+#     for seq_list, direction in directions:
+#         for x, y, intensity in seq_list:
+#             if direction == 'f':
+#                 x_vals_f.append(x)
+#                 y_vals_f.append(y)
+#                 colors_f.append(color_map[direction][intensity])
+#             else:
+#                 x_vals_r.append(x)
+#                 y_vals_r.append(y)
+#                 colors_r.append(color_map[direction][intensity])
 
 
-    tick_interval = 5000
-    axis_min = min(min_x, min_y)
-    axis_max = max(max_x, max_y)
+#     # Plot the dot plot in batches
+#     fig, ax = plt.subplots(figsize=(10, 10))
 
-    # ax.set_xlim(axis_min, axis_max)
-    # ax.set_ylim(axis_max, axis_min) 
+#     dot_size = 10  # Increase dot size
 
-    axis_min = (axis_min // tick_interval) * tick_interval
-    axis_max = ((axis_max + tick_interval - 1) // tick_interval) * tick_interval
+#     line_length = 20  # Length of the lines
 
-    ax.set_xlim(axis_min, axis_max)
-    ax.set_ylim(axis_max, axis_min)
+#     # if x_vals['f']:
+#     #     ax.hlines(y=y_vals['f'], xmin=[x for x in x_vals['f']], xmax=[x + line_length for x in x_vals['f']], colors=colors['f'], alpha=0.6, label='forward')
+#     # if x_vals['r']:
+#     #     ax.hlines(y=y_vals['r'], xmin=[x for x in x_vals['r']], xmax=[x + line_length for x in x_vals['r']], colors=colors['r'], alpha=0.6, label='reverse')
 
-    ax.set_xlabel(x_label)
-    ax.set_ylabel(y_label)
-    ax.set_title('Dot Plot of Gene Similarities')
-    ax.yaxis.tick_right()  # Move the Y-axis to the right
-    ax.yaxis.set_label_position("right")
-    ax.legend()
-    ax.grid(False)
+#     if x_vals_f:
+#         ax.hlines(y=y_vals_f, xmin=np.array(x_vals_f), xmax=np.array(x_vals_f) + line_length, colors=colors_f, alpha=0.6, label='forward')
+#     if x_vals_r:
+#         ax.hlines(y=y_vals_r, xmin=np.array(x_vals_r) - line_length, xmax=np.array(x_vals_r), colors=colors_r, alpha=0.6, label='reverse')
 
 
-    x_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
-    y_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
-    ax.set_xticks(x_ticks)
-    ax.set_yticks(y_ticks)
+#     tick_interval = 5000
+#     axis_min = min(min_x, min_y)
+#     axis_max = max(max_x, max_y)
 
-    ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
-    ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+#     # ax.set_xlim(axis_min, axis_max)
+#     # ax.set_ylim(axis_max, axis_min) 
 
-    plt.xticks(rotation=90)  # Rotate X-axis labels to prevent overlap
+#     axis_min = (axis_min // tick_interval) * tick_interval
+#     axis_max = ((axis_max + tick_interval - 1) // tick_interval) * tick_interval
+
+#     ax.set_xlim(axis_min, axis_max)
+#     ax.set_ylim(axis_max, axis_min)
+
+#     ax.set_xlabel(x_label)
+#     ax.set_ylabel(y_label)
+#     ax.set_title('Dot Plot of Gene Similarities')
+#     ax.yaxis.tick_right()  # Move the Y-axis to the right
+#     ax.yaxis.set_label_position("right")
+#     ax.legend()
+#     ax.grid(False)
 
 
+#     x_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
+#     y_ticks = np.arange(axis_min, axis_max + tick_interval, tick_interval)
+#     ax.set_xticks(x_ticks)
+#     ax.set_yticks(y_ticks)
 
-    plt.savefig(output_path, dpi=150)  # Reduced DPI for quicker rendering
-    print(f"Plot saved as '{output_path}'.")
-    # plt.show()
-    print("Plot displayed.")
+#     ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+#     ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+#     plt.xticks(rotation=90)  # Rotate X-axis labels to prevent overlap
 
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python yop_reader.py <input_yop_path> <output_image_path>")
-        sys.exit(1)
+#     plt.savefig(output_path, dpi=150)  # Reduced DPI for quicker rendering
+#     print(f"Plot saved as '{output_path}'.")
+#     # plt.show()
+#     print("Plot displayed.")
 
-    yop_path = sys.argv[1]
-    output_path = sys.argv[2]
 
-    plot_dotplot(yop_path, output_path)
+
+# if __name__ == "__main__":
+#     if len(sys.argv) != 3:
+#         print("Usage: python yop_reader.py <input_yop_path> <output_image_path>")
+#         sys.exit(1)
+
+#     yop_path = sys.argv[1]
+#     output_path = sys.argv[2]
+
+#     plot_dotplot(yop_path, output_path)

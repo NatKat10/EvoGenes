@@ -36,9 +36,6 @@
 
 from flask import Flask
 from .extensions import db, ma
-from .routes import generate as generate_blueprint
-from .routes import main as main_blueprint
-
 from flask_cors import CORS
 from .dash_app import create_dash_app
 
@@ -54,6 +51,9 @@ def create_app():
 
     # db.init_app(app)
     ma.init_app(app)
+
+    from .routes import generate as generate_blueprint
+    from .routes import main as main_blueprint
 
     app.register_blueprint(generate_blueprint, url_prefix='/generate')
     app.register_blueprint(main_blueprint)

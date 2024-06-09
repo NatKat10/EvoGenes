@@ -51,7 +51,7 @@ def create_dash_app(flask_app):
         data = [exon_trace, intron_trace, marker_trace]
 
         layout = go.Layout(
-            width=800,
+            # width=800,
             height=70,
             xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
             yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6],fixedrange=True),
@@ -82,10 +82,60 @@ def create_dash_app(flask_app):
         # fig.update_layout(config=config)
 
         return fig
+    
+    def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label):
+        x_vals_f, y_vals_f, colors_f = [], [], []
+        x_vals_r, y_vals_r, colors_r = [], [], []
+
+        color_map = {
+            'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
+            'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
+        }
+
+        for seq_list, direction in directions:
+            for x, y, intensity in seq_list:
+                if direction == 'f':
+                    x_vals_f.append(x)
+                    y_vals_f.append(y)
+                    colors_f.append(f'rgba{color_map[direction][intensity] + (0.6,)}')
+                else:
+                    x_vals_r.append(x)
+                    y_vals_r.append(y)
+                    colors_r.append(f'rgba{color_map[direction][intensity] + (0.6,)}')
+
+        traces = []
+
+        if x_vals_f:
+            traces.append(go.Scatter(x=x_vals_f, y=y_vals_f, mode='markers', marker=dict(color=colors_f, size=5), name='Forward'))
+        if x_vals_r:
+            traces.append(go.Scatter(x=x_vals_r, y=y_vals_r, mode='markers', marker=dict(color=colors_r, size=5), name='Reverse'))
+
+        layout = go.Layout(
+            # width=800,
+            title='Dot Plot of Gene Similarities',
+            # xaxis=dict(title=x_label, range=[min_x, max_x]),
+            # yaxis=dict(title=y_label, range=[max_y, min_y]),
+            xaxis=dict(range=[min_x, max_x]),
+            yaxis=dict(range=[max_y, min_y]),
+            hovermode='closest',
+            legend=dict(
+                x=1,
+                y=1.1,
+                xanchor='right',
+                yanchor='top',
+                orientation='h'
+            ),
+            margin=dict(l=35, r=5, t=60, b=35),
+        )
+
+        return go.Figure(data=traces, layout=layout)
 
     dash_app.layout = html.Div([
-        dcc.Graph(id='gene-plot', figure=create_gene_plot([]))
+        dcc.Graph(id='gene-plot', figure=create_gene_plot([])),
+        dcc.Graph(id='dotplot'),
+        dcc.Store(id='dotplot-data', data=None)
+    
     ])
 
-    return dash_app, create_gene_plot
+    return dash_app, create_gene_plot, plot_dotplot
 

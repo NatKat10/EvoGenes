@@ -10,7 +10,7 @@ import os
 from .dash_app import create_dash_app
 
 from .extensions import db  # Make sure this import is correct based on your setup
-from .GeneImage import GeneImage  # Import the GeneImage class
+# from .GeneImage import GeneImage  # Import the GeneImage class
 
 import subprocess
 import tempfile
@@ -19,11 +19,16 @@ import re
 
 from bs4 import BeautifulSoup
 
+# import plotly.graph_objs as go
+# from yop_reader import plot_dotplot
+from yop_reader import process_sequences
+
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
-dash_app, create_gene_plot = create_dash_app(app)
+dash_app, create_gene_plot, plot_dotplot = create_dash_app(app)
 
 
 #Blueprints
@@ -87,18 +92,23 @@ def run_evo_genes():
             return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
     yass_output_path = 'yass_output.yop'
-    dp_output_path = 'dp.png'
+    # dp_output_path = 'dp.png'
     yass_executable = './yass-Win64.exe'
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
     subprocess.run(command, check=True)
     
-    python_executable = 'python'
-    yop_reader_script = 'yop_reader.py'
-    command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
-    subprocess.run(command, check=True)
+    # python_executable = 'python'
+    # yop_reader_script = 'yop_reader.py'
+    # command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
+    # subprocess.run(command, check=True)
 
-    with open(dp_output_path, 'rb') as file:
-        dotplot_image_data = file.read()
+    # with open(dp_output_path, 'rb') as file:
+    #     dotplot_image_data = file.read()
+
+    result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yass_output_path)
+
+    # with open(dp_output_path, 'w') as file:
+    #     file.write(dash_app.index())
 
     gene_structure1 = fetch_gene_structure(gene_id1)
     gene_structure2 = fetch_gene_structure(gene_id2)
@@ -118,10 +128,23 @@ def run_evo_genes():
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
     os.remove(yass_output_path)
-    os.remove(dp_output_path)
+    # os.remove(dp_output_path)
     
+    dotplot_data = {
+        'directions': directions,
+        'min_x': min_x,
+        'max_x': max_x,
+        'min_y': min_y,
+        'max_y': max_y,
+        'x_label': x_label,
+        'y_label': y_label
+    }
+
+    print("Prepared dotplot_data:", dotplot_data)
+
     return jsonify({
-        'dotplot_image': dotplot_image_data.decode('latin1'),
+        'dotplot_data': dotplot_data,
+        # 'dotplot_image': dotplot_image_data.decode('latin1'),
         'gene_structure1_html': gene_structure1_body,
         'gene_structure2_html': gene_structure2_body,
         'exon_intervals1': exon_intervals1,
@@ -252,4 +275,20 @@ def plot_gene_structure():
     positions = request.args.get('positions')
     exons_positions = json.loads(positions) if positions else []
     fig = create_gene_plot(exons_positions)
+    return fig.to_html()
+
+
+@main.route('/dash/dotplot/update', methods=['POST'])
+def update_dotplot_data():
+    data = request.json
+    dotplot_data = data.get('dotplot_data', {})
+    return jsonify(success=True)
+
+@main.route('/dash/dotplot/plot', methods=['POST'])
+def plot_dotplot_route():
+    dotplot_data = request.json['dotplot_data']
+    fig = plot_dotplot(dotplot_data['directions'],
+                       dotplot_data['min_x'], dotplot_data['max_x'],
+                       dotplot_data['min_y'], dotplot_data['max_y'],
+                       dotplot_data['x_label'], dotplot_data['y_label'])
     return fig.to_html()
