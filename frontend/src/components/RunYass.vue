@@ -54,23 +54,27 @@
     <div class="visualization-container" v-if="visualizations">
       <div class="graph-container">
         <div class="dotplot-container">
-          <iframe :src="dashDotplotUrl" class="figure-iframe"></iframe>
+          <!-- <iframe :src="dashDotplotUrl" class="figure-iframe"></iframe> -->
+          <div ref="dotplot" class="figure-plot"></div>
+
         </div>
         <div class="gene-structure-container">
+          <div ref="geneStructure1" class="gene-structure"></div>
+          <div ref="geneStructure2" class="gene-structure"></div>
+
           <div class="parent-select-container">
             <label for="parent-select1">Select Parent for Gene 1:</label>
             <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)">
               <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
             </select>
           </div>
-          <div ref="geneStructure1" class="gene-structure"></div>
+          
           <div class="parent-select-container">
             <label for="parent-select2">Select Parent for Gene 2:</label>
             <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)">
               <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
             </select>
           </div>
-          <div ref="geneStructure2" class="gene-structure"></div>
         </div>
       </div>
     </div>
@@ -270,13 +274,21 @@ export default {
       })
         .then(response => response.text())
         .then(html => {
-          // Update the iframe with the received HTML
-          const iframe = document.querySelector('.dotplot-container iframe');
-          iframe.srcdoc = html;
+          this.insertDotplotHTML(this.$refs.dotplot, html);
         })
         .catch(error => {
           console.error('Error updating dotplot:', error);
         });
+    },
+
+    insertDotplotHTML(container, html) {
+      container.innerHTML = html;
+      const scripts = container.getElementsByTagName('script');
+      for (const script of scripts) {
+        const newScript = document.createElement('script');
+        newScript.text = script.text;
+        script.replaceWith(newScript);
+      }
     },
 
   }
@@ -564,22 +576,32 @@ button:has(:last-child:active)::before {
 .visualization-container {
   width: 100%;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
 }
 
 .graph-container {
-  width: 800px; /* Set the desired width for the graphs */
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* Ensure the child elements stack vertically */
+  align-items: center; /* Center items horizontally */
 }
 
-.dotplot-container,
+.dotplot-container {
+  flex: 1;
+}
+
 .gene-structure-container {
-  width: 100%;
-  margin-bottom: 20px;
+  /* flex: 1; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .figure-iframe {
   width: 100%;
-  height: 500px; /* Set the desired height for the dotplot graph */
+  height: 470px; 
   border: none;
 }
 
@@ -589,6 +611,9 @@ button:has(:last-child:active)::before {
 
 .gene-structure {
   width: 100%;
-  height: 70px; /* Set the desired height for the gene structure graph */
+  height: 70px; 
+  /* border: 1px solid #ccc; */
+  margin-bottom: 20px;
+
 }
 </style>

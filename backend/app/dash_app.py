@@ -20,8 +20,8 @@ def create_dash_app(flask_app):
 
         if x_range is None:
             x_range = [min_start - x_indentation, max_end + x_indentation]
-        else:
-            x_range_with_indentation = [x_range[0] + x_indentation, x_range[1] - x_indentation]
+        # else:
+        #     x_range_with_indentation = [x_range[0] + x_indentation, x_range[1] - x_indentation]
 
         exon_x = []
         exon_y = []
@@ -51,11 +51,12 @@ def create_dash_app(flask_app):
         data = [exon_trace, intron_trace, marker_trace]
 
         layout = go.Layout(
-            # width=800,
+            width=780,
             height=70,
             xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
             yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6],fixedrange=True),
             margin=dict(l=5, r=5, t=5, b=35),
+            # margin=dict(l=0, r=0, t=0, b=20),
             # paper_bgcolor='rgba(0,0,0,0)',  # Transparent background
             # plot_bgcolor='rgba(0,0,0,0)',  # Transparent plot area
             hovermode='closest'
@@ -111,12 +112,13 @@ def create_dash_app(flask_app):
             traces.append(go.Scatter(x=x_vals_r, y=y_vals_r, mode='markers', marker=dict(color=colors_r, size=5), name='Reverse'))
 
         layout = go.Layout(
-            # width=800,
+            width=780, 
+            # height=500,
             title='Dot Plot of Gene Similarities',
             # xaxis=dict(title=x_label, range=[min_x, max_x]),
             # yaxis=dict(title=y_label, range=[max_y, min_y]),
             xaxis=dict(range=[min_x, max_x]),
-            yaxis=dict(range=[max_y, min_y]),
+            yaxis=dict(showticklabels=False,range=[max_y, min_y]),
             hovermode='closest',
             legend=dict(
                 x=1,
@@ -125,7 +127,8 @@ def create_dash_app(flask_app):
                 yanchor='top',
                 orientation='h'
             ),
-            margin=dict(l=35, r=5, t=60, b=35),
+            margin=dict(l=5, r=5, t=60, b=35),
+            # margin=dict(l=0, r=0, t=0, b=20),
         )
 
         return go.Figure(data=traces, layout=layout)
