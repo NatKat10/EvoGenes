@@ -13,18 +13,10 @@
       </div>
       <div class="carousel-inner">
         <div class="carousel-item active">
-          <img :src="images[0]" class="d-block w-100" alt="Slide 1">
-          <div class="carousel-caption">
-            <p class="text-danger">Slide 1</p>
-            <button @click="openModal(0)" class="btn btn-primary">View Details</button>
-          </div>
+          <img :src="images[0]" class="d-block w-100" alt="Slide 1" @click="openModal(0)" title="Click for popular sequences">
         </div>
         <div class="carousel-item" v-for="(image, index) in images.slice(1)" :key="index + 1">
-          <img :src="image" class="d-block w-100" :alt="'Slide ' + (index + 2)">
-          <div class="carousel-caption">
-            <p class="text-danger">Slide {{ index + 2 }}</p>
-            <button @click="openModal(index + 1)" class="btn btn-primary">View Details</button>
-          </div>
+          <img :src="image" class="d-block w-100" :alt="'Slide ' + (index + 2)" @click="openModal(index + 1)" title="Click for popular sequences">
         </div>
       </div>
       <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
@@ -131,21 +123,33 @@ export default {
   max-width: 600px;
 }
 
+.carousel-inner {
+  max-height: 300px; /* Adjust the height to ensure images are not cropped */
+}
+
 .carousel-inner img {
-  max-height: 400px;
-  object-fit: cover;
+  max-height: 300px; /* Adjust the height to ensure images are not cropped */
+  object-fit: contain; /* Ensure the entire image is visible */
+  cursor: pointer; /* Make it clear that images are clickable */
 }
 
-.carousel-caption {
-  position: absolute;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: darkgray;
+  border-radius: 50%;
 }
 
-.carousel-caption p {
-  font-size: 1.5rem;
+.carousel-control-prev-icon:hover,
+.carousel-control-next-icon:hover {
+  background-color: gray;
+}
+
+.carousel-indicators [data-bs-target] {
+  background-color: darkgray;
+}
+
+.carousel-indicators [data-bs-target]:hover {
+  background-color: gray;
 }
 
 .modal-overlay {
