@@ -17,6 +17,10 @@ import 'swiper/css/pagination';
 import 'swiper/css/navigation';
 
 
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
+
 // import {
 //     CarouselPlugin
 // } from "bootstrap-vue";
