@@ -52,24 +52,30 @@
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
     <div class="visualization-container" v-if="visualizations">
-      <div class="dotplot-container">
-        <img :src="visualizations.dotplot_image" alt="Dot Plot Image" class="image" />
-      </div>
-      <div class="gene-structure-container">
-        <div>
-          <label for="parent-select1">Select Parent for Gene 1:</label>
-          <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)">
-            <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
-          </select>
+      <div class="graph-container">
+        <div class="dotplot-container">
+          <!-- <iframe :src="dashDotplotUrl" class="figure-iframe"></iframe> -->
+          <div ref="dotplot" class="figure-plot"></div>
+
         </div>
-        <div ref="geneStructure1"></div>
-        <div>
-          <label for="parent-select2">Select Parent for Gene 2:</label>
-          <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)">
-            <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
-          </select>
+        <div class="gene-structure-container">
+          <div ref="geneStructure1" class="gene-structure"></div>
+          <div ref="geneStructure2" class="gene-structure"></div>
+
+          <div class="parent-select-container">
+            <label for="parent-select1">Select Parent for Gene 1:</label>
+            <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)">
+              <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
+            </select>
+          </div>
+          
+          <div class="parent-select-container">
+            <label for="parent-select2">Select Parent for Gene 2:</label>
+            <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)">
+              <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
+            </select>
+          </div>
         </div>
-        <div ref="geneStructure2"></div>
       </div>
     </div>
   </div>
@@ -98,6 +104,7 @@ export default {
       activeSection: null,
       loading: false,
       progress: 0,
+      dashDotplotUrl: null,
     };
   },
   computed: {
@@ -147,10 +154,7 @@ export default {
       this.loading = true;
       this.progress = 0;
 
-      
-
       try {
-
         const response = await this.fetchWithProgress('http://localhost:5000/run-evo-genes', {
           method: 'POST',
           body: formData
@@ -162,14 +166,11 @@ export default {
           throw new Error('Network response was not ok');
         }
 
-        
-
-
-
         const data = await response.json();
         console.log("Response Data: ", data); // Debugging: Log the response data
         this.visualizations = {
-          dotplot_image: `data:image/png;base64,${btoa(data.dotplot_image)}`,
+          dotplot_data: data.dotplot_data,
+          // dotplot_image: `data:image/png;base64,${btoa(data.dotplot_image)}`,
           gene_structure1_html: data.gene_structure1_html,
           gene_structure2_html: data.gene_structure2_html,
           exon_intervals1: data.exon_intervals1,
@@ -182,26 +183,20 @@ export default {
           this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
         });
 
-
-
-
-
         this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
         this.errorMessage = "Incorrect Input";
       } finally {
         
-
-
-
         this.loading = false;
         this.progress = 100; // Ensure progress reaches 100% when done
         this.clearInputs();
+        // Update the dotplot graph
+        this.updateDotplot();
       }
-
-
     },
+
     async fetchWithProgress(url, options, onProgress) {
       const response = await fetch(url, options);
       const reader = response.body.getReader();
@@ -223,7 +218,6 @@ export default {
         }
       }
 
-
       // concatenate chunks into single Uint8Array
       let chunksAll = new Uint8Array(receivedLength);
       let position = 0;
@@ -235,10 +229,8 @@ export default {
       return new Response(chunksAll, {
         headers: { 'Content-Type': response.headers.get('Content-Type') }
       });
-
-
-
     },
+
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
       fetch('http://localhost:5000/dash/update', {
@@ -260,6 +252,7 @@ export default {
           console.error('Error updating gene structure:', error);
         });
     },
+
     insertGeneStructureHTML(container, html) {
       container.innerHTML = html;
       const scripts = container.getElementsByTagName('script');
@@ -268,7 +261,36 @@ export default {
         newScript.text = script.text;
         script.replaceWith(newScript);
       }
-    }
+    },
+
+    updateDotplot() {
+      if (!this.visualizations || !this.visualizations.dotplot_data) return;
+
+      fetch('http://localhost:5000/dash/dotplot/plot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),
+        mode: 'cors',
+      })
+        .then(response => response.text())
+        .then(html => {
+          this.insertDotplotHTML(this.$refs.dotplot, html);
+        })
+        .catch(error => {
+          console.error('Error updating dotplot:', error);
+        });
+    },
+
+    insertDotplotHTML(container, html) {
+      container.innerHTML = html;
+      const scripts = container.getElementsByTagName('script');
+      for (const script of scripts) {
+        const newScript = document.createElement('script');
+        newScript.text = script.text;
+        script.replaceWith(newScript);
+      }
+    },
+
   }
 };
 </script>
@@ -549,5 +571,49 @@ button:has(:last-child:active)::before {
   .btn button {
     padding: 0.5vw 1vw;
   }
+}
+
+.visualization-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column; /* Ensure the child elements stack vertically */
+  align-items: center; /* Center items horizontally */
+}
+
+.dotplot-container {
+  flex: 1;
+}
+
+.gene-structure-container {
+  /* flex: 1; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.figure-iframe {
+  width: 100%;
+  height: 470px; 
+  border: none;
+}
+
+.parent-select-container {
+  margin-bottom: 10px;
+}
+
+.gene-structure {
+  width: 100%;
+  height: 70px; 
+  /* border: 1px solid #ccc; */
+  margin-bottom: 20px;
+
 }
 </style>
