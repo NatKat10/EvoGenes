@@ -16,6 +16,7 @@
 
 
         <div class="components-container">
+          <GeneStructure />
           <RunYass />
         </div>
       </div>
@@ -25,10 +26,13 @@
 
 <script>
 import RunYass from "@/components/RunYass.vue";  
+import GeneStructure from "@/components/GeneStructure.vue";  
+
 
 export default {
   components: {
-    RunYass
+    RunYass,
+    GeneStructure
   }
 };
 </script>
