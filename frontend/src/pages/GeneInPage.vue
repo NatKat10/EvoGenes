@@ -1,15 +1,114 @@
 <template>
-    <div></div>
+  <div class="container1">
     
-  </template>
-  
-  <script>
- 
+    <div class="run-yass">
 
-  </script>
+      <div class="yassComp">
+        
+
+        <div class="components-container">
+          <GeneStructure />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import GeneStructure from "@/components/GeneStructure.vue";  
+
+export default {
+  components: {
+    GeneStructure
+  }
+};
+</script>
+
+<style>
+.run-yass {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+  background: none;
+  overflow-y: auto;
+}
+
+.run-yass::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('../assets/evo5.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.3;
+  z-index: -1;
+}
+
+.yassComp {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.components-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 20px;
+}
+
+
+
+
+.header2 {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   
-  <style>
+  .gene-title {
+    width: 1000px;
+    height: 100px;
+  }
   
-  </style>
+  .gene-text {
+    font-size: 80px;
+    fill: #ffffff; /* Adjust color as needed */
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 700; /* Increased font weight for thicker text */
+    animation: geneMove 7s infinite alternate;
+    stroke: #000;
+    stroke-width: 4px;
+  }
   
+  @keyframes geneMove {
+    0% { letter-spacing: 5px; }
+    50% { letter-spacing: 20px; }
+    100% { letter-spacing: 5px; }
+  }
   
+  .components-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 20px; /* Add space between components */
+  }
+  
+
+</style>

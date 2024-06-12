@@ -1,10 +1,15 @@
 <template>
-  <div class="carousel-container">
+  <div class="container">
+    <h3>Popular Gene Sequences</h3>
+
     <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-indicators">
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="3" aria-label="Slide 4"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="4" aria-label="Slide 5"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="5" aria-label="Slide 6"></button>
       </div>
       <div class="carousel-inner">
         <div class="carousel-item active">
@@ -14,7 +19,7 @@
             <button @click="openModal(0)" class="btn btn-primary">View Details</button>
           </div>
         </div>
-        <div class="carousel-item" v-for="(image, index) in images.slice(1)" :key="index">
+        <div class="carousel-item" v-for="(image, index) in images.slice(1)" :key="index + 1">
           <img :src="image" class="d-block w-100" :alt="'Slide ' + (index + 2)">
           <div class="carousel-caption">
             <p class="text-danger">Slide {{ index + 2 }}</p>
@@ -31,7 +36,7 @@
         <span class="visually-hidden">Next</span>
       </button>
     </div>
-    
+
     <transition name="modal-fade">
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-content">
@@ -65,14 +70,20 @@ export default {
       showModal: false,
       currentSlide: 0,
       images: [
-        require('../assets/logoo.jpg'),
-        require('../assets/evo1.png'),
-        require('../assets/evo1.png')
+        require('../assets/person.png'),
+        require('../assets/monkey.png'),
+        require('../assets/pig.png'),
+        require('../assets/fish.png'),
+        require('../assets/bacter.png'),
+        require('../assets/Ecoli.png')
       ],
       modalTitles: [
         'Details for Slide 1',
         'Details for Slide 2',
-        'Details for Slide 3'
+        'Details for Slide 3',
+        'Details for Slide 4',
+        'Details for Slide 5',
+        'Details for Slide 6'
       ],
       tableData: [
         [
@@ -86,6 +97,18 @@ export default {
         [
           { id: 1, col1: 'Gene C1', col2: 'Sequence C1' },
           { id: 2, col1: 'Gene C2', col2: 'Sequence C2' }
+        ],
+        [
+          { id: 1, col1: 'Gene D1', col2: 'Sequence D1' },
+          { id: 2, col1: 'Gene D2', col2: 'Sequence D2' }
+        ],
+        [
+          { id: 1, col1: 'Gene E1', col2: 'Sequence E1' },
+          { id: 2, col1: 'Gene E2', col2: 'Sequence E2' }
+        ],
+        [
+          { id: 1, col1: 'Gene F1', col2: 'Sequence F1' },
+          { id: 2, col1: 'Gene F2', col2: 'Sequence F2' }
         ]
       ]
     };
@@ -103,24 +126,8 @@ export default {
 </script>
 
 <style scoped>
-.carousel-container {
-  width: 90%;
-  max-width: 900px;
-  margin: auto;
-  padding: 2vw;
-  border: 0.3vw solid #ebebeb;
-  background-color: rgba(244, 244, 244, 0.6);
-  border-radius: 2vw;
-  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-
 .carousel {
-  width: 80%;
+  width: 100%;
   max-width: 600px;
 }
 
@@ -155,7 +162,7 @@ export default {
 }
 
 .modal-content {
-  background: rgb(7, 151, 69);
+  background: rgb(231, 231, 231);
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -195,5 +202,31 @@ th {
 }
 .modal-fade-enter, .modal-fade-leave-to /* .modal-fade-leave-active in <2.1.8 */ {
   opacity: 0;
+}
+
+.container {
+  width: 90%;
+  max-width: 900px;
+  margin: 5vh auto;
+  padding: 2vw;
+  border: 0.3vw solid #ebebeb;
+  background-color: rgba(244, 244, 244, 0.6); /* Slightly transparent background */
+  border-radius: 2vw;
+  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 2vw 1vw;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 2vw 0.5vw;
+  }
 }
 </style>

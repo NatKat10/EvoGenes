@@ -4,7 +4,7 @@ import Home  from './pages/HomePage.vue';
 // import About from './components/About.vue';
 // import GeneInput from './components/GeneInput.vue';
 // import GeneSequenceDisplay from './components/GeneSequenceDisplay.vue';
-import GeneStructure from './components/GeneStructure.vue';
+import GeneStructure from './pages/GeneInPage.vue';
 
 import RunYass from './pages/YassPage.vue';
 import GeneInput from './pages/GeneInPage.vue';
