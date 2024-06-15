@@ -128,7 +128,7 @@ def run_evo_genes():
         'y_label': extracted_gene_id2   # Use only the gene ID for label
     }
 
-    print("Prepared dotplot_data:", dotplot_data)
+    # print("Prepared dotplot_data:", dotplot_data)
 
     return jsonify({
         'dotplot_data': dotplot_data,
