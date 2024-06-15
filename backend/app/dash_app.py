@@ -86,7 +86,7 @@ def create_dash_app(flask_app):
     
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label):
         x_vals_f, y_vals_f, colors_f = [], [], []
-        x_vals_r, y_vals_r, colors_r = [], [], []
+        x_vals_r, y_vals_r, colors_r = [], [],[]
 
         color_map = {
             'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
@@ -112,13 +112,10 @@ def create_dash_app(flask_app):
             traces.append(go.Scatter(x=x_vals_r, y=y_vals_r, mode='markers', marker=dict(color=colors_r, size=5), name='Reverse'))
 
         layout = go.Layout(
-            width=780, 
-            # height=500,
+            width=780,
             title='Dot Plot of Gene Similarities',
-            # xaxis=dict(title=x_label, range=[min_x, max_x]),
-            # yaxis=dict(title=y_label, range=[max_y, min_y]),
-            xaxis=dict(range=[min_x, max_x]),
-            yaxis=dict(showticklabels=False,range=[max_y, min_y]),
+            xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
+            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True,side='right'),
             hovermode='closest',
             legend=dict(
                 x=1,
@@ -127,8 +124,7 @@ def create_dash_app(flask_app):
                 yanchor='top',
                 orientation='h'
             ),
-            margin=dict(l=5, r=5, t=60, b=35),
-            # margin=dict(l=0, r=0, t=0, b=20),
+            margin=dict(l=5, r=5, t=60, b=35)
         )
 
         return go.Figure(data=traces, layout=layout)
