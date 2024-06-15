@@ -11,6 +11,7 @@
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="4" aria-label="Slide 5"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="5" aria-label="Slide 6"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="6" aria-label="Slide 7"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="7" aria-label="Slide 8"></button>
       </div>
       <div class="carousel-inner">
         <div class="carousel-item active">
@@ -65,11 +66,12 @@ export default {
       images: [
         require('../assets/person1.png'),
         require('../assets/monkey.png'),
-        require('../assets/pig.png'),
-        require('../assets/fish.png'),
+        require('../assets/pig2.png'),
+        require('../assets/fish2.png'),
         require('../assets/bacter.png'),
         require('../assets/mouse.png'),
-        require('../assets/dog.png')
+        require('../assets/dog.png'),
+        require('../assets/panda.png')
       ],
       modalTitles: [
         'Humans (Homo sapiens)',
@@ -78,7 +80,8 @@ export default {
         'Zebrafish (Danio rerio)',
         'Nematodes (Caenorhabditis elegans)',
         'Mice (Mus musculus)',
-        'Escherichia coli (E. coli)'
+        'Dog (Canis lupus familiaris)',
+        'Giant panda (Ailuropoda melanoleuca)'
         
       ],
       tableData: [
@@ -131,7 +134,15 @@ export default {
           { id: 3, col1: 'FGF4', col2: 'ENSCAFG00845017368' },
           { id: 4, col1: 'POMC', col2: 'ENSCAFG00040006132' },
           { id: 5, col1: 'RPS13', col2: 'ENSCAFG00040021439' },
+        ],
+        [
+          { id: 1, col1: 'FARS2', col2: 'ENSAMEG00000027009' },
+          { id: 2, col1: 'MARS2', col2: 'ENSAMEG00000019748' },
+          { id: 3, col1: 'TARS2', col2: 'ENSAMEG00000001547' },
+          { id: 4, col1: 'QTRT2', col2: 'ENSAMEG00000005349' },
+          { id: 5, col1: 'YARS2', col2: 'ENSAMEG00000008909' },
         ]
+
       ]
     };
   },
