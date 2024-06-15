@@ -53,9 +53,11 @@ def fetch_sequence_from_ensembl(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
     if response.ok:
-        return response.content
+        sequence = response.content.decode('utf-8')
+        gene_id_extracted = sequence.split('\n', 1)[0].split()[0].lstrip('>')
+        return sequence.encode('utf-8'), gene_id_extracted
     else:
-        return None
+        return None, None
 
 def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
     server = "http://rest.ensembl.org"
@@ -81,8 +83,8 @@ def run_evo_genes():
         gene_id1 = request.form['GeneID1']
         gene_id2 = request.form['GeneID2']
     
-        sequence1 = fetch_sequence_from_ensembl(gene_id1)
-        sequence2 = fetch_sequence_from_ensembl(gene_id2)
+        sequence1, extracted_gene_id1 = fetch_sequence_from_ensembl(gene_id1)
+        sequence2, extracted_gene_id2 = fetch_sequence_from_ensembl(gene_id2)
         
         if sequence1 and sequence2:
             with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
@@ -92,23 +94,11 @@ def run_evo_genes():
             return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
     yass_output_path = 'yass_output.yop'
-    # dp_output_path = 'dp.png'
     yass_executable = './yass-Win64.exe'
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
     subprocess.run(command, check=True)
-    
-    # python_executable = 'python'
-    # yop_reader_script = 'yop_reader.py'
-    # command = [python_executable, yop_reader_script, yass_output_path, dp_output_path]
-    # subprocess.run(command, check=True)
 
-    # with open(dp_output_path, 'rb') as file:
-    #     dotplot_image_data = file.read()
-
-    result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yass_output_path)
-
-    # with open(dp_output_path, 'w') as file:
-    #     file.write(dash_app.index())
+    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
 
     gene_structure1 = fetch_gene_structure(gene_id1)
     gene_structure2 = fetch_gene_structure(gene_id2)
@@ -116,7 +106,6 @@ def run_evo_genes():
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    # Return the raw data along with HTML
     gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]]).to_html()
     gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]]).to_html()
 
@@ -128,31 +117,26 @@ def run_evo_genes():
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
     os.remove(yass_output_path)
-    # os.remove(dp_output_path)
-    
+
     dotplot_data = {
         'directions': directions,
         'min_x': min_x,
         'max_x': max_x,
         'min_y': min_y,
         'max_y': max_y,
-        'x_label': x_label,
-        'y_label': y_label
+        'x_label': extracted_gene_id1,  # Use only the gene ID for label
+        'y_label': extracted_gene_id2   # Use only the gene ID for label
     }
 
     print("Prepared dotplot_data:", dotplot_data)
 
     return jsonify({
         'dotplot_data': dotplot_data,
-        # 'dotplot_image': dotplot_image_data.decode('latin1'),
         'gene_structure1_html': gene_structure1_body,
         'gene_structure2_html': gene_structure2_body,
         'exon_intervals1': exon_intervals1,
         'exon_intervals2': exon_intervals2
     })
-
-
-
 @main.route('/add', methods=['POST'])
 def add_gene():
     data = request.get_json()
