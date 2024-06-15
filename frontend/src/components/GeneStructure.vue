@@ -69,7 +69,7 @@ export default {
         require('../assets/fish.png'),
         require('../assets/bacter.png'),
         require('../assets/mouse.png'),
-        require('../assets/Ecoli.png')
+        require('../assets/dog.png')
       ],
       modalTitles: [
         'Humans (Homo sapiens)',
@@ -126,8 +126,11 @@ export default {
           { id: 5, col1: 'Apoe', col2: 'ENSMUSG00000002985' }
         ],
         [
-          { id: 1, col1: 'Gene G1', col2: 'Sequence G1' },
-          { id: 2, col1: 'Gene G2', col2: 'Sequence G2' }
+          { id: 1, col1: 'DRD4', col2: 'ENSCAFG00845017368' },
+          { id: 2, col1: 'SOD1', col2: 'ENSCAFG00040024569' },
+          { id: 3, col1: 'FGF4', col2: 'ENSCAFG00845017368' },
+          { id: 4, col1: 'POMC', col2: 'ENSCAFG00040006132' },
+          { id: 5, col1: 'RPS13', col2: 'ENSCAFG00040021439' },
         ]
       ]
     };
