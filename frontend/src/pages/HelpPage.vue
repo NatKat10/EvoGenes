@@ -31,8 +31,8 @@
           <div class="modal-body">
             <div class="d-flex flex-wrap justify-content-center text-center">
               <div class="p-3 member-card" v-for="(member, index) in teamMembers" :key="index">
-                <div class="image-frame">
-                  <img :src="member.image" class="rounded-circle img-thumbnail mb-3" alt="Team member">
+                <div class="luxurious-frame">
+                  <img :src="member.image" class="luxurious-img" alt="Team member">
                 </div>
                 <h5>{{ member.name }}</h5>
                 <p class="role">{{ member.role }}</p>
@@ -66,15 +66,15 @@ export default {
       teamMembers: [
         {
           image: require('@/assets/fish.png'),
-          name: 'John Doe',
-          role: 'Project Lead',
+          name: 'AYELET MOYAL',
+          role: 'Project Lead + Frontend Developer',
           linkedin: 'https://www.linkedin.com/in/john-doe',
-          email: 'john.doe@mail.com',
-          phoneNumber: '+1 (234) 567-890'
+          email: 'ayelet431@mail.com',
+          phoneNumber: '+972 052-368-3885'
         },
         {
           image: require('@/assets/fish.png'),
-          name: 'Jane Smith',
+          name: 'NATALIA KATAEV',
           role: 'Backend Developer',
           linkedin: 'https://www.linkedin.com/in/jane-smith',
           email: 'jane.smith@mail.com',
@@ -137,23 +137,46 @@ p {
   line-height: 1.6; /* Adjusts line spacing for better readability */
 }
 
-.image-frame {
-  border: 5px solid #ddd; /* Add a border to the image frame */
-  border-radius: 50%; /* Make the frame circular */
-  padding: 5px; /* Add padding inside the frame */
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3); /* Add shadow for a luxurious effect */
-  width: 100px; /* Adjust width for smaller image */
-  height: 100px; /* Adjust height for smaller image */
+.luxurious-frame {
+  position: relative;
+  width: 140px; /* Adjust width for larger image */
+  height: 140px; /* Adjust height for larger image */
+  padding: 15px;
+  background: linear-gradient(145deg, #444, #000); /* Luxurious gradient background */
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  margin: 0 auto; /* Center the frame */
+  margin: 0 auto;
 }
 
-.image-frame img {
-  width: 90%; /* Ensure the image fits within the frame */
+.luxurious-frame:before,
+.luxurious-frame:after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  top: -10px;
+  left: -10px;
+  z-index: -1;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.luxurious-frame:after {
+  top: 10px;
+  left: 10px;
+  z-index: -2;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.luxurious-img {
+  width: 100%; /* Ensure the image fits within the frame */
   height: auto; /* Maintain aspect ratio */
+  border-radius: 50%;
+  transition: transform 0.3s ease-in-out;
 }
 
 .member-card {
@@ -223,5 +246,13 @@ p {
 .modal-title {
   text-align: center;
   width: 100%;
+}
+
+.luxurious-frame:hover .luxurious-img {
+  transform: scale(1.2);
+}
+
+.luxurious-frame:hover ~ .blur {
+  filter: blur(5px);
 }
 </style>
