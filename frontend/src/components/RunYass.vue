@@ -83,6 +83,8 @@
 
 <script>
 import LoaderOverlay from './LoaderOverlay.vue';
+import { server_domain } from '@/server_domain';
+
 
 export default {
   name: 'RunEvoGenes',
@@ -155,7 +157,7 @@ export default {
       this.progress = 0;
 
       try {
-        const response = await this.fetchWithProgress('http://localhost:5000/run-evo-genes', {
+        const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
           method: 'POST',
           body: formData
         }, (loaded, total) => {
@@ -233,7 +235,7 @@ export default {
 
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      fetch('http://localhost:5000/dash/update', {
+      fetch(`${server_domain}/dash/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exonsPositions: exonIntervals }),
@@ -241,7 +243,7 @@ export default {
       })
         .then(response => response.json())
         .then(() => {
-          const plotUrl = `http://localhost:5000/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
+          const plotUrl = `${server_domain}/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
           fetch(plotUrl)
             .then(response => response.text())
             .then(html => {
@@ -266,7 +268,7 @@ export default {
     updateDotplot() {
       if (!this.visualizations || !this.visualizations.dotplot_data) return;
 
-      fetch('http://localhost:5000/dash/dotplot/plot', {
+      fetch(`${server_domain}/dash/dotplot/plot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),

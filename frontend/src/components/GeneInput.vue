@@ -14,6 +14,8 @@
   </template>
   
   <script>
+  import { server_domain } from '@/server_domain';
+
   export default {
     data() {
       return {
@@ -32,7 +34,7 @@
           sequence2: this.gene2,
         };
   
-        fetch('http://localhost:5000/generate', { 
+        fetch(`${server_domain}/generate`, { 
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
