@@ -276,8 +276,8 @@ th {
 }
 
 .container {
-  width: 90%;
-  max-width: 78%;
+  width: 100%;
+  max-width: 100%;
   margin: 5vh auto;
   padding: 2vw;
   border: 0.3vw solid #ebebeb;
@@ -292,6 +292,12 @@ th {
 h3 {
   margin-bottom: 1rem; /* Add space between the heading and the carousel */
   font-size: 2vw;
+}
+
+
+.gene-structure-container {
+  width: 100%;
+  flex: 1;
 }
 
 @media (max-width: 768px) {

@@ -96,7 +96,9 @@ def run_evo_genes():
     yass_output_path = 'yass_output.yop'
     yass_executable = './yass-Win64.exe'
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-    subprocess.run(command, check=True)
+    # subprocess.run(command, check=True)
+    result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    yass_output = result.stdout + result.stderr
 
     result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
 
@@ -135,7 +137,8 @@ def run_evo_genes():
         'gene_structure1_html': gene_structure1_body,
         'gene_structure2_html': gene_structure2_body,
         'exon_intervals1': exon_intervals1,
-        'exon_intervals2': exon_intervals2
+        'exon_intervals2': exon_intervals2,
+        'yass_output': yass_output
     })
 @main.route('/add', methods=['POST'])
 def add_gene():

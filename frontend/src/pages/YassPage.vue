@@ -118,10 +118,19 @@ export default {
   .components-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     width: 100%;
     gap: 20px; /* Add space between components */
   }
+
+  .components-container > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px; /* Adjust as needed for a larger size */
+}
   
 
 </style>

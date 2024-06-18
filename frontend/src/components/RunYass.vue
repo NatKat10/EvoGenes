@@ -1,32 +1,7 @@
 <template>
   <div class="container">
-    
     <LoaderOverlay :visible="loading" :progress="progress" />
-    <!-- <LoaderOverlay :visible="loading" /> -->
-    
-
     <!-- Sequence text inputs -->
-  <!-- <div class= sequence-section :class="{ disabled: disableOtherSections && activeSection !== 'sequence' }">
-    <div class="txt1">
-      <textarea class="textarea" v-model="sequence1" placeholder="Enter or paste sequence 1 here" @input="handleInput('sequence')"></textarea>
-    </div>
-    <div class="txt2">
-      <textarea class="textarea" v-model="sequence2" placeholder="Enter or paste sequence 2 here" @input="handleInput('sequence')"></textarea>
-    </div>
-  </div> -->
-    <!-- <div class="upload-section" :class="{ disabled: disableOtherSections && activeSection !== 'upload' }">
-      <div class="file-group">
-        <div class="file-label-input">
-          <label for="file1" class="upload-label">Choose FASTA file for Gene1:</label>
-          <input type="file" id="file1" class="upload-box" ref="file1" @change="handleFileChange('file1')" accept=".fa, .fasta"/>
-        </div>
-        <div class="file-label-input">
-          <label for="file2" class="upload-label">Choose FASTA file for Gene2:</label>
-          <input type="file" id="file2" class="upload-box" ref="file2" @change="handleFileChange('file2')" accept=".fa, .fasta"/>
-        </div>
-      </div>
-    </div> -->
-
     <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble'}">
       <h3>Enter Ensembl Gene ID:</h3>
       <div class="file-group">
@@ -54,37 +29,43 @@
     <div class="visualization-container" v-if="visualizations">
       <div class="graph-container">
         <div class="dotplot-container">
-          <!-- <iframe :src="dashDotplotUrl" class="figure-iframe"></iframe> -->
           <div ref="dotplot" class="figure-plot"></div>
-
+          <div class="info-icon" @click="showModal = true">?</div>
         </div>
         <div class="gene-structure-container">
           <div ref="geneStructure1" class="gene-structure"></div>
           <div ref="geneStructure2" class="gene-structure"></div>
 
           <div class="parent-select-container">
-            <label for="parent-select1">Select Parent for Gene 1:</label>
-            <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)">
+            <label for="parent-select1">Select Parent for Gene 1:   </label>
+            <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
               <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
             </select>
           </div>
           
           <div class="parent-select-container">
-            <label for="parent-select2">Select Parent for Gene 2:</label>
-            <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)">
+            <label for="parent-select2">Select Parent for Gene 2:   </label>
+            <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
               <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
             </select>
           </div>
         </div>
       </div>
     </div>
+    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+      <div class="modal-content">
+        <h3>YASS Alignment Summary:</h3>
+        <pre>{{ yassOutput }}</pre>
+        <button @click="showModal = false">Close</button>
+      </div>
+    </div>
+  
   </div>
 </template>
 
 <script>
 import LoaderOverlay from './LoaderOverlay.vue';
 import { server_domain } from '@/server_domain';
-
 
 export default {
   name: 'RunEvoGenes',
@@ -107,6 +88,8 @@ export default {
       loading: false,
       progress: 0,
       dashDotplotUrl: null,
+      yassOutput: '', 
+      showModal: false,
     };
   },
   computed: {
@@ -172,12 +155,12 @@ export default {
         console.log("Response Data: ", data); // Debugging: Log the response data
         this.visualizations = {
           dotplot_data: data.dotplot_data,
-          // dotplot_image: `data:image/png;base64,${btoa(data.dotplot_image)}`,
           gene_structure1_html: data.gene_structure1_html,
           gene_structure2_html: data.gene_structure2_html,
           exon_intervals1: data.exon_intervals1,
           exon_intervals2: data.exon_intervals2
         };
+        this.yassOutput = data.yass_output;
         this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
         this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
         this.$nextTick(() => {
@@ -190,7 +173,6 @@ export default {
         console.error('Error running Evo Genes:', error);
         this.errorMessage = "Incorrect Input";
       } finally {
-        
         this.loading = false;
         this.progress = 100; // Ensure progress reaches 100% when done
         this.clearInputs();
@@ -223,7 +205,7 @@ export default {
       // concatenate chunks into single Uint8Array
       let chunksAll = new Uint8Array(receivedLength);
       let position = 0;
-      for(let chunk of chunks) {
+      for (let chunk of chunks) {
         chunksAll.set(chunk, position);
         position += chunk.length;
       }
@@ -292,7 +274,6 @@ export default {
         script.replaceWith(newScript);
       }
     },
-
   }
 };
 </script>
@@ -302,8 +283,8 @@ export default {
   color: red;
   margin-top: 10px;
 }
-.sequence-section.disabled, 
-.upload-section.disabled, 
+.sequence-section.disabled,
+.upload-section.disabled,
 .ensemble-section.disabled {
   pointer-events: none;
   opacity: 0.5;
@@ -318,9 +299,9 @@ export default {
 
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin: 5vh auto;
-  padding: 2vw;
+  max-width: 1200px; /* Increased maximum width */
+  margin: 2vh auto;
+  padding: 1vw;
   border: 0.3vw solid #ebebeb;
   background-color: rgba(244, 244, 244, 0.6); /* Slightly transparent background */
   border-radius: 2vw;
@@ -351,8 +332,8 @@ h3 {
 }
 
 .textarea {
-  background-color: #fff4ee;
-  color: #a81414;
+  background-color: #c3c3c3;
+  color: #205119;
   padding: 1em; /* Reduced padding for thinner height */
   border-radius: 1vw;
   border: 0.2vw solid transparent;
@@ -360,13 +341,16 @@ h3 {
   font-family: "Heebo", sans-serif;
   font-size: 1vw; /* Reduced font size for thinner height */
   line-height: 1.2; /* Adjusted line-height for thinner height */
-  width: 90%;
+  width: 100%;
   transition: all 0.2s;
-  box-shadow: 0.5vw 0.3vw 0.5vw rgba(144, 143, 143, 0.5);
+  box-shadow: 0.5vw 0.3vw 0.5vw rgba(184, 184, 184, 0.5);
 }
 
 .textarea:hover {
-  background-color: #ffd3aa;
+  background-color: #5a7f5ee9;
+  color: #ffffff;
+
+  
 }
 
 .textarea:focus {
@@ -588,10 +572,13 @@ button:has(:last-child:active)::before {
   display: flex;
   flex-direction: column; /* Ensure the child elements stack vertically */
   align-items: center; /* Center items horizontally */
+  position: relative;
+
 }
 
 .dotplot-container {
   flex: 1;
+  position: relative;
 }
 
 .gene-structure-container {
@@ -603,7 +590,7 @@ button:has(:last-child:active)::before {
 
 .figure-iframe {
   width: 100%;
-  height: 470px; 
+  height: 870px;
   border: none;
 }
 
@@ -613,9 +600,75 @@ button:has(:last-child:active)::before {
 
 .gene-structure {
   width: 100%;
-  height: 70px; 
+  height: 90px;
   /* border: 1px solid #ccc; */
   margin-bottom: 20px;
+}
 
+
+
+.styled-select {
+  width: 100%;
+  padding: 0.5em;
+  font-size: 1.2em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.styled-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.styled-select option {
+  padding: 0.5em;
+  font-size: 1.2em;
+}
+
+
+
+.info-icon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow: auto;
+}
+
+	
+.yass-output {
+  margin-top: 20px;
+  width: 100%;
+  background: #f4f4f4;
+  padding: 10px;
+  border-radius: 5px;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 </style>
