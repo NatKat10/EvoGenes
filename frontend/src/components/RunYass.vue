@@ -317,8 +317,8 @@ export default {
 }
 
 .container {
-  width: 90%;
-  max-width: 900px;
+  width: 100%;
+  max-width: 1200px;
   margin: 5vh auto;
   padding: 2vw;
   border: 0.3vw solid #ebebeb;
