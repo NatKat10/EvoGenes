@@ -16,8 +16,12 @@
     <p>
       We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
     </p>
-    <div class="text-center mt-5">
-      <button class="btn btn-primary" @click="openModal">Contact Us</button>
+    <div class="btn">
+      <button @click="openModal">
+        <span></span>
+        <i class="fas fa-phone"></i>   Contact Us
+        <span></span>
+      </button>
     </div>
 
     <!-- Modal -->
@@ -25,7 +29,7 @@
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="contactModalLabel">Contact Us</h5>
+            <h5 class="modal-title" id="contactModalLabel"> Contact Us</h5>
             <button type="button" class="custom-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
           </div>
           <div class="modal-body">
@@ -70,13 +74,13 @@ export default {
           role: 'Project Lead + Frontend Developer',
           linkedin: 'https://www.linkedin.com/in/john-doe',
           email: 'ayelet431@mail.com',
-          phoneNumber: '+972 052-368-3885'
+          phoneNumber: '+972 052-68-35'
         },
         {
           image: require('@/assets/fish.png'),
           name: 'NATALIA KATAEV',
           role: 'Backend Developer',
-          linkedin: 'https://www.linkedin.com/in/jane-smith',
+          linkedin: 'https://www.linkedin.com/in/natasha-kataev-b47406158/',
           email: 'jane.smith@mail.com',
           phoneNumber: '+1 (234) 567-891'
         },
@@ -111,30 +115,107 @@ export default {
 <style scoped>
 .container {
   width: 90%;
-  max-width: 900px;
-  margin: 5vh auto;
-  padding: 3vw;
+  max-width: 1200px;
+  margin: 2vh auto;
+  padding: 1vw;
   border: 0.3vw solid #ebebeb;
-  background-color: rgba(244, 244, 244, 0.6);
+  background-color: rgba(244, 244, 244, 0.6); /* Slightly transparent background */
   border-radius: 2vw;
   box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
 }
 
 .title {
   text-align: center;
   margin-bottom: 40px; /* Increase space below the title */
-  font-size: 23px;
+  font-size: 2.5vw; /* Responsive font size */
 }
 
 p {
   margin-bottom: 20px; /* Adds space between paragraphs */
   text-align: justify; /* Justifies text for a cleaner look */
-  font-size: 18px; /* Sets the font size for the paragraphs */
+  font-size: 1.2vw; /* Sets the font size for the paragraphs */
   line-height: 1.6; /* Adjusts line spacing for better readability */
+}
+
+.btn {
+  display: flex;
+  justify-content: center; /* Centers the button horizontally */
+  width: 100%; /* Ensure the flex container spans the full width */
+  margin-top: 2vw; /* Add margin for spacing */
+}
+
+button {
+  font: inherit;
+  padding: 1vw 2vw;
+  background: #166844;
+  border: 0.1em solid hsl(186, 54%, 19%);
+  border-radius: 100vw;
+  cursor: pointer;
+  transition: background-color 250ms;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+}
+
+button:hover,
+button:focus-visible {
+  background: #22a66d;
+}
+
+button > span {
+  position: absolute;
+  z-index: -1;
+  width: 33.333%;
+  height: 100%;
+  background: transparent;
+  opacity: 0.5;
+}
+
+button > :first-child {
+  left: 0;
+  top: 0;
+}
+
+button > :last-child {
+  right: 0;
+  top: 0;
+}
+
+button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  background: hsl(200 60% 20%);
+  width: 10%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+  transition: transform 1000ms 200ms, opacity 200ms;
+}
+
+button:active::before {
+  transform: scale(20);
+  opacity: 1;
+  transition: transform 1000ms, opacity 500ms;
+}
+
+button:has(:first-child:active)::before {
+  margin-left: 0;
+}
+
+button:has(:last-child:active)::before {
+  margin-right: 0;
+}
+
+button:has(:first-child:active)::before,
+button:has(:last-child:active)::before {
+  transition: transform 500ms, opacity 250ms;
 }
 
 .luxurious-frame {
