@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="sidebar" @mouseenter="openSidebar" @mouseleave="closeSidebar">
-      <div class="logo">
+      <div class="logo" @click="navigateHome">
         <img src="../assets/circle_logo.png" alt="Logo"> <!-- Update path as needed -->
       </div>
       <nav class="nav flex-column">
@@ -32,6 +32,9 @@ export default {
     keepSidebarOpen(event) {
       event.stopPropagation(); // Prevent the sidebar from closing when a link is clicked
       this.isOpen = true;
+    },
+    navigateHome() {
+      this.$router.push('/'); // Programmatically navigate to the home screen
     }
   }
 }
@@ -64,6 +67,7 @@ export default {
 .logo img {
   height: 80px;
   margin: 10px 0;
+  cursor: pointer; /* Change cursor to pointer to indicate clickability */
 }
 
 .nav-link {
@@ -97,7 +101,7 @@ export default {
 .nav-link span {
   display: none; /* Hide text when sidebar is collapsed */
   white-space: nowrap;
-  margin-left: 15px; /* T-h-i-s is what does the space between icon and label */
+  margin-left: 15px; /* This adds the space between icon and label */
 }
 
 .sidebar:hover .nav-link span, .sidebar.active .nav-link span {
