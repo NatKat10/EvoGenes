@@ -4,16 +4,32 @@ from flask_cors import CORS
 from .dash_app import create_dash_app
 import os
 
+
+
+# added for the DB connection
+from .routes import generate as generate_blueprint
+from .routes import main as main_blueprint
+
+
+
 def create_app():
     app = Flask(__name__, static_folder='../frontend/dist', template_folder='../frontend/dist')
     CORS(app)
+
+
+
+    # CORS(app, resources={"/gene-image": {"origins": "http://localhost:8080"}})
+    # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:F14g258h369!@localhost/mydb'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:ayenat1@localhost/mydb'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
     # Initialize Dash app
     dash_app = create_dash_app(app)  
 
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    # db.init_app(app)
+    db.init_app(app)
     ma.init_app(app)
 
     from .routes import generate as generate_blueprint
@@ -30,4 +46,14 @@ def create_app():
         else:
             return send_from_directory(app.static_folder, 'index.html')
 
+
+
+     
+    with app.app_context():
+        db.create_all()
+
     return app
+
+
+
+
