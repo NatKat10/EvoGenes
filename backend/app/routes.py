@@ -75,6 +75,7 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
         return []
 
 @main.route('/run-evo-genes', methods=['POST'])
+
 def run_evo_genes():
     fasta_file1_path = 'temp_sequence1.fasta'
     fasta_file2_path = 'temp_sequence2.fasta'
@@ -96,7 +97,6 @@ def run_evo_genes():
     yass_output_path = 'yass_output.yop'
     yass_executable = './yass-Win64.exe'
     command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-    # subprocess.run(command, check=True)
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     yass_output = result.stdout + result.stderr
 
@@ -108,8 +108,22 @@ def run_evo_genes():
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]]).to_html()
-    gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]]).to_html()
+    # Normalize gene structure coordinates to dot plot range
+    def normalize_exons(exon_intervals, min_val, max_val):
+        normalized_intervals = {}
+        for parent, intervals in exon_intervals.items():
+            min_start = min(start for start, end in intervals)
+            max_end = max(end for start, end in intervals)
+            gene_length = max_end - min_start
+            normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val),
+                                             min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
+        return normalized_intervals
+
+    normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
+    normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
+
+    gene_structure1_html = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x]).to_html()
+    gene_structure2_html = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y]).to_html()
 
     soup1 = BeautifulSoup(gene_structure1_html, 'html.parser')
     gene_structure1_body = soup1.body.decode_contents()
@@ -130,16 +144,16 @@ def run_evo_genes():
         'y_label': extracted_gene_id2   # Use only the gene ID for label
     }
 
-    # print("Prepared dotplot_data:", dotplot_data)
-
     return jsonify({
         'dotplot_data': dotplot_data,
         'gene_structure1_html': gene_structure1_body,
         'gene_structure2_html': gene_structure2_body,
-        'exon_intervals1': exon_intervals1,
-        'exon_intervals2': exon_intervals2,
+        'exon_intervals1': normalized_exons1,
+        'exon_intervals2': normalized_exons2,
         'yass_output': yass_output
     })
+
+
 @main.route('/add', methods=['POST'])
 def add_gene():
     data = request.get_json()
