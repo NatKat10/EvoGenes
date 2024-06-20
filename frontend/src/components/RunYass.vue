@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <!-- Shows a loading spinner when the process is running -->
     <LoaderOverlay :visible="loading" :progress="progress" />
     <!-- Sequence text inputs -->
     <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble'}">
@@ -65,6 +66,7 @@
 
 <script>
 import LoaderOverlay from './LoaderOverlay.vue';
+// This import is used to get the server domain for making API requests
 import { server_domain } from '@/server_domain';
 
 export default {
@@ -73,7 +75,7 @@ export default {
     LoaderOverlay
   },
   data() {
-    return {
+    return {//data properties used in the component
       errorMessage: '',
       sequence1: '',
       sequence2: '',
@@ -98,9 +100,11 @@ export default {
     },
   },
   methods: {
+    //sets the active section based on the input
     handleInput(section) {
       this.activeSection = section;
     },
+    //Clears all input fields and error messages
     clearInputs() {
       this.file1 = null;
       this.file2 = null;
@@ -114,8 +118,9 @@ export default {
       if (fileInput1) fileInput1.value = '';
       if (fileInput2) fileInput2.value = '';
     },
-    handleFileChange(refName) {
-      const file = this.$refs[refName].files[0];
+    //Handles file input changes and updates the corresponding data properties
+    handleFileChange(refName) {//This method is used to handle file input changes
+      const file = this.$refs[refName].files[0];//accesses the specific file input element referenced by refName and get the first file
       this[refName] = file;
       this.handleInput('upload');
     },
@@ -128,7 +133,7 @@ export default {
       } else if (this.sequence1 && this.sequence2) {
         formData.append('sequence1', this.sequence1);
         formData.append('sequence2', this.sequence2);
-      } else if (this.GeneID1 && this.GeneID2) {
+      } else if (this.GeneID1 && this.GeneID2) {// append keys geneid1 and geneid2 to formData object
         formData.append('GeneID1', this.GeneID1);
         formData.append('GeneID2', this.GeneID2);
       } else {
@@ -141,17 +146,34 @@ export default {
 
       try {
         const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
+          //sends the FormData to the server endpoint /run-evo-genes using a POST request.
           method: 'POST',
           body: formData
         }, (loaded, total) => {
-          this.progress = Math.floor((loaded / total) * 100);
+          this.progress = Math.floor((loaded / total) * 100);//The progress of the upload is monitored and updated accordingly
         });
+        //in the backend side: The server retrieves the Gene IDs from the form data
+        //It fetches the gene sequences from Ensembl using the fetch_sequence_from_ensembl function
+        //The fetched sequences are written to temporary FASTA files
+        //The YASS alignment tool is run using the temporary FASTA files, and the output is saved to a file.
+        //this is what the backend returns:
+
+        //         return jsonify({
+        //     'dotplot_data': dotplot_data,
+        //     'gene_structure1_html': gene_structure1_body,
+        //     'gene_structure2_html': gene_structure2_body,
+        //     'exon_intervals1': normalized_exons1,
+        //     'exon_intervals2': normalized_exons2,
+        //     'yass_output': yass_output
+        // })
+
 
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
 
-        const data = await response.json();
+        const data = await response.json();//response from the server to be converted from JSON format into a JavaScript object
+        //the await ensures us that the function waits for the operation to complete before moving to the next line
         console.log("Response Data: ", data); // Debugging: Log the response data
         this.visualizations = {
           dotplot_data: data.dotplot_data,
@@ -161,14 +183,16 @@ export default {
           exon_intervals2: data.exon_intervals2
         };
         this.yassOutput = data.yass_output;
+        //select the first parent key from the exon intervals data for each gene and assign them to selectedParent1 and selectedParent2
         this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
         this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
-        this.$nextTick(() => {
+        this.$nextTick(() => {//ensures that the DOM is updated before running the provided callback function. 
+          //inserts the gene structure HTML into the corresponding geneStructure1 and geneStructure2 elements. 
           this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
           this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
         });
 
-        this.clearInputs();
+        this.clearInputs();//method to reset all input fields
       } catch (error) {
         console.error('Error running Evo Genes:', error);
         this.errorMessage = "Incorrect Input";
@@ -181,9 +205,9 @@ export default {
       }
     },
 
-    async fetchWithProgress(url, options, onProgress) {
-      const response = await fetch(url, options);
-      const reader = response.body.getReader();
+    async fetchWithProgress(url, options, onProgress) {// perform this fetch request and to report the progress of the upload (when sending gene id to backend)
+      const response = await fetch(url, options);//fetch request to the specified url with the given options GET POST 
+      const reader = response.body.getReader();//gets a readable stream reader from the response body
       const contentLength = +response.headers.get('Content-Length');
 
       let receivedLength = 0; // bytes received so far
@@ -216,15 +240,16 @@ export default {
     },
 
     updateGeneStructure(containerRef, selectedParent) {
+      //fetches the correct exon interval from visualizations data property
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      fetch(`${server_domain}/dash/update`, {
+      fetch(`${server_domain}/dash/update`, {//update the exon positions in endpoint /dash/update 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exonsPositions: exonIntervals }),
         mode: 'cors',
       })
-        .then(response => response.json())
-        .then(() => {
+        .then(response => response.json())//convert the response to json 
+        .then(() => {//fetch request is made to get the updated gene structure plot
           const plotUrl = `${server_domain}/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
           fetch(plotUrl)
             .then(response => response.text())
@@ -238,27 +263,28 @@ export default {
     },
 
     insertGeneStructureHTML(container, html) {
-      container.innerHTML = html;
-      const scripts = container.getElementsByTagName('script');
-      for (const script of scripts) {
-        const newScript = document.createElement('script');
-        newScript.text = script.text;
-        script.replaceWith(newScript);
+      container.innerHTML = html;//Inserts the HTML content into the specified container.
+      const scripts = container.getElementsByTagName('script');//Fetches all script tags within the container
+      for (const script of scripts) {//Iterates over each script tag
+
+        const newScript = document.createElement('script');//Creates a new script element
+        newScript.text = script.text;//Copies the text content from the old script to the new script
+        script.replaceWith(newScript);//Replaces the old script tag with the new script tag
       }
     },
 
     updateDotplot() {
       if (!this.visualizations || !this.visualizations.dotplot_data) return;
-
+      //fetch request to the backend endpoint /dash/dotplot/plot to update the dot plot.
       fetch(`${server_domain}/dash/dotplot/plot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),
         mode: 'cors',
       })
-        .then(response => response.text())
-        .then(html => {
-          this.insertDotplotHTML(this.$refs.dotplot, html);
+        .then(response => response.text())//Converts the response to text
+        .then(html => {//Inserts the HTML into the DOM
+          this.insertDotplotHTML(this.$refs.dotplot, html);//Calls insertDotplotHTML to insert the HTML into the specified container
         })
         .catch(error => {
           console.error('Error updating dotplot:', error);
@@ -266,12 +292,12 @@ export default {
     },
 
     insertDotplotHTML(container, html) {
-      container.innerHTML = html;
-      const scripts = container.getElementsByTagName('script');
-      for (const script of scripts) {
-        const newScript = document.createElement('script');
-        newScript.text = script.text;
-        script.replaceWith(newScript);
+      container.innerHTML = html;//Inserts the HTML content into the specified container
+      const scripts = container.getElementsByTagName('script');//Fetches all script tags within the container
+      for (const script of scripts) {//Iterates over each script tag
+        const newScript = document.createElement('script');//Creates a new script element
+        newScript.text = script.text;//Copies the text content from the old script to the new script
+        script.replaceWith(newScript);//Replaces the old script tag with the new script tag
       }
     },
   }
