@@ -149,6 +149,30 @@ def run_evo_genes():
             'exon_intervals2': normalized_exons2,
             'yass_output': yass_output
         })
+    
+    
+# Define the update and plot endpoints
+@main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
+def update_exon_positions():
+    data = request.json
+    exons_positions = data.get('exonsPositions', [])
+    return jsonify(success=True)
+
+
+@main.route('/dash/dotplot/update', methods=['POST'])
+def update_dotplot_data():#This route handles POST requests to update dot plot data.
+    data = request.json
+    dotplot_data = data.get('dotplot_data', {})# Retrieves the dot plot data from the JSON data.
+    return jsonify(success=True)
+
+
+@main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
+def plot_gene_structure():
+    positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
+    exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
+    fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
+    return fig.to_html()
+
 
 @main.route('/dash/dotplot/plot', methods=['POST'])
 def plot_dotplot_route():

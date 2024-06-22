@@ -134,7 +134,6 @@ def process_sequences(file_path):
                 min_y = y
             if y > max_y:
                 max_y = y
-
     return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
 
 # def plot_dotplot(yop_path, output_path):
