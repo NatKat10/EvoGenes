@@ -1,7 +1,7 @@
 from flask import Flask, send_from_directory
 from .extensions import db, ma
 from flask_cors import CORS
-from .dash_app import create_dash_app
+# from .dash_app import create_dash_app
 import os
 
 # added for the DB connection

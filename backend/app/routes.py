@@ -5,7 +5,7 @@ import requests
 import subprocess
 import os
 import json
-from .dash_app import create_dash_app
+# from .dash_app import create_dash_app
 from yop_reader import process_sequences
 from bs4 import BeautifulSoup
 from flask_cors import CORS
