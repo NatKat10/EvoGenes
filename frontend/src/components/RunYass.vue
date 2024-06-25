@@ -214,7 +214,7 @@ export default {
     },
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      fetch(`${server_domain}/dash/update`, {
+      fetch(`${server_domain}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exonsPositions: exonIntervals }),
@@ -222,7 +222,7 @@ export default {
       })
         .then(response => response.json())
         .then(() => {
-          const plotUrl = `${server_domain}/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
+          const plotUrl = `${server_domain}/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
           fetch(plotUrl)
             .then(response => response.text())
             .then(html => {
@@ -244,7 +244,7 @@ export default {
     },
     updateDotplot() {
       if (!this.visualizations || !this.visualizations.dotplot_data) return;
-      fetch(`${server_domain}/dash/dotplot/plot`, {
+      fetch(`${server_domain}/dotplot/plot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),
