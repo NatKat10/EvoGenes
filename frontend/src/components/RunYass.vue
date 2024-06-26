@@ -52,6 +52,11 @@
           </div>
         </div>
       </div>
+
+      <!-- Export button as image -->
+      <div class="export-button" v-if="visualizations">
+        <img src="@/assets/camera.png" alt="Export" @click="captureScreenshot" style="cursor: pointer;"/>
+      </div>
     </div>
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content">
@@ -64,6 +69,7 @@
 </template>
 
 <script>
+import html2canvas from 'html2canvas';
 import LoaderOverlay from './LoaderOverlay.vue';
 // This import is used to get the server domain for making API requests
 import { server_domain } from '@/server_domain';
@@ -357,11 +363,24 @@ export default {
       .catch(error => {
         console.error('Error sending relayout data:', error);
       });
+    },
+    captureScreenshot() {
+    const combinedVisualization = document.querySelector('.visualization-container');
+    if (combinedVisualization) {
+      console.log('Combined visualization element found');
+      html2canvas(combinedVisualization).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'combined_visualization.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    } else {
+      console.error('Combined visualization element not found');
     }
+  }
   }
 };
 </script>
-
 <style scoped>
 .error-message {
   color: red;
@@ -754,5 +773,17 @@ button:has(:last-child:active)::before {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+
+
+.export-button {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.export-button img {
+  width: 50px; /* Adjust the size as needed */
+  height: auto;
 }
 </style>

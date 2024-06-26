@@ -3,7 +3,7 @@
 Visit our website here (link to our website DNS)
 
 Created by:
-- Natalya Kataev
+- Natalia Kataev
 - Ayelet Moyal
 - Maor Biton
 - Assaf Shukrun
