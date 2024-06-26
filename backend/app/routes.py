@@ -183,5 +183,17 @@ def plot_dotplot_route():
                        dotplot_data['x_label'], dotplot_data['y_label'])
     return fig.to_html()
 
+
+@main.route('/dash/relayout', methods=['POST'])
+def handle_relayout():
+    try:
+        relayout_data = request.json
+        # Process the relayout_data as needed
+        print(f'Relayout data received: {relayout_data}')
+        return jsonify(success=True)
+    except Exception as e:
+        print(f'Error processing relayout data: {e}')
+        return jsonify(success=False, error=str(e)), 500
+
 if __name__ == '__main__':
     app.run(debug=True)

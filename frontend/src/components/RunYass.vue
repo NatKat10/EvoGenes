@@ -253,10 +253,38 @@ export default {
         .then(response => response.text())
         .then(html => {
           this.insertDotplotHTML(this.$refs.dotplot, html);
+          // Fetch relayout data if necessary
+          this.fetchRelayoutData();
         })
         .catch(error => {
           console.error('Error updating dotplot:', error);
         });
+    },
+    fetchRelayoutData() {
+    fetch(`${server_domain}/dash/relayout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ action: 'fetch_relayout' }) // Example payload
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new TypeError("Received non-JSON response");
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Relayout data:', data);
+      // Handle relayout data as needed
+    })
+    .catch(error => {
+      console.error('Error fetching relayout data:', error);
+    });
     },
     insertDotplotHTML(container, html) {
       container.innerHTML = html;
@@ -266,8 +294,24 @@ export default {
         newScript.text = script.text;
         script.replaceWith(newScript);
       }
+      this.addZoomEventListener(container); // Add this line
     },
-  }
+    addZoomEventListener(container) {
+      const dotplot = container.querySelector('.plotly-graph-div');
+      if (dotplot) {
+        dotplot.on('plotly_relayout', (eventData) => {
+          if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+            const x0 = eventData['xaxis.range[0]'];
+            const x1 = eventData['xaxis.range[1]'];
+            const y0 = eventData['yaxis.range[0]'];
+            const y1 = eventData['yaxis.range[1]'];
+            console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
+          }
+        });
+      }
+    }
+
+  },
 };
 </script>
 

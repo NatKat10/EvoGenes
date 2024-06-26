@@ -284,8 +284,9 @@
 
 import dash
 from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output,State
 import plotly.graph_objects as go
+import requests
 
 def create_dash_app(flask_app):
     #a function that takes a flask app instance as argument and
@@ -402,10 +403,24 @@ def create_dash_app(flask_app):
 
         return go.Figure(data=traces, layout=layout)
 
-    dash_app.layout = html.Div([#defines the layout of your Dash application
+    dash_app.layout = html.Div([
         dcc.Graph(id='gene-plot', figure=create_gene_plot([])),
         dcc.Graph(id='dotplot'),
-        dcc.Store(id='dotplot-data', data=None)
+        dcc.Store(id='dotplot-data', data=None),
+        dcc.Store(id='relayout-data', data=None)
     ])
+
+    @dash_app.callback(
+        Output('relayout-data', 'data'),
+        [Input('dotplot', 'relayoutData')],
+        [State('relayout-data', 'data')]
+    )
+    def capture_zoom_event(relayout_data, existing_relayout_data):
+        if relayout_data:
+            existing_relayout_data = existing_relayout_data or {}
+            existing_relayout_data.update(relayout_data)
+            # Send the relayout data to the backend
+            requests.post(f'{flask_app.config["SERVER_NAME"]}/dash/relayout', json=relayout_data)
+        return existing_relayout_data
 
     return dash_app, create_gene_plot, plot_dotplot
