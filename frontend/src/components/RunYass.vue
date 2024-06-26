@@ -259,7 +259,6 @@ export default {
         .then(response => response.text())
         .then(html => {
           this.insertDotplotHTML(this.$refs.dotplot, html);
-          // Do not call fetchRelayoutData immediately
         })
         .catch(error => {
           console.error('Error updating dotplot:', error);
@@ -306,45 +305,58 @@ export default {
       this.addZoomEventListener(container); // Add this line
     },
     addZoomEventListener(container) {
-    const dotplot = container.querySelector('.plotly-graph-div');
-    if (dotplot) {
-      dotplot.on('plotly_relayout', (eventData) => {
-        if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-          const x0 = eventData['xaxis.range[0]'];
-          const x1 = eventData['xaxis.range[1]'];
-          const y0 = eventData['yaxis.range[0]'];
-          const y1 = eventData['yaxis.range[1]'];
+      const dotplot = container.querySelector('.plotly-graph-div');
+      if (dotplot) {
+        dotplot.on('plotly_relayout', (eventData) => {
           const comparison_id = this.comparison_id;
 
-          console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
-          console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
-          
-          // Send the zoom coordinates to the backend
-          fetch(`${server_domain}/dash/relayout`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ x0, x1, y0, y1, comparison_id })
-          })
-          .then(response => {
-            if (!response.ok) {
-              throw new Error('Network response was not ok');
-            }
-            return response.json();
-          })
-          .then(data => {
-            // Update the gene structure plots with the response data
-            this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
-            this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
-            console.log('Relayout data sent successfully:', data);
-          })
-          .catch(error => {
-            console.error('Error sending relayout data:', error);
-          });
-        }
-      });
+          if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+            const x0 = eventData['xaxis.range[0]'];
+            const x1 = eventData['xaxis.range[1]'];
+            const y0 = eventData['yaxis.range[0]'];
+            const y1 = eventData['yaxis.range[1]'];
+
+            console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
+            console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
+            
+            // Send the zoom coordinates to the backend
+            this.sendRelayoutData(x0, x1, y0, y1, comparison_id);
+          } else {
+            // Axes have been reset, send the original coordinates
+            const originalX0 = this.visualizations.dotplot_data.min_x;
+            const originalX1 = this.visualizations.dotplot_data.max_x;
+            const originalY0 = this.visualizations.dotplot_data.max_y;
+            const originalY1 = this.visualizations.dotplot_data.min_y;
+
+            console.log('Resetting axes to original coordinates');
+            this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, comparison_id);
+          }
+        });
       }
+    },
+    sendRelayoutData(x0, x1, y0, y1, comparison_id) {
+      fetch(`${server_domain}/dash/relayout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ x0, x1, y0, y1, comparison_id })
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Update the gene structure plots with the response data
+        this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
+        this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
+        console.log('Relayout data sent successfully:', data);
+      })
+      .catch(error => {
+        console.error('Error sending relayout data:', error);
+      });
     }
   }
 };
