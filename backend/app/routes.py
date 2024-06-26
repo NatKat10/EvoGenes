@@ -66,7 +66,8 @@ def run_evo_genes():
                 'gene_structure2_html': comparison.gene_structure2_html,
                 'exon_intervals1': json.loads(comparison.exon_intervals1),
                 'exon_intervals2': json.loads(comparison.exon_intervals2),
-                'yass_output': comparison.yass_output
+                'yass_output': comparison.yass_output,
+                'comparison_id': comparison.id  # Ensure comparison_id is part of the response data
             })
 
         sequence1, extracted_gene_id1 = fetch_sequence_from_ensembl(gene_id1)
@@ -147,7 +148,8 @@ def run_evo_genes():
             'gene_structure2_html': gene_structure2_body,
             'exon_intervals1': normalized_exons1,
             'exon_intervals2': normalized_exons2,
-            'yass_output': yass_output
+            'yass_output': yass_output,
+            'comparison_id': new_comparison.id  # Ensure comparison_id is part of the response data
         })
     
     
@@ -188,9 +190,42 @@ def plot_dotplot_route():
 def handle_relayout():
     try:
         relayout_data = request.json
-        # Process the relayout_data as needed
-        print(f'Relayout data received: {relayout_data}')
-        return jsonify(success=True)
+        print(f"Received relayout data: {relayout_data}")
+
+        # Extract zoom coordinates
+        x0 = relayout_data.get('x0')
+        x1 = relayout_data.get('x1')
+        y0 = relayout_data.get('y0')
+        y1 = relayout_data.get('y1')
+        comparison_id = relayout_data.get('comparison_id')
+
+        # Check for missing data
+        missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'comparison_id'] if relayout_data.get(field) is None]
+        if missing_fields:
+            print(f"Missing fields: {missing_fields}")
+            return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
+
+        # Fetch the necessary gene structure data from the database
+        comparison = GeneComparison.query.filter_by(id=comparison_id).first()
+        if not comparison:
+            print(f"Comparison not found: {comparison_id}")
+            return jsonify(success=False, error="Comparison not found"), 404
+
+        exon_intervals1 = json.loads(comparison.exon_intervals1)
+        exon_intervals2 = json.loads(comparison.exon_intervals2)
+
+        # Assuming exon_intervals are stored in the same format as used in the create_gene_plot function
+        gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=[x0, x1]).to_html()
+        gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0]).to_html()
+
+        # Log the new gene structure ranges
+        print(f"New gene structure 1 range: [{x0}, {x1}]")
+        print(f"New gene structure 2 range: [{y1}, {y0}]")
+
+        return jsonify({
+            'gene_structure1_html': gene_structure1_html,
+            'gene_structure2_html': gene_structure2_html
+        })
     except Exception as e:
         print(f'Error processing relayout data: {e}')
         return jsonify(success=False, error=str(e)), 500
