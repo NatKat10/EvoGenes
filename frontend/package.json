@@ -23,6 +23,7 @@
     "slick-carousel": "^1.8.1",
     "swiper": "^11.1.4",
     "vue": "^3.2.13",
+    "vue-lazyload": "^3.0.0",
     "vue-router": "^4.3.0",
     "vue-slick-carousel": "^1.0.6"
   },

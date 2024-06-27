@@ -11,6 +11,10 @@ from bs4 import BeautifulSoup
 from flask_cors import CORS
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
 dash_app, create_gene_plot, plot_dotplot = create_dash_app(app)
@@ -189,10 +193,11 @@ def plot_dotplot_route():
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
-        relayout_data = request.json
+        relayout_data = request.json#retrieves the JSON data sent in the POST request and stores it in the variable relayout_data.
         print(f"Received relayout data: {relayout_data}")
 
-        # Extract zoom coordinates
+        # extract the zoom coordinates (x0, x1, y0, y1) and comparison_id from the relayout_data dictionary using the get method.
+        # If a key does not exist, None is returned
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
         y0 = relayout_data.get('y0')
