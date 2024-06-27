@@ -7,6 +7,8 @@ import plotly.graph_objects as go
 import requests
 import logging
 logging.basicConfig(level=logging.INFO)
+import time
+import random
 
 def create_dash_app(flask_app):
     #a function that takes a flask app instance as argument and
@@ -84,8 +86,9 @@ def create_dash_app(flask_app):
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label):
         logging.info("Start processing plot_dotplot function")
 
+        start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
-        x_vals_r, y_vals_r, colors_r = [], [],[]
+        x_vals_r, y_vals_r, colors_r = [], [], []
 
         color_map = {
             'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
@@ -106,6 +109,22 @@ def create_dash_app(flask_app):
                     colors_r.append(color)
 
         logging.info(f"Forward points: {len(x_vals_f)}, Reverse points: {len(x_vals_r)}")
+
+        # Data sampling: Reduce the number of points
+        def sample_data(x_vals, y_vals, colors, sample_fraction=0.1):
+            sample_size = int(len(x_vals) * sample_fraction)
+            sampled_indices = random.sample(range(len(x_vals)), sample_size)
+            return (
+                [x_vals[i] for i in sampled_indices],
+                [y_vals[i] for i in sampled_indices],
+                [colors[i] for i in sampled_indices]
+            )
+
+        sample_fraction = 0.1  # Adjust the sample fraction as needed (0.1 means 10%)
+        x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sample_fraction)
+        x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sample_fraction)
+
+        logging.info(f"Sampled Forward points: {len(x_vals_f)}, Sampled Reverse points: {len(x_vals_r)}")
 
         traces = []
 
@@ -136,7 +155,8 @@ def create_dash_app(flask_app):
             margin=dict(l=5, r=5, t=60, b=35)
         )
 
-        logging.info("Completed processing plot_dotplot function")
+        end_time = time.time()
+        logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
         return go.Figure(data=traces, layout=layout)
 
     dash_app.layout = html.Div([
