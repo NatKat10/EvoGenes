@@ -61,10 +61,10 @@ def create_dash_app(flask_app):
             intron_x.extend([start, mid_x, None, mid_x, end, None])
             intron_y.extend([mid_y, 0.5, None, 0.5, mid_y, None])
 
-        intron_trace = go.Scatter(x=intron_x, y=intron_y, mode='lines', line=dict(color='grey', width=2, dash='solid'),#This is a Plotly Scatter trace for the introns.
+        intron_trace = go.Scattergl(x=intron_x, y=intron_y, mode='lines', line=dict(color='grey', width=2, dash='solid'),#This is a Plotly Scatter trace for the introns.
                                   opacity=0.6, showlegend=False)
 
-        marker_trace = go.Scatter(x=marker_pos, y=[y + 0.5 for y in marker_heights], mode='markers',
+        marker_trace = go.Scattergl(x=marker_pos, y=[y + 0.5 for y in marker_heights], mode='markers',
                                   marker=dict(size=8, color=marker_colors, opacity=1), showlegend=False)
 
         data = [exon_trace, intron_trace, marker_trace]
@@ -93,15 +93,15 @@ def create_dash_app(flask_app):
         }
 
         logging.info(f"Directions length: {len(directions)}")
-        for seq_list, direction in directions:# iterates over each sequence list and its direction
-            for x, y, intensity in seq_list:#iterates over each sequence's x, y, and intensity values
-                color = f'rgba{color_map[direction][intensity] + (0.6,)}'# if its farward (green) append the indexes aand the correct color shade
+        for seq_list, direction in directions:
+            for x, y, intensity in seq_list:
+                color = f'rgba{color_map[direction][intensity] + (0.6,)}'
                 if direction == 'f':
                     x_vals_f.append(x)
                     y_vals_f.append(y)
                     colors_f.append(color)
                 else:
-                    x_vals_r.append(x)#same for reverse(red)
+                    x_vals_r.append(x)
                     y_vals_r.append(y)
                     colors_r.append(color)
 
@@ -109,13 +109,13 @@ def create_dash_app(flask_app):
 
         traces = []
 
-        if x_vals_f:#Each point represents a pair of values for two variables.
-            traces.append(go.Scatter(
+        if x_vals_f:
+            traces.append(go.Scattergl(
                 x=x_vals_f, y=y_vals_f, mode='markers', 
                 marker=dict(color=colors_f, size=5), name='Forward'
             ))
         if x_vals_r:
-            traces.append(go.Scatter(
+            traces.append(go.Scattergl(
                 x=x_vals_r, y=y_vals_r, mode='markers', 
                 marker=dict(color=colors_r, size=5), name='Reverse'
             ))

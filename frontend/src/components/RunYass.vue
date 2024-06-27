@@ -70,6 +70,7 @@
 
 <script>
 import html2canvas from 'html2canvas';
+import Plotly from 'plotly.js-dist';
 
 import LoaderOverlay from './LoaderOverlay.vue';
 // This import is used to get the server domain for making API requests
@@ -132,65 +133,64 @@ export default {
       this.handleInput('upload');
     },
     async runEvoGenes() {
-    console.log('Run Evo Genes method called');
-    const formData = new FormData();
-    if (this.file1 && this.file2) {
-      formData.append('fasta1', this.file1);
-      formData.append('fasta2', this.file2);
-    } else if (this.sequence1 && this.sequence2) {
-      formData.append('sequence1', this.sequence1);
-      formData.append('sequence2', this.sequence2);
-    } else if (this.GeneID1 && this.GeneID2) {
-      formData.append('GeneID1', this.GeneID1);
-      formData.append('GeneID2', this.GeneID2);
-    } else {
-      this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
-      return;
-    }
-
-    this.loading = true;
-    this.progress = 0;
-
-    try {
-      const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
-        method: 'POST',
-        body: formData
-      }, (loaded, total) => {
-        this.progress = Math.floor((loaded / total) * 100);
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      console.log('Run Evo Genes method called');
+      const formData = new FormData();
+      if (this.file1 && this.file2) {
+        formData.append('fasta1', this.file1);
+        formData.append('fasta2', this.file2);
+      } else if (this.sequence1 && this.sequence2) {
+        formData.append('sequence1', this.sequence1);
+        formData.append('sequence2', this.sequence2);
+      } else if (this.GeneID1 && this.GeneID2) {
+        formData.append('GeneID1', this.GeneID1);
+        formData.append('GeneID2', this.GeneID2);
+      } else {
+        this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
+        return;
       }
 
-      const data = await response.json();
-      console.log("Response Data: ", data);  // Log data received from the backend
-      this.visualizations = {
-        dotplot_data: data.dotplot_data,
-        gene_structure1_html: data.gene_structure1_html,
-        gene_structure2_html: data.gene_structure2_html,
-        exon_intervals1: data.exon_intervals1,
-        exon_intervals2: data.exon_intervals2,
-        comparison_id: data.comparison_id
-      };
-      this.comparison_id = data.comparison_id;
-      this.yassOutput = data.yass_output;
-      this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
-      this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
-      this.$nextTick(() => {
-        this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
-        this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
-      });
+      this.loading = true;
+      this.progress = 0;
 
-      this.clearInputs();
-    } catch (error) {
-      console.error('Error running Evo Genes:', error);
-      this.errorMessage = "Incorrect Input";
-    } finally {
-      this.loading = false;
-      this.progress = 100;
-      this.clearInputs();
-      this.updateDotplot();
+      try {
+        const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
+          method: 'POST',
+          body: formData
+        }, (loaded, total) => {
+          this.progress = Math.floor((loaded / total) * 100);
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log("Response Data: ", data);  // Log data received from the backend
+        this.visualizations = {
+          dotplot_data: JSON.parse(data.dotplot_data),  // Ensure it is parsed correctly
+          gene_structure1_html: data.gene_structure1_html,
+          gene_structure2_html: data.gene_structure2_html,
+          exon_intervals1: data.exon_intervals1,
+          exon_intervals2: data.exon_intervals2,
+          comparison_id: data.comparison_id
+        };
+        this.comparison_id = data.comparison_id;
+        this.yassOutput = data.yass_output;
+        this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
+        this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
+        this.$nextTick(() => {
+          this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
+          this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
+          this.insertDotplotHTML(this.$refs.dotplot, this.visualizations.dotplot_data);  // Use the parsed JSON
+        });
+
+        this.clearInputs();
+      } catch (error) {
+        console.error('Error running Evo Genes:', error);
+        this.errorMessage = "Incorrect Input";
+      } finally {
+        this.loading = false;
+        this.progress = 100;
       }
     },
     async fetchWithProgress(url, options, onProgress) {
@@ -255,96 +255,35 @@ export default {
         script.replaceWith(newScript);
       }
     },
-    updateDotplot() {
-    if (!this.visualizations || !this.visualizations.dotplot_data) return;
-    console.log('Updating dotplot with data:', this.visualizations.dotplot_data);  // Log dotplot data
-    fetch(`${server_domain}/dash/dotplot/plot`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),
-      mode: 'cors',
-    })
-      .then(response => response.text())
-      .then(html => {
-        this.insertDotplotHTML(this.$refs.dotplot, html);
-      })
-      .catch(error => {
-        console.error('Error updating dotplot:', error);
-        });
-    },
-    fetchRelayoutData() {
-      // Ensure fetchRelayoutData is only called when necessary data is available
-      if (!this.comparison_id) {
-        console.error('comparison_id is not set');
-        return;
-      }
-      fetch(`${server_domain}/dash/relayout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ action: 'fetch_relayout', comparison_id: this.comparison_id })
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Received non-JSON response");
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log('Relayout data:', data);
-      })
-      .catch(error => {
-        console.error('Error fetching relayout data:', error);
-      });
-    },
-    insertDotplotHTML(container, html) {
-    console.log('Inserting dotplot HTML:', html);  // Log HTML to check content
-    container.innerHTML = html;
+    insertDotplotHTML(container, dotplotData) {
+      console.log('Inserting dotplot HTML:', dotplotData);  // Log HTML to check content
+      Plotly.newPlot(container, dotplotData.data, dotplotData.layout);  // Use Plotly to render the saved figure
 
-    // Execute any scripts within the newly inserted HTML
-    const scripts = container.getElementsByTagName('script');
-    for (const script of scripts) {
-      const newScript = document.createElement('script');
-      newScript.type = 'text/javascript';
-      if (script.src) {
-        newScript.src = script.src;
-      } else {
-        newScript.textContent = script.textContent;
-      }
-      script.parentNode.replaceChild(newScript, script);
-    }
-
-    this.addZoomEventListener(container); // Add this line
+      this.addZoomEventListener(container); // Add this line
     },
     addZoomEventListener(container) {
-    const dotplot = container.querySelector('.plotly-graph-div');
-    if (dotplot) {
-      dotplot.on('plotly_relayout', (eventData) => {
-        const comparison_id = this.comparison_id;
-        if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-          const x0 = eventData['xaxis.range[0]'];
-          const x1 = eventData['xaxis.range[1]'];
-          const y0 = eventData['yaxis.range[0]'];
-          const y1 = eventData['yaxis.range[1]'];
-          console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
-          console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
-          this.sendRelayoutData(x0, x1, y0, y1, comparison_id);
-        } else {
-                      // Axes have been reset, send the original coordinates
-
-          const originalX0 = this.visualizations.dotplot_data.min_x;
-          const originalX1 = this.visualizations.dotplot_data.max_x;
-          const originalY0 = this.visualizations.dotplot_data.max_y;
-          const originalY1 = this.visualizations.dotplot_data.min_y;
-          console.log('Resetting axes to original coordinates');
-          this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, comparison_id);
-        }
-      });
+      const dotplot = container.querySelector('.plotly-graph-div');
+      if (dotplot) {
+        dotplot.on('plotly_relayout', (eventData) => {
+          const comparison_id = this.comparison_id;
+          if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+            const x0 = eventData['xaxis.range[0]'];
+            const x1 = eventData['xaxis.range[1]'];
+            const y0 = eventData['yaxis.range[0]'];
+            const y1 = eventData['yaxis.range[1]'];
+            console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
+            console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
+            this.sendRelayoutData(x0, x1, y0, y1, comparison_id);
+          } else {
+            // Axes have been reset, send the original coordinates
+            const originalX0 = this.visualizations.dotplot_data.min_x;
+            const originalX1 = this.visualizations.dotplot_data.max_x;
+            const originalY0 = this.visualizations.dotplot_data.max_y;
+            const originalY1 = this.visualizations.dotplot_data.min_y;
+            console.log('Resetting axes to original coordinates');
+            this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, comparison_id);
+          }
+        });
       }
     },
     sendRelayoutData(x0, x1, y0, y1, comparison_id) {
@@ -372,27 +311,27 @@ export default {
       });
     },
     captureScreenshot() {
-    const combinedVisualization = document.querySelector('.visualization-container');
-    const exportButton = document.querySelector('.export-button');
-    if (combinedVisualization) {
-      console.log('Combined visualization element found');
+      const combinedVisualization = document.querySelector('.visualization-container');
+      const exportButton = document.querySelector('.export-button');
+      if (combinedVisualization) {
+        console.log('Combined visualization element found');
 
-      // Hide the export button
-      exportButton.style.display = 'none';
+        // Hide the export button
+        exportButton.style.display = 'none';
 
-      html2canvas(combinedVisualization).then(canvas => {
-        // Show the export button again
-        exportButton.style.display = '';
+        html2canvas(combinedVisualization).then(canvas => {
+          // Show the export button again
+          exportButton.style.display = '';
 
-        const link = document.createElement('a');
-        link.download = 'combined_visualization.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    } else {
-      console.error('Combined visualization element not found');
+          const link = document.createElement('a');
+          link.download = 'combined_visualization.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      } else {
+        console.error('Combined visualization element not found');
+      }
     }
-  }
   }
 };
 </script>
