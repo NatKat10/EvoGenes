@@ -37,22 +37,24 @@
             </div>
             <div class="modal-body">
               <div class="d-flex flex-wrap justify-content-center text-center">
-                <div class="p-3 member-card" v-for="(member, index) in teamMembers" :key="index">
-                  <div class="luxurious-frame">
-                    <img :src="member.image" class="luxurious-img" alt="Team member">
-                  </div>
-                  <h5>{{ member.name }}</h5>
-                  <p class="role">{{ member.role }}</p>
-                  <div class="contact-icons">
-                    <a :href="member.linkedin" target="_blank" class="icon">
-                      <i class="fab fa-linkedin"></i>
-                    </a>
-                    <a :href="'mailto:' + member.email" class="icon">
-                      <i class="fas fa-envelope"></i>
-                    </a>
-                    <span class="icon">
-                      <i class="fas fa-phone"></i> {{ member.phoneNumber }}
-                    </span>
+                <div class="row">
+                  <div class="col-6 p-3 member-card" v-for="(member, index) in teamMembers" :key="index">
+                    <div class="luxurious-frame">
+                      <img :src="member.image" class="luxurious-img" alt="Team member">
+                    </div>
+                    <h5>{{ member.name }}</h5>
+                    <p class="role">{{ member.role }}</p>
+                    <div class="contact-icons">
+                      <a :href="member.linkedin" target="_blank" class="icon">
+                        <i class="fab fa-linkedin"></i>
+                      </a>
+                      <a :href="'mailto:' + member.email" class="icon">
+                        <i class="fas fa-envelope"></i>
+                      </a>
+                      <span class="icon">
+                        <i class="fas fa-phone"></i>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -61,7 +63,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -74,37 +75,33 @@ export default {
     return {
       teamMembers: [
         {
-          image: require('@/assets/fish.png'),
+          image: require('@/assets/ayelet.png'),
           name: 'AYELET MOYAL',
           role: 'Project Lead + Frontend Developer',
           linkedin: 'https://www.linkedin.com/in/john-doe',
           email: 'ayelet431@mail.com',
-          phoneNumber: '+972 052-368-3885'
         },
         {
-          image: require('@/assets/fish.png'),
+          image: require('@/assets/natalia.jpeg'),
           name: 'NATALIA KATAEV',
           role: 'Backend Developer',
           linkedin: 'https://www.linkedin.com/in/jane-smith',
           email: 'jane.smith@mail.com',
-          phoneNumber: '+1 (234) 567-891'
         },
         {
           image: require('@/assets/fish.png'),
-          name: 'Alice Johnson',
+          name: 'Assaf Shokroon',
           role: 'Frontend Developer',
           linkedin: 'https://www.linkedin.com/in/alice-johnson',
           email: 'alice.johnson@mail.com',
-          phoneNumber: '+1 (234) 567-892'
         },
         {
           image: require('@/assets/fish.png'),
-          name: 'Bob Brown',
+          name: 'Maor Biton',
           role: 'Data Scientist',
           linkedin: 'https://www.linkedin.com/in/bob-brown',
           email: 'bob.brown@mail.com',
-          phoneNumber: '+1 (234) 567-893'
-        }
+        },
       ]
     };
   },
@@ -163,6 +160,7 @@ p {
   align-items: center;
   justify-content: center;
   margin: 0 auto;
+  overflow: hidden; /* Ensures images stay within the frame */
 }
 
 .luxurious-frame:before,
@@ -188,7 +186,8 @@ p {
 
 .luxurious-img {
   width: 100%; /* Ensure the image fits within the frame */
-  height: auto; /* Maintain aspect ratio */
+  height: 100%;
+  object-fit: cover; /* Ensures the image covers the frame without distortion */
   border-radius: 50%;
   transition: transform 0.3s ease-in-out;
 }
