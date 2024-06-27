@@ -1,5 +1,10 @@
 <template>
   <div class="container1">
+    <header class="header2">
+      <svg class="gene-title" viewBox="0 0 1000 100">
+        <text x="50%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">Insructions</text>
+      </svg>
+    </header>
     
     <div class="run-yass">
 
@@ -7,7 +12,8 @@
         
 
         <div class="components-container">
-          <GeneStructure />
+          
+          <AboutComp />
         </div>
       </div>
     </div>
@@ -15,11 +21,11 @@
 </template>
 
 <script>
-import GeneStructure from "@/components/GeneStructure.vue";  
+import AboutComp from "@/components/AboutComp.vue";
 
 export default {
   components: {
-    GeneStructure
+    AboutComp
   }
 };
 </script>

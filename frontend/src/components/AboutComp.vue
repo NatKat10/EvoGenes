@@ -1,28 +1,48 @@
 <template>
   <div class="container">
-    <h1>Comprehensive End-to-End Gene Visualization System - "Evo-Genes"</h1>
-    <p>
-      As part of our final project in the Department of Software and Information Systems Engineering at Ben Gurion University of the Negev, under the guidance of Prof. Guy Shani from the Faculty of Software and Information Systems Engineering and Dr. Tal Shay from the Faculty of Life Sciences, we have developed a comprehensive end-to-end gene visualization system. The laboratory aims to unravel the complexity of how cells with identical genetic information can exhibit diverse functions and phenotypic properties. 
-    </p>
-    <p>
-      A significant challenge in this research is the limited capability to compare gene similarities across species while maintaining the context of the original gene structure.
-    </p>
-    <p>
-      Currently, no system allows for the simultaneous examination of sequence similarities and structural differences between species. To address this challenge, we have created a web-based system that leverages both server-side and client-side programming to interface with the extensive Ensembl database.
-    </p>
-    <p>
-      Our system facilitates intuitive and visually engaging comparative gene sequence analysis, emphasizing the display of exons, thus optimizing comparative gene analysis. This unique feature significantly enhances the accessibility and utility of gene comparison tools, providing biologists and researchers with comprehensive insights into gene development and functional divergence. The system streamlines the comparative analysis process by automating sequence retrieval and aligning gene structures with Dot Plot outputs, thereby boosting research productivity and data analysis efficiency.
-    </p>
-    <p>
-      We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
-    </p>
+    <h1>"Evo-Genes" Web Instructions</h1>
+    <div class="instruction-list">
+      <div class="instruction-item" v-for="(item, index) in instructions" :key="index">
+        <div class="icon" v-if="item.image">
+          <img :src="item.image" :alt="item.title" class="button-image">
+        </div>
+        <div class="icon" v-else>
+          <i :class="item.icon"></i>
+        </div>
+        <div class="description">
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.description }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'GeneVisualization'
-}
+  name: 'GeneVisualization',
+  data() {
+    return {
+      instructions: [
+        {
+          image: require('../assets/camera.png'), // Update the path as needed
+          title: 'Camera',
+          description: 'Allows you to capture a screenshot of the visualization and download it as an image.'
+        },
+        {
+          icon: 'fa fa-info-circle',
+          title: 'Help',
+          description: 'Offers additional help and support resources for using the "Evo-Genes" web application.'
+        },
+        {
+          icon: 'fa fa-question-circle',
+          title: 'Question Mark',
+          description: 'Opens a modal with additional information about the YASS alignment summary.'
+        }
+      ]
+    };
+  }
+};
 </script>
 
 <style scoped>
@@ -34,7 +54,7 @@ export default {
   border: 0.3vw solid #ebebeb;
   background-color: rgba(244, 244, 244, 0.6);
   border-radius: 2vw;
-  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
+  box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5); /* Corrected CSS syntax */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -47,9 +67,41 @@ h1 {
   font-size: 23px;
 }
 
-p {
-  margin-bottom: 20px; /* Adds space between paragraphs */
-  text-align: justify; /* Justifies text for a cleaner look */
+.instruction-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.icon {
+  margin-right: 20px;
+  font-size: 24px; /* Adjust the size as needed for icons */
+}
+
+.button-image {
+  width: 50px; /* Adjust the size as needed */
+  height: auto;
+}
+
+.description {
+  flex: 1;
+}
+
+.description h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.description p {
+  margin: 5px 0 0 0;
   font-size: 18px; /* Sets the font size for the paragraphs */
   line-height: 1.6; /* Adjusts line spacing for better readability */
 }
