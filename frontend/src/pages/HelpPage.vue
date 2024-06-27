@@ -24,7 +24,7 @@
         We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
       </p>
       <div class="text-center mt-5">
-        <button class="btn btn-primary" @click="openModal">Contact Us</button>
+        <button class="btn btn-primary" @click="openModal"> <i class="fas fa-phone"></i>   Contact Us</button>
       </div>
 
       <!-- Modal -->
@@ -32,7 +32,7 @@
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="contactModalLabel">Contact Us</h5>
+              <h5 class="modal-title" id="contactModalLabel"><i class="fas fa-phone"></i>   Contact Us</h5>
               <button type="button" class="custom-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
             </div>
             <div class="modal-body">
@@ -51,9 +51,9 @@
                       <a :href="'mailto:' + member.email" class="icon">
                         <i class="fas fa-envelope"></i>
                       </a>
-                      <span class="icon">
+                      <!-- <span class="icon">
                         <i class="fas fa-phone"></i>
-                      </span>
+                      </span> -->
                     </div>
                   </div>
                 </div>
@@ -210,11 +210,11 @@ p {
 .icon {
   margin: 0 10px;
   font-size: 20px;
-  color: #007bff;
+  color: #d46b09;
 }
 
 .icon:hover {
-  color: #0056b3;
+  color: #ff9028;
 }
 
 .modal-content {
