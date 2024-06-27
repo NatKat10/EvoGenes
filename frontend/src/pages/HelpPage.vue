@@ -152,7 +152,7 @@ p {
   position: relative;
   width: 140px; /* Adjust width for larger image */
   height: 140px; /* Adjust height for larger image */
-  padding: 15px;
+  padding: 3px;
   background: linear-gradient(145deg, #444, #000); /* Luxurious gradient background */
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 0, 0, 0.7);
@@ -265,7 +265,5 @@ p {
   transform: scale(1.2);
 }
 
-.luxurious-frame:hover ~ .blur {
-  filter: blur(5px);
-}
+
 </style>
