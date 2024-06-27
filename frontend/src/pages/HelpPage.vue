@@ -265,5 +265,19 @@ p {
   transform: scale(1.2);
 }
 
+.btn-primary {
+  font-size: 1.5rem; /* Make the button text larger */
+  padding: 0.75rem 2rem; /* Adjust padding for a larger button */
+  background-color: #166844; /* Primary color */
+  border: 0.1em solid hsl(186, 54%, 19%);
+  border-radius: 50px; /* Elliptical shape */
+  transition: all 0.3s ease-in-out;
+}
 
+.btn-primary:hover {
+  background-color: #22a66d; /* Darker shade on hover */
+  transform: scale(1.1); /* Slightly larger on hover */
+  border: 0.1em solid hsl(186, 54%, 19%);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Add a shadow effect on hover */
+}
 </style>
