@@ -19,6 +19,7 @@
     "html2canvas": "^1.4.1",
     "jquery": "^3.7.1",
     "matplotlib": "^1.0.0",
+    "plotly.js-dist": "^2.33.0",
     "popper.js": "^1.16.1",
     "slick-carousel": "^1.8.1",
     "swiper": "^11.1.4",

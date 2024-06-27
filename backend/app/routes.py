@@ -9,6 +9,8 @@ from .dash_app import create_dash_app
 from yop_reader import process_sequences
 from bs4 import BeautifulSoup
 from flask_cors import CORS
+import plotly.io as pio
+
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
@@ -65,7 +67,7 @@ def run_evo_genes():
         if comparison:
             # Return the existing comparison data
             return jsonify({
-                'dotplot_data': json.loads(comparison.dotplot_data),
+                'dotplot_data': comparison.dotplot_data,
                 'gene_structure1_html': comparison.gene_structure1_html,
                 'gene_structure2_html': comparison.gene_structure2_html,
                 'exon_intervals1': json.loads(comparison.exon_intervals1),
@@ -110,13 +112,15 @@ def run_evo_genes():
         normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
         normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
 
-        gene_structure1_html = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x]).to_html()
-        gene_structure2_html = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y]).to_html()
+        # Generate Plotly figures
+        dotplot_figure = plot_dotplot(directions, min_x, max_x, min_y, max_y, extracted_gene_id1, extracted_gene_id2)
+        gene_structure1_figure = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
+        gene_structure2_figure = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
-        soup1 = BeautifulSoup(gene_structure1_html, 'html.parser')
-        gene_structure1_body = soup1.body.decode_contents()
-        soup2 = BeautifulSoup(gene_structure2_html, 'html.parser')
-        gene_structure2_body = soup2.body.decode_contents()
+        # Serialize Plotly figures to JSON
+        dotplot_json = pio.to_json(dotplot_figure)
+        gene_structure1_html = pio.to_html(gene_structure1_figure)
+        gene_structure2_html = pio.to_html(gene_structure2_figure)
 
         os.remove(fasta_file1_path)
         os.remove(fasta_file2_path)
@@ -132,29 +136,36 @@ def run_evo_genes():
             'y_label': extracted_gene_id2
         }
 
-        # Save the new comparison to the database
-        new_comparison = GeneComparison(
-            gene_id1=gene_id1,
-            gene_id2=gene_id2,
-            dotplot_data=json.dumps(dotplot_data),
-            gene_structure1_html=gene_structure1_body,
-            gene_structure2_html=gene_structure2_body,
-            exon_intervals1=json.dumps(normalized_exons1),
-            exon_intervals2=json.dumps(normalized_exons2),
-            yass_output=yass_output
-        )
-        db.session.add(new_comparison)
-        db.session.commit()
+        # Save the new comparison to the database with error handling
+        try:
+            new_comparison = GeneComparison(
+                gene_id1=gene_id1,
+                gene_id2=gene_id2,
+                dotplot_data=dotplot_json,  # Store JSON of Plotly figure
+                gene_structure1_html=gene_structure1_html,
+                gene_structure2_html=gene_structure2_html,
+                exon_intervals1=json.dumps(normalized_exons1),
+                exon_intervals2=json.dumps(normalized_exons2),
+                yass_output=yass_output
+            )
+            db.session.add(new_comparison)
+            db.session.commit()
+        except OperationalError as e:
+            db.session.rollback()
+            print(f"Error saving to database: {e}")
+            return jsonify({'error': 'Failed to save data to the database.'}), 500
 
         return jsonify({
-            'dotplot_data': dotplot_data,
-            'gene_structure1_html': gene_structure1_body,
-            'gene_structure2_html': gene_structure2_body,
+            'dotplot_data': dotplot_json,  # Return the stored JSON
+            'gene_structure1_html': gene_structure1_html,
+            'gene_structure2_html': gene_structure2_html,
             'exon_intervals1': normalized_exons1,
             'exon_intervals2': normalized_exons2,
             'yass_output': yass_output,
             'comparison_id': new_comparison.id  # Ensure comparison_id is part of the response data
         })
+
+    return jsonify({'error': 'Invalid input.'}), 400
     
     
 # Define the update and plot endpoints
