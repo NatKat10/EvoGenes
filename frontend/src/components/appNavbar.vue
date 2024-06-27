@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="sidebar" @mouseenter="openSidebar" @mouseleave="closeSidebar">
-      <div class="logo">
-        <img src="../assets/circle_logo.png" alt="Logo"> 
+      <div class="logo" @click="navigateHome">
+        <img src="../assets/circle_logo.png" alt="Logo">
       </div>
       <nav class="nav flex-column">
         <router-link to="/" class="nav-link" @click="keepSidebarOpen"> <i class="fa fa-home"></i> <span>Home</span> </router-link>
@@ -32,6 +32,9 @@ export default {
     keepSidebarOpen(event) {
       event.stopPropagation(); // Prevent the sidebar from closing when a link is clicked
       this.isOpen = true;
+    },
+    navigateHome() {
+      this.$router.push('/'); // Programmatically navigate to the home screen
     }
   }
 }
@@ -61,9 +64,18 @@ export default {
   padding: 8px 12px; /* Increase padding */
 }
 
+.logo {
+  cursor: pointer; /* Change cursor to pointer to indicate clickability */
+}
+
 .logo img {
   height: 80px;
   margin: 10px 0;
+  transition: transform 0.3s ease-in-out; /* Smooth transition for the hover effect */
+}
+
+.logo:hover img {
+  transform: scale(1.1); /* Enlarge image on hover */
 }
 
 .nav-link {
