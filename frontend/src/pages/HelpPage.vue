@@ -1,51 +1,59 @@
 <template>
-  <div class="container">
-    <h1 class="title">Comprehensive End-to-End Gene Visualization System - "Evo-Genes"</h1>
-    <p>
-      As part of our final project in the Department of Software and Information Systems Engineering at Ben Gurion University of the Negev, under the guidance of Prof. Guy Shani from the Faculty of Software and Information Systems Engineering and Dr. Tal Shay from the Faculty of Life Sciences, we have developed a comprehensive end-to-end gene visualization system. The laboratory aims to unravel the complexity of how cells with identical genetic information can exhibit diverse functions and phenotypic properties. 
-    </p>
-    <p>
-      A significant challenge in this research is the limited capability to compare gene similarities across species while maintaining the context of the original gene structure.
-    </p>
-    <p>
-      Currently, no system allows for the simultaneous examination of sequence similarities and structural differences between species. To address this challenge, we have created a web-based system that leverages both server-side and client-side programming to interface with the extensive Ensembl database.
-    </p>
-    <p>
-      Our system facilitates intuitive and visually engaging comparative gene sequence analysis, emphasizing the display of exons, thus optimizing comparative gene analysis. This unique feature significantly enhances the accessibility and utility of gene comparison tools, providing biologists and researchers with comprehensive insights into gene development and functional divergence. The system streamlines the comparative analysis process by automating sequence retrieval and aligning gene structures with Dot Plot outputs, thereby boosting research productivity and data analysis efficiency.
-    </p>
-    <p>
-      We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
-    </p>
-    <div class="text-center mt-5">
-      <button class="btn btn-primary" @click="openModal">Contact Us</button>
-    </div>
+  <div class="conta">
+    <header class="header2">
+      <svg class="gene-title" viewBox="0 0 1000 100">
+        <text x="50%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">About Us</text>
+      </svg>
+    </header>
 
-    <!-- Modal -->
-    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="contactModalLabel">Contact Us</h5>
-            <button type="button" class="custom-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="d-flex flex-wrap justify-content-center text-center">
-              <div class="p-3 member-card" v-for="(member, index) in teamMembers" :key="index">
-                <div class="luxurious-frame">
-                  <img :src="member.image" class="luxurious-img" alt="Team member">
-                </div>
-                <h5>{{ member.name }}</h5>
-                <p class="role">{{ member.role }}</p>
-                <div class="contact-icons">
-                  <a :href="member.linkedin" target="_blank" class="icon">
-                    <i class="fab fa-linkedin"></i>
-                  </a>
-                  <a :href="'mailto:' + member.email" class="icon">
-                    <i class="fas fa-envelope"></i>
-                  </a>
-                  <span class="icon">
-                    <i class="fas fa-phone"></i> {{ member.phoneNumber }}
-                  </span>
+    <div class="container">
+      <h1 class="title">Comprehensive End-to-End Gene Visualization System - "Evo-Genes"</h1>
+      <p>
+        As part of our final project in the Department of Software and Information Systems Engineering at Ben Gurion University of the Negev, under the guidance of Prof. Guy Shani from the Faculty of Software and Information Systems Engineering and Dr. Tal Shay from the Faculty of Life Sciences, we have developed a comprehensive end-to-end gene visualization system. The laboratory aims to unravel the complexity of how cells with identical genetic information can exhibit diverse functions and phenotypic properties. 
+      </p>
+      <p>
+        A significant challenge in this research is the limited capability to compare gene similarities across species while maintaining the context of the original gene structure.
+      </p>
+      <p>
+        Currently, no system allows for the simultaneous examination of sequence similarities and structural differences between species. To address this challenge, we have created a web-based system that leverages both server-side and client-side programming to interface with the extensive Ensembl database.
+      </p>
+      <p>
+        Our system facilitates intuitive and visually engaging comparative gene sequence analysis, emphasizing the display of exons, thus optimizing comparative gene analysis. This unique feature significantly enhances the accessibility and utility of gene comparison tools, providing biologists and researchers with comprehensive insights into gene development and functional divergence. The system streamlines the comparative analysis process by automating sequence retrieval and aligning gene structures with Dot Plot outputs, thereby boosting research productivity and data analysis efficiency.
+      </p>
+      <p>
+        We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
+      </p>
+      <div class="text-center mt-5">
+        <button class="btn btn-primary" @click="openModal">Contact Us</button>
+      </div>
+
+      <!-- Modal -->
+      <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="contactModalLabel">Contact Us</h5>
+              <button type="button" class="custom-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="d-flex flex-wrap justify-content-center text-center">
+                <div class="p-3 member-card" v-for="(member, index) in teamMembers" :key="index">
+                  <div class="luxurious-frame">
+                    <img :src="member.image" class="luxurious-img" alt="Team member">
+                  </div>
+                  <h5>{{ member.name }}</h5>
+                  <p class="role">{{ member.role }}</p>
+                  <div class="contact-icons">
+                    <a :href="member.linkedin" target="_blank" class="icon">
+                      <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a :href="'mailto:' + member.email" class="icon">
+                      <i class="fas fa-envelope"></i>
+                    </a>
+                    <span class="icon">
+                      <i class="fas fa-phone"></i> {{ member.phoneNumber }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -53,6 +61,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -109,13 +118,18 @@ export default {
 </script>
 
 <style scoped>
+.conta {
+  background: url('../assets/evo5.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
 .container {
   width: 90%;
   max-width: 900px;
   margin: 5vh auto;
   padding: 3vw;
   border: 0.3vw solid #ebebeb;
-  background-color: rgba(244, 244, 244, 0.6);
+  background-color: rgba(244, 244, 244, 0.8); /* Adjusted opacity for transparency */
   border-radius: 2vw;
   box-shadow: 0.5vw 0.5vw 1vw rgba(144, 143, 143, 0.5);
   display: flex;
@@ -256,4 +270,3 @@ p {
   filter: blur(5px);
 }
 </style>
-
