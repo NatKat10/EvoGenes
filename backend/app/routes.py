@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, Flask
-from .models import GeneComparison
-from .extensions import db
+# from .models import GeneComparison
+# from .extensions import db
 import requests
 import subprocess
 import os
@@ -9,11 +9,16 @@ from .dash_app import create_dash_app
 from yop_reader import process_sequences
 from bs4 import BeautifulSoup
 from flask_cors import CORS
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+logging.basicConfig(level=logging.INFO)
+
 
 CORS(app, supports_credentials=True, allow_headers=["Content-Type", "Authorization"], methods=["GET", "POST", "OPTIONS"])
 
@@ -22,7 +27,7 @@ dash_app, create_gene_plot, plot_dotplot = create_dash_app(app)
 main = Blueprint('main', __name__)
 generate = Blueprint('generate', __name__)
 
-def fetch_sequence_from_ensembl(gene_id):
+def fetch_sequence_from_ensembl_parallel(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
     if response.ok:
@@ -49,6 +54,9 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
 
 @main.route('/run-evo-genes', methods=['POST'])
 def run_evo_genes():
+    start_time = time.time()
+    logging.info("run_evo_genes started")
+
     if 'GeneID1' in request.form and 'GeneID2' in request.form:
         gene_id1 = request.form['GeneID1']
         gene_id2 = request.form['GeneID2']
@@ -56,42 +64,39 @@ def run_evo_genes():
         # Ensure the gene IDs are always ordered for consistency
         gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
 
-        # Check if the comparison already exists in the database
-        comparison = GeneComparison.query.filter(
-            ((GeneComparison.gene_id1 == gene_id1) & (GeneComparison.gene_id2 == gene_id2)) |
-            ((GeneComparison.gene_id1 == gene_id2) & (GeneComparison.gene_id2 == gene_id1))
-        ).first()
+        logging.info("Fetching sequences in parallel")
+        # Fetch sequences in parallel
+        with ThreadPoolExecutor() as executor:
+            future_seq1 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id1)
+            future_seq2 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id2)
+            sequence1, extracted_gene_id1 = future_seq1.result()
+            sequence2, extracted_gene_id2 = future_seq2.result()
 
-        if comparison:
-            # Return the existing comparison data
-            return jsonify({
-                'dotplot_data': json.loads(comparison.dotplot_data),
-                'gene_structure1_html': comparison.gene_structure1_html,
-                'gene_structure2_html': comparison.gene_structure2_html,
-                'exon_intervals1': json.loads(comparison.exon_intervals1),
-                'exon_intervals2': json.loads(comparison.exon_intervals2),
-                'yass_output': comparison.yass_output,
-                'comparison_id': comparison.id  # Ensure comparison_id is part of the response data
-            })
-
-        sequence1, extracted_gene_id1 = fetch_sequence_from_ensembl(gene_id1)
-        sequence2, extracted_gene_id2 = fetch_sequence_from_ensembl(gene_id2)
         if not sequence1 or not sequence2:
+            logging.error("Failed to fetch sequences from Ensembl")
             return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
+        logging.info("Sequences fetched")
+
+        # Process sequences and run YASS
         fasta_file1_path = 'temp_sequence1.fasta'
         fasta_file2_path = 'temp_sequence2.fasta'
         with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
             file1.write(sequence1)
             file2.write(sequence2)
 
+        logging.info("Running YASS")
         yass_output_path = 'yass_output.yop'
         yass_executable = './yass-Win64.exe'
         command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+        yass_start_time = time.time()
         result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        yass_end_time = time.time()
+        logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
         yass_output = result.stdout + result.stderr
 
         result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
+        logging.info("Sequences processed")
 
         gene_structure1 = fetch_gene_structure(gene_id1)
         gene_structure2 = fetch_gene_structure(gene_id2)
@@ -132,19 +137,8 @@ def run_evo_genes():
             'y_label': extracted_gene_id2
         }
 
-        # Save the new comparison to the database
-        new_comparison = GeneComparison(
-            gene_id1=gene_id1,
-            gene_id2=gene_id2,
-            dotplot_data=json.dumps(dotplot_data),
-            gene_structure1_html=gene_structure1_body,
-            gene_structure2_html=gene_structure2_body,
-            exon_intervals1=json.dumps(normalized_exons1),
-            exon_intervals2=json.dumps(normalized_exons2),
-            yass_output=yass_output
-        )
-        db.session.add(new_comparison)
-        db.session.commit()
+        end_time = time.time()
+        logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
         return jsonify({
             'dotplot_data': dotplot_data,
@@ -152,10 +146,8 @@ def run_evo_genes():
             'gene_structure2_html': gene_structure2_body,
             'exon_intervals1': normalized_exons1,
             'exon_intervals2': normalized_exons2,
-            'yass_output': yass_output,
-            'comparison_id': new_comparison.id  # Ensure comparison_id is part of the response data
+            'yass_output': yass_output
         })
-    
     
 # Define the update and plot endpoints
 @main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
@@ -190,34 +182,26 @@ def plot_dotplot_route():
     return fig.to_html()
 
 
+
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
-        relayout_data = request.json#retrieves the JSON data sent in the POST request and stores it in the variable relayout_data.
+        relayout_data = request.json
         print(f"Received relayout data: {relayout_data}")
 
-        # extract the zoom coordinates (x0, x1, y0, y1) and comparison_id from the relayout_data dictionary using the get method.
-        # If a key does not exist, None is returned
+        # Extract the zoom coordinates (x0, x1, y0, y1) and exon intervals from the relayout_data dictionary
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
         y0 = relayout_data.get('y0')
         y1 = relayout_data.get('y1')
-        comparison_id = relayout_data.get('comparison_id')
+        exon_intervals1 = relayout_data.get('exon_intervals1')
+        exon_intervals2 = relayout_data.get('exon_intervals2')
 
         # Check for missing data
-        missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'comparison_id'] if relayout_data.get(field) is None]
+        missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'exon_intervals1', 'exon_intervals2'] if relayout_data.get(field) is None]
         if missing_fields:
             print(f"Missing fields: {missing_fields}")
             return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
-
-        # Fetch the necessary gene structure data from the database
-        comparison = GeneComparison.query.filter_by(id=comparison_id).first()
-        if not comparison:
-            print(f"Comparison not found: {comparison_id}")
-            return jsonify(success=False, error="Comparison not found"), 404
-
-        exon_intervals1 = json.loads(comparison.exon_intervals1)
-        exon_intervals2 = json.loads(comparison.exon_intervals2)
 
         # Assuming exon_intervals are stored in the same format as used in the create_gene_plot function
         gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=[x0, x1]).to_html()
@@ -237,3 +221,9 @@ def handle_relayout():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    from gevent.pywsgi import WSGIServer
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    http_server = WSGIServer(('0.0.0.0', 5000), app)
+    http_server.serve_forever()
