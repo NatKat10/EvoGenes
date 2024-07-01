@@ -53,6 +53,23 @@
         </div>
       </div>
 
+      <div class="manual-zoom-container">
+        <h4>Manual Zoom</h4>
+        <div class="zoom-inputs">
+          <div>
+            <label>X-axis: </label>
+            <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
+            <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+          </div>
+          <div>
+            <label>Y-axis: </label>
+            <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
+            <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+          </div>
+        </div>
+        <button @click="applyManualZoom">Apply Zoom</button>
+      </div>
+
       <!-- Export button as image -->
       <div class="export-button" v-if="visualizations">
         <img src="@/assets/camera.png" alt="Export" @click="captureScreenshot" style="cursor: pointer;"/>
@@ -99,6 +116,12 @@ export default {
       yassOutput: '',
       showModal: false,
       comparison_id: null,
+      manualZoom: {
+        x1: null,
+        x2: null,
+        y1: null,
+        y2: null
+      },
     };
   },
   mounted() {
@@ -349,52 +372,89 @@ export default {
       });
       }
     },
-    sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id) {
-        fetch(`${server_domain}/dash/relayout`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Update the gene structure plots with the response data
-            this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
-            this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
-            console.log('Relayout data sent successfully:', data);
-        })
-        .catch(error => {
-            console.error('Error sending relayout data:', error);
+
+    sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id, is_manual_zoom = false) {
+      const dotplot_data = this.visualizations.dotplot_data;
+      const requestBody = { 
+        x0, x1, y0, y1, 
+        exon_intervals1, 
+        exon_intervals2, 
+        comparison_id,
+        is_manual_zoom,
+        directions: dotplot_data.directions,
+        min_x: dotplot_data.min_x,
+        max_x: dotplot_data.max_x,
+        min_y: dotplot_data.min_y,
+        max_y: dotplot_data.max_y,
+        x_label: dotplot_data.x_label,
+        y_label: dotplot_data.y_label
+      };
+      console.log('Sending relayout data:', JSON.stringify(requestBody, null, 2));
+      
+      fetch(`${server_domain}/dash/relayout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Received response:', data);
+        // Update the gene structure plots and dotplot with the response data
+        this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
+        this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
+        this.insertDotplotHTML(this.$refs.dotplot, data.dotplot_html);
+        console.log('Relayout data applied successfully');
+      })
+      .catch(error => {
+        console.error('Error sending relayout data:', error);
       });
     },
+
     captureScreenshot() {
-    const combinedVisualization = document.querySelector('.visualization-container');
-    const exportButton = document.querySelector('.export-button');
-    if (combinedVisualization) {
-      console.log('Combined visualization element found');
+      const combinedVisualization = document.querySelector('.visualization-container');
+      const exportButton = document.querySelector('.export-button');
+      if (combinedVisualization) {
+        console.log('Combined visualization element found');
 
-      // Hide the export button
-      exportButton.style.display = 'none';
+        // Hide the export button
+        exportButton.style.display = 'none';
 
-      html2canvas(combinedVisualization).then(canvas => {
-        // Show the export button again
-        exportButton.style.display = '';
+        html2canvas(combinedVisualization).then(canvas => {
+          // Show the export button again
+          exportButton.style.display = '';
 
-        const link = document.createElement('a');
-        link.download = 'combined_visualization.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    } else {
-      console.error('Combined visualization element not found');
-    }
-  }
+          const link = document.createElement('a');
+          link.download = 'combined_visualization.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      } else {
+        console.error('Combined visualization element not found');
+      }
+    },
+    applyManualZoom() {
+      if (this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+          this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+        const { x1, x2, y1, y2 } = this.manualZoom;
+        this.sendRelayoutData(
+          x1, x2, y2, y1,
+          this.visualizations.exon_intervals1,
+          this.visualizations.exon_intervals2,
+          this.comparison_id,
+          true, // is_manual_zoom
+          this.visualizations.dotplot_data // Include original dotplot data
+        );
+      } else {
+        console.error('Please fill in all zoom coordinates');
+      }
+    },
   }
 };
 </script>

@@ -149,27 +149,27 @@ def run_evo_genes():
             'yass_output': yass_output
         })
     
-# Define the update and plot endpoints
-@main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
-def update_exon_positions():
-    data = request.json
-    exons_positions = data.get('exonsPositions', [])
-    return jsonify(success=True)
+# # Define the update and plot endpoints
+# @main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
+# def update_exon_positions():
+#     data = request.json
+#     exons_positions = data.get('exonsPositions', [])
+#     return jsonify(success=True)
 
 
-@main.route('/dash/dotplot/update', methods=['POST'])
-def update_dotplot_data():#This route handles POST requests to update dot plot data.
-    data = request.json
-    dotplot_data = data.get('dotplot_data', {})# Retrieves the dot plot data from the JSON data.
-    return jsonify(success=True)
+# @main.route('/dash/dotplot/update', methods=['POST'])
+# def update_dotplot_data():#This route handles POST requests to update dot plot data.
+#     data = request.json
+#     dotplot_data = data.get('dotplot_data', {})# Retrieves the dot plot data from the JSON data.
+#     return jsonify(success=True)
 
 
-@main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
-def plot_gene_structure():
-    positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
-    exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
-    fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
-    return fig.to_html()
+# @main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
+# def plot_gene_structure():
+#     positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
+#     exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
+#     fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
+#     return fig.to_html()
 
 
 @main.route('/dash/dotplot/plot', methods=['POST'])
@@ -183,37 +183,91 @@ def plot_dotplot_route():
 
 
 
+# @main.route('/dash/relayout', methods=['POST'])
+# def handle_relayout():
+#     try:
+#         relayout_data = request.json
+#         print(f"Received relayout data: {relayout_data}")
+
+#         # Extract the zoom coordinates (x0, x1, y0, y1) and exon intervals from the relayout_data dictionary
+#         x0 = relayout_data.get('x0')
+#         x1 = relayout_data.get('x1')
+#         y0 = relayout_data.get('y0')
+#         y1 = relayout_data.get('y1')
+#         exon_intervals1 = relayout_data.get('exon_intervals1')
+#         exon_intervals2 = relayout_data.get('exon_intervals2')
+
+#         # Check for missing data
+#         missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'exon_intervals1', 'exon_intervals2'] if relayout_data.get(field) is None]
+#         if missing_fields:
+#             print(f"Missing fields: {missing_fields}")
+#             return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
+
+#         # Assuming exon_intervals are stored in the same format as used in the create_gene_plot function
+#         gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=[x0, x1]).to_html()
+#         gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0]).to_html()
+
+#         # Log the new gene structure ranges
+#         print(f"New gene structure 1 range: [{x0}, {x1}]")
+#         print(f"New gene structure 2 range: [{y1}, {y0}]")
+
+#         return jsonify({
+#             'gene_structure1_html': gene_structure1_html,
+#             'gene_structure2_html': gene_structure2_html
+#         })
+#     except Exception as e:
+#         print(f'Error processing relayout data: {e}')
+#         return jsonify(success=False, error=str(e)), 500
+
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
         relayout_data = request.json
         print(f"Received relayout data: {relayout_data}")
 
-        # Extract the zoom coordinates (x0, x1, y0, y1) and exon intervals from the relayout_data dictionary
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
         y0 = relayout_data.get('y0')
         y1 = relayout_data.get('y1')
-        exon_intervals1 = relayout_data.get('exon_intervals1')
-        exon_intervals2 = relayout_data.get('exon_intervals2')
+        exon_intervals1 = relayout_data.get('exon_intervals1', {})
+        exon_intervals2 = relayout_data.get('exon_intervals2', {})
 
-        # Check for missing data
-        missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'exon_intervals1', 'exon_intervals2'] if relayout_data.get(field) is None]
-        if missing_fields:
-            print(f"Missing fields: {missing_fields}")
-            return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
+        # Check if this is a manual zoom
+        is_manual_zoom = relayout_data.get('is_manual_zoom', False)
 
-        # Assuming exon_intervals are stored in the same format as used in the create_gene_plot function
-        gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=[x0, x1]).to_html()
-        gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0]).to_html()
+        if is_manual_zoom:
+            # Use the provided coordinates directly
+            x_range = [x0, x1]
+            y_range = [y1, y0]  # Note: y1 and y0 are swapped to match Plotly's coordinate system
+        else:
+            # Calculate zoom based on the relayout data (as before)
+            x_range = [x0, x1] if x0 is not None and x1 is not None else None
+            y_range = [y1, y0] if y0 is not None and y1 is not None else None
 
-        # Log the new gene structure ranges
-        print(f"New gene structure 1 range: [{x0}, {x1}]")
-        print(f"New gene structure 2 range: [{y1}, {y0}]")
+        # Update both gene structure plots and the dotplot
+        gene_structure1_html = ""
+        gene_structure2_html = ""
+        if exon_intervals1 and list(exon_intervals1.keys()):
+            gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range).to_html()
+        if exon_intervals2 and list(exon_intervals2.keys()):
+            gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range).to_html()
+
+        # Update the dotplot
+        dotplot_data = {
+            'directions': relayout_data.get('directions', []),
+            'min_x': x0 if x0 is not None else relayout_data.get('min_x', 0),
+            'max_x': x1 if x1 is not None else relayout_data.get('max_x', 1),
+            'min_y': y1 if y1 is not None else relayout_data.get('min_y', 0),
+            'max_y': y0 if y0 is not None else relayout_data.get('max_y', 1),
+            'x_label': relayout_data.get('x_label', ''),
+            'y_label': relayout_data.get('y_label', '')
+        }
+        dotplot_html = plot_dotplot(**dotplot_data).to_html()
 
         return jsonify({
             'gene_structure1_html': gene_structure1_html,
-            'gene_structure2_html': gene_structure2_html
+            'gene_structure2_html': gene_structure2_html,
+            'dotplot_html': dotplot_html
         })
     except Exception as e:
         print(f'Error processing relayout data: {e}')
