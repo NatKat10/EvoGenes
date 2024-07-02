@@ -10,11 +10,8 @@ logging.basicConfig(level=logging.INFO)
 import time
 import random
 
-def create_dash_app(flask_app):
-    #a function that takes a flask app instance as argument and
-    #creates dash app
-    flask_app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 50 MB
 
+def create_dash_app(flask_app):
     dash_app = dash.Dash(
         __name__,
         server=flask_app,
@@ -85,6 +82,7 @@ def create_dash_app(flask_app):
 
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label):
         logging.info("Start processing plot_dotplot function")
+        # print(directions[0])
 
         start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
@@ -110,9 +108,13 @@ def create_dash_app(flask_app):
 
         logging.info(f"Forward points: {len(x_vals_f)}, Reverse points: {len(x_vals_r)}")
 
-        # Data sampling: Reduce the number of points
-        def sample_data(x_vals, y_vals, colors, sample_fraction=0.1):
-            sample_size = int(len(x_vals) * sample_fraction)
+        # Set a threshold for sampling and a maximum number of samples
+        base_threshold = 10000  # Base threshold value
+        sample_fraction = 0.1  # 10%
+        max_samples = base_threshold
+
+        def sample_data(x_vals, y_vals, colors, sample_fraction, max_samples):
+            sample_size = min(int(len(x_vals) * sample_fraction), max_samples)
             sampled_indices = random.sample(range(len(x_vals)), sample_size)
             return (
                 [x_vals[i] for i in sampled_indices],
@@ -120,9 +122,22 @@ def create_dash_app(flask_app):
                 [colors[i] for i in sampled_indices]
             )
 
-        sample_fraction = 0.1  # Adjust the sample fraction as needed (0.1 means 10%)
-        x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sample_fraction)
-        x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sample_fraction)
+        # Calculate thresholds based on the length of directions
+        forward_threshold = len(x_vals_f) * sample_fraction
+        reverse_threshold = len(x_vals_r) * sample_fraction
+
+        # Apply sampling if the number of points exceeds the threshold
+        if len(x_vals_f) > base_threshold:
+            print(f"Applying sampling to forward points: {len(x_vals_f)} points (Threshold: {base_threshold})")
+            x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sample_fraction, max_samples)
+        else:
+            print(f"No sampling applied to forward points: {len(x_vals_f)} points")
+
+        if len(x_vals_r) > base_threshold:
+            print(f"Applying sampling to reverse points: {len(x_vals_r)} points (Threshold: {base_threshold})")
+            x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sample_fraction, max_samples)
+        else:
+            print(f"No sampling applied to reverse points: {len(x_vals_r)} points")
 
         logging.info(f"Sampled Forward points: {len(x_vals_f)}, Sampled Reverse points: {len(x_vals_r)}")
 

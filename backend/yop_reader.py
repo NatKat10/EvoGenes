@@ -7,134 +7,134 @@ import numpy as np
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import plotly.graph_objs as go
 
-# from dash import dcc
-# from dash import html
+# # from dash import dcc
+# # from dash import html
 
-# from backend.app import dash_app
+# # from backend.app import dash_app
 
 
-def parse_yop(file_path):
-    sequences = []
-    current_sequence = []
+# def parse_yop(file_path):
+#     sequences = []
+#     current_sequence = []
 
-    # Regular expression to match the start of a sequence
-    sequence_start_pattern = re.compile(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ [fr]")
+#     # Regular expression to match the start of a sequence
+#     sequence_start_pattern = re.compile(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ [fr]")
 
-    with open(file_path, 'r', encoding='utf-8') as file:
-        for line in file:#reading each line in the yop file.
-            if sequence_start_pattern.match(line):# if the line matches the start pattern
-                if current_sequence:
-                    sequences.append(current_sequence)
-                    current_sequence = []
-            current_sequence.append(line.strip())
+#     with open(file_path, 'r', encoding='utf-8') as file:
+#         for line in file:#reading each line in the yop file.
+#             if sequence_start_pattern.match(line):# if the line matches the start pattern
+#                 if current_sequence:
+#                     sequences.append(current_sequence)
+#                     current_sequence = []
+#             current_sequence.append(line.strip())
 
-        if current_sequence:# puts all the lines that related to single sequance and making a list of sequances
-            sequences.append(current_sequence)
+#         if current_sequence:# puts all the lines that related to single sequance and making a list of sequances
+#             sequences.append(current_sequence)
 
-    return sequences #Returns a list of sequences
+#     return sequences #Returns a list of sequences
 
-def extract_fields(sequence):
-    fields = {}
+# def extract_fields(sequence):
+#     fields = {}
 
-    # Extract the indexes and direction from the first line
-    first_line = sequence[0]
-    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", first_line)#check if the first line indid matches the beggining pattern.
-    if not match:
-        return None
+#     # Extract the indexes and direction from the first line
+#     first_line = sequence[0]
+#     match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", first_line)#check if the first line indid matches the beggining pattern.
+#     if not match:
+#         return None
 
-    start1, end1, start2, end2, direction = match.groups()#extracting the needed fields " (25136-25194)(29160-29218) Ev: 0.000135011 s: 59/59 f "
-    fields['indexes'] = (int(start1), int(end1), int(start2), int(end2))
-    fields['direction'] = direction
+#     start1, end1, start2, end2, direction = match.groups()#extracting the needed fields " (25136-25194)(29160-29218) Ev: 0.000135011 s: 59/59 f "
+#     fields['indexes'] = (int(start1), int(end1), int(start2), int(end2))
+#     fields['direction'] = direction
 
-    # Extract axis labels from the second line
-    second_line = sequence[1]
-    labels_match = re.match(r'^\* "([^"]+)" \(\d+ bp\) / "([^"]+)" \(\d+ bp\)', second_line)
-    if labels_match:
-        fields['x_label'], fields['y_label'] = labels_match.groups()
-    else:
-        fields['x_label'], fields['y_label'] = 'X-axis', 'Y-axis'
+#     # Extract axis labels from the second line
+#     second_line = sequence[1]
+#     labels_match = re.match(r'^\* "([^"]+)" \(\d+ bp\) / "([^"]+)" \(\d+ bp\)', second_line)
+#     if labels_match:
+#         fields['x_label'], fields['y_label'] = labels_match.groups()
+#     else:
+#         fields['x_label'], fields['y_label'] = 'X-axis', 'Y-axis'
 
-    # Extract the line with the mutation symbols
-    mutation_line = None
-    for line in sequence:
-        line_content = line.strip()
-        # Check if the line contains only mutation symbols and no alphanumeric characters
-        if re.fullmatch(r'[|:. ]+', line_content):
-            mutation_line = line_content
-            break
+#     # Extract the line with the mutation symbols
+#     mutation_line = None
+#     for line in sequence:
+#         line_content = line.strip()
+#         # Check if the line contains only mutation symbols and no alphanumeric characters
+#         if re.fullmatch(r'[|:. ]+', line_content):
+#             mutation_line = line_content
+#             break
 
-    if mutation_line is None:
-        return None
-    fields['mutation_line'] = mutation_line
+#     if mutation_line is None:
+#         return None
+#     fields['mutation_line'] = mutation_line
 
-    return fields # returning only the needed fields for the dotplot creation (2 start, 2 end, direction, labels and the mutation line)
+#     return fields # returning only the needed fields for the dotplot creation (2 start, 2 end, direction, labels and the mutation line)
 
-def generate_list(fields):#Generates a list of tuples (index1, index2, intensity) based on the mutation symbols.
-    start1, end1, start2, end2 = fields['indexes']# get the fields we need
-    mutation_line = fields['mutation_line']
+# def generate_list(fields):#Generates a list of tuples (index1, index2, intensity) based on the mutation symbols.
+#     start1, end1, start2, end2 = fields['indexes']# get the fields we need
+#     mutation_line = fields['mutation_line']
 
-    result_list = []
-    if fields['direction'] == 'f':# in case the direction is farward we start from beggining and going up 
-        index1, index2 = start1, start2
-        step = 1
-    else:
-        index1, index2 = start1, start2#in case the direction is reverse we do the same but in the opposite direction
-        step = -1
+#     result_list = []
+#     if fields['direction'] == 'f':# in case the direction is farward we start from beggining and going up 
+#         index1, index2 = start1, start2
+#         step = 1
+#     else:
+#         index1, index2 = start1, start2#in case the direction is reverse we do the same but in the opposite direction
+#         step = -1
 
-    for char in mutation_line:
-        if char == ' ':
-            index1 += step
-            index2 += step
-            continue
-        elif char == '|':
-            result_list.append((index1, index2, 3)) # if the aligment result is "match" we give the highest score etc.
-        elif char == ':':
-            result_list.append((index1, index2, 2))
-        elif char == '.':
-            result_list.append((index1, index2, 1))
+#     for char in mutation_line:
+#         if char == ' ':
+#             index1 += step
+#             index2 += step
+#             continue
+#         elif char == '|':
+#             result_list.append((index1, index2, 3)) # if the aligment result is "match" we give the highest score etc.
+#         elif char == ':':
+#             result_list.append((index1, index2, 2))
+#         elif char == '.':
+#             result_list.append((index1, index2, 1))
 
-        index1 += step
-        index2 += step
+#         index1 += step
+#         index2 += step
 
-    return result_list
+#     return result_list
 
-def process_sequences(file_path):
-    sequences = parse_yop(file_path)
+# def process_sequences(file_path):
+#     sequences = parse_yop(file_path)
     
-    result_sequences = []
-    directions = []
-    x_label, y_label = 'X-axis', 'Y-axis'
+#     result_sequences = []
+#     directions = []
+#     x_label, y_label = 'X-axis', 'Y-axis'
 
-    # Variables to store the axis limits
-    min_x = float('inf')
-    max_x = float('-inf')
-    min_y = float('inf')
-    max_y = float('-inf')
+#     # Variables to store the axis limits
+#     min_x = float('inf')
+#     max_x = float('-inf')
+#     min_y = float('inf')
+#     max_y = float('-inf')
 
-    for i, sequence in tqdm(enumerate(sequences), total=len(sequences), desc="Processing sequences"):
-        fields = extract_fields(sequence)
-        if fields is None:
-            print(f"Sequence {i + 1} has issues with extracting fields")
-            continue
+#     for i, sequence in tqdm(enumerate(sequences), total=len(sequences), desc="Processing sequences"):
+#         fields = extract_fields(sequence)
+#         if fields is None:
+#             print(f"Sequence {i + 1} has issues with extracting fields")
+#             continue
 
-        if i == 0:  # Assume all sequences have the same labels
-            x_label, y_label = fields['x_label'], fields['y_label']
+#         if i == 0:  # Assume all sequences have the same labels
+#             x_label, y_label = fields['x_label'], fields['y_label']
 
-        result_list = generate_list(fields)
-        result_sequences.append(result_list)
-        directions.append((result_list, fields['direction']))
+#         result_list = generate_list(fields)
+#         result_sequences.append(result_list)
+#         directions.append((result_list, fields['direction']))
 
-        # Update axis limits
-        for x, y, _ in result_list:# updating the min and max for the dotplot according to the results 
-            if x < min_x:
-                min_x = x
-            if x > max_x:
-                max_x = x
-            if y < min_y:
-                min_y = y
-            if y > max_y:
-                max_y = y
-    return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
+#         # Update axis limits
+#         for x, y, _ in result_list:# updating the min and max for the dotplot according to the results 
+#             if x < min_x:
+#                 min_x = x
+#             if x > max_x:
+#                 max_x = x
+#             if y < min_y:
+#                 min_y = y
+#             if y > max_y:
+#                 max_y = y
+#     return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
 
 # def plot_dotplot(yop_path, output_path):
 #     result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label = process_sequences(yop_path)#Processes the YOP file to get sequences and directions.
@@ -240,3 +240,112 @@ def process_sequences(file_path):
 #     output_path = sys.argv[2]
 
 #     plot_dotplot(yop_path, output_path)
+
+
+def parse_yop(file_path):
+    sequences = []
+    current_sequence = []
+
+    # Pre-compiled regular expression to match the start of a sequence
+    sequence_start_pattern = re.compile(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ [fr]")
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            if sequence_start_pattern.match(line):
+                if current_sequence:
+                    sequences.append(current_sequence)
+                    current_sequence = []
+            current_sequence.append(line.strip())
+
+        if current_sequence:
+            sequences.append(current_sequence)
+
+    return sequences
+
+def extract_fields(sequence):
+    fields = {}
+
+    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", sequence[0])
+    if not match:
+        return None
+
+    start1, end1, start2, end2, direction = match.groups()
+    fields['indexes'] = (int(start1), int(end1), int(start2), int(end2))
+    fields['direction'] = direction
+
+    labels_match = re.match(r'^\* "([^"]+)" \(\d+ bp\) / "([^"]+)" \(\d+ bp\)', sequence[1])
+    if labels_match:
+        fields['x_label'], fields['y_label'] = labels_match.groups()
+    else:
+        fields['x_label'], fields['y_label'] = 'X-axis', 'Y-axis'
+
+    for line in sequence:
+        if re.fullmatch(r'[|:. ]+', line.strip()):
+            fields['mutation_line'] = line.strip()
+            break
+
+    if 'mutation_line' not in fields:
+        return None
+
+    return fields
+
+def generate_list(fields):
+    start1, end1, start2, end2 = fields['indexes']
+    mutation_line = fields['mutation_line']
+
+    result_list = []
+    step = 1 if fields['direction'] == 'f' else -1
+    index1, index2 = start1, start2
+
+    for char in mutation_line:
+        if char == ' ':
+            index1 += step
+            index2 += step
+            continue
+        elif char == '|':
+            result_list.append((index1, index2, 3))
+        elif char == ':':
+            result_list.append((index1, index2, 2))
+        elif char == '.':
+            result_list.append((index1, index2, 1))
+
+        index1 += step
+        index2 += step
+
+    return result_list
+
+def process_sequences(file_path):
+    sequences = parse_yop(file_path)
+    
+    result_sequences = []
+    directions = []
+    x_label, y_label = 'X-axis', 'Y-axis'
+
+    min_x = float('inf')
+    max_x = float('-inf')
+    min_y = float('inf')
+    max_y = float('-inf')
+
+    for sequence in tqdm(sequences, desc="Processing sequences"):
+        fields = extract_fields(sequence)
+        if fields is None:
+            continue
+
+        if x_label == 'X-axis' and y_label == 'Y-axis':  # Assume all sequences have the same labels
+            x_label, y_label = fields['x_label'], fields['y_label']
+
+        result_list = generate_list(fields)
+        result_sequences.append(result_list)
+        directions.append((result_list, fields['direction']))
+
+        for x, y, _ in result_list:
+            if x < min_x:
+                min_x = x
+            if x > max_x:
+                max_x = x
+            if y < min_y:
+                min_y = y
+            if y > max_y:
+                max_y = y
+
+    return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label

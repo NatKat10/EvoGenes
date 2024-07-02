@@ -60,6 +60,23 @@
         </div>
       </div>
 
+      <div class="manual-zoom-container">
+        <h4>Manual Zoom</h4>
+        <div class="zoom-inputs">
+          <div>
+            <label>X-axis: </label>
+            <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
+            <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+          </div>
+          <div>
+            <label>Y-axis: </label>
+            <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
+            <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+          </div>
+        </div>
+        <button @click="applyManualZoom">Apply Zoom</button>
+      </div>
+
       <!-- Export button as image -->
       <div class="export-button" v-if="visualizations">
         <img src="@/assets/camera.png" alt="Export" @click="captureScreenshot" style="cursor: pointer;"/>
@@ -107,6 +124,12 @@ export default {
       yassOutput: '',
       showModal: false,
       comparison_id: null,
+      manualZoom: {
+        x1: null,
+        x2: null,
+        y1: null,
+        y2: null
+      },
     };
   },
   mounted() {
@@ -330,38 +353,58 @@ export default {
     this.addZoomEventListener(container); // Add this line
     },
     addZoomEventListener(container) {
-    const dotplot = container.querySelector('.plotly-graph-div');
-    if (dotplot) {
-      dotplot.on('plotly_relayout', (eventData) => {
-        const comparison_id = this.comparison_id;
-        if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-          const x0 = eventData['xaxis.range[0]'];
-          const x1 = eventData['xaxis.range[1]'];
-          const y0 = eventData['yaxis.range[0]'];
-          const y1 = eventData['yaxis.range[1]'];
-          console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
-          console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
-          this.sendRelayoutData(x0, x1, y0, y1, comparison_id);
-        } else {
-                      // Axes have been reset, send the original coordinates
+        const dotplot = container.querySelector('.plotly-graph-div');
+        if (dotplot) {
+            dotplot.on('plotly_relayout', (eventData) => {
+                const comparison_id = this.comparison_id;
+                const exon_intervals1 = this.visualizations.exon_intervals1;
+                const exon_intervals2 = this.visualizations.exon_intervals2;
 
-          const originalX0 = this.visualizations.dotplot_data.min_x;
-          const originalX1 = this.visualizations.dotplot_data.max_x;
-          const originalY0 = this.visualizations.dotplot_data.max_y;
-          const originalY1 = this.visualizations.dotplot_data.min_y;
-          console.log('Resetting axes to original coordinates');
-          this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, comparison_id);
+                if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+                    const x0 = eventData['xaxis.range[0]'];
+                    const x1 = eventData['xaxis.range[1]'];
+                    const y0 = eventData['yaxis.range[0]'];
+                    const y1 = eventData['yaxis.range[1]'];
+                    console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
+                    console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
+                    this.sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id);
+                } else {
+                    // Axes have been reset, send the original coordinates
+                    const originalX0 = this.visualizations.dotplot_data.min_x;
+                    const originalX1 = this.visualizations.dotplot_data.max_x;
+                    const originalY0 = this.visualizations.dotplot_data.max_y;
+                    const originalY1 = this.visualizations.dotplot_data.min_y;
+                    console.log('Resetting axes to original coordinates');
+                    this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, exon_intervals1, exon_intervals2, comparison_id);
         }
       });
       }
     },
-    sendRelayoutData(x0, x1, y0, y1, comparison_id) {
+
+    sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id, is_manual_zoom = false) {
+      const dotplot_data = this.visualizations.dotplot_data;
+      const requestBody = { 
+        x0, x1, y0, y1, 
+        exon_intervals1, 
+        exon_intervals2, 
+        comparison_id,
+        is_manual_zoom,
+        directions: dotplot_data.directions,
+        min_x: dotplot_data.min_x,
+        max_x: dotplot_data.max_x,
+        min_y: dotplot_data.min_y,
+        max_y: dotplot_data.max_y,
+        x_label: dotplot_data.x_label,
+        y_label: dotplot_data.y_label
+      };
+      console.log('Sending relayout data:', JSON.stringify(requestBody, null, 2));
+      
       fetch(`${server_domain}/dash/relayout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ x0, x1, y0, y1, comparison_id })
+        body: JSON.stringify(requestBody)
       })
       .then(response => {
         if (!response.ok) {
@@ -370,37 +413,56 @@ export default {
         return response.json();
       })
       .then(data => {
-        // Update the gene structure plots with the response data
+        console.log('Received response:', data);
+        // Update the gene structure plots and dotplot with the response data
         this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
         this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
-        console.log('Relayout data sent successfully:', data);
+        this.insertDotplotHTML(this.$refs.dotplot, data.dotplot_html);
+        console.log('Relayout data applied successfully');
       })
       .catch(error => {
         console.error('Error sending relayout data:', error);
       });
     },
+
     captureScreenshot() {
-    const combinedVisualization = document.querySelector('.visualization-container');
-    const exportButton = document.querySelector('.export-button');
-    if (combinedVisualization) {
-      console.log('Combined visualization element found');
+      const combinedVisualization = document.querySelector('.visualization-container');
+      const exportButton = document.querySelector('.export-button');
+      if (combinedVisualization) {
+        console.log('Combined visualization element found');
 
-      // Hide the export button
-      exportButton.style.display = 'none';
+        // Hide the export button
+        exportButton.style.display = 'none';
 
-      html2canvas(combinedVisualization).then(canvas => {
-        // Show the export button again
-        exportButton.style.display = '';
+        html2canvas(combinedVisualization).then(canvas => {
+          // Show the export button again
+          exportButton.style.display = '';
 
-        const link = document.createElement('a');
-        link.download = 'combined_visualization.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
-    } else {
-      console.error('Combined visualization element not found');
-    }
-  }
+          const link = document.createElement('a');
+          link.download = 'combined_visualization.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      } else {
+        console.error('Combined visualization element not found');
+      }
+    },
+    applyManualZoom() {
+      if (this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+          this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+        const { x1, x2, y1, y2 } = this.manualZoom;
+        this.sendRelayoutData(
+          x1, x2, y2, y1,
+          this.visualizations.exon_intervals1,
+          this.visualizations.exon_intervals2,
+          this.comparison_id,
+          true, // is_manual_zoom
+          this.visualizations.dotplot_data // Include original dotplot data
+        );
+      } else {
+        console.error('Please fill in all zoom coordinates');
+      }
+    },
   }
 };
 </script>
