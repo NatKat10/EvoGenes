@@ -29,34 +29,27 @@
 
     <div class="visualization-container" v-if="visualizations">
       <div class="graph-container">
-
         <div class="dotplot-container">
           <div ref="dotplot" class="figure-plot"></div>
           <div class="info-icon" @click="showModal = true">?</div>
         </div>
-        
-        <div class="gene-structure-containerX">
+        <div class="gene-structure-container">
           <div ref="geneStructure1" class="gene-structure"></div>
-        </div>
-
-        <div class="gene-structure-containerY">
           <div ref="geneStructure2" class="gene-structure"></div>
-        </div>
 
-      </div>
-
-        <div class="parent-select-container">
-          <label for="parent-select1">Select Parent for Gene 1:   </label>
-          <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
-            <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
-          </select>
-        </div>
-        
-        <div class="parent-select-container">
-          <label for="parent-select2">Select Parent for Gene 2:   </label>
-          <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
-            <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
-          </select>
+          <div class="parent-select-container">
+            <label for="parent-select1">Select Parent for Gene 1:   </label>
+            <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
+              <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
+            </select>
+          </div>
+          
+          <div class="parent-select-container">
+            <label for="parent-select2">Select Parent for Gene 2:   </label>
+            <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
+              <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -82,8 +75,6 @@
         <img src="@/assets/camera.png" alt="Export" @click="captureScreenshot" style="cursor: pointer;"/>
       </div>
     </div>
-
-
     <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
       <div class="modal-content">
         <h3>YASS Alignment Summary:</h3>
@@ -91,6 +82,7 @@
         <button @click="showModal = false">Close</button>
       </div>
     </div>
+  </div>
 </template>
 
 <script>
@@ -466,8 +458,6 @@ export default {
   }
 };
 </script>
-
-
 <style scoped>
 .error-message {
   color: red;
@@ -539,6 +529,8 @@ h3 {
 .textarea:hover {
   background-color: #5a7f5ee9;
   color: #ffffff;
+
+  
 }
 
 .textarea:focus {
@@ -758,9 +750,10 @@ button:has(:last-child:active)::before {
 .graph-container {
   width: 100%;
   display: flex;
-  flex-direction: column; /* Stack vertically to align gene structure 1 below the dot plot */
+  flex-direction: column; /* Ensure the child elements stack vertically */
   align-items: center; /* Center items horizontally */
   position: relative;
+
 }
 
 .dotplot-container {
@@ -768,28 +761,31 @@ button:has(:last-child:active)::before {
   position: relative;
 }
 
-.gene-structure-containerX {
-  width: 100%;
+.gene-structure-container {
+  /* flex: 1; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.gene-structure-containerY {
-  position: absolute;
-  top: 0;
-  right: -120px; /* Adjust this value to move it closer to or further from the dot plot */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  transform: rotate(-90deg) translate(-50%, -50%);
-  transform-origin: top left;
-  width: 70px; /* Adjust this value to make the container smaller */
+.figure-iframe {
+  width: 100%;
+  height: 870px;
+  border: none;
+}
+
+.parent-select-container {
+  margin-bottom: 10px;
 }
 
 .gene-structure {
   width: 100%;
-  height: 70px; /* Adjust this value to make the structure smaller */
+  height: 90px;
+  /* border: 1px solid #ccc; */
   margin-bottom: 20px;
 }
+
+
 
 .styled-select {
   width: 100%;
@@ -810,6 +806,8 @@ button:has(:last-child:active)::before {
   font-size: 1.2em;
 }
 
+
+
 .info-icon {
   position: absolute;
   top: 10px;
@@ -824,7 +822,6 @@ button:has(:last-child:active)::before {
   justify-content: center;
   cursor: pointer;
 }
-
 .modal-content {
   background: white;
   padding: 20px;
@@ -834,6 +831,7 @@ button:has(:last-child:active)::before {
   overflow: auto;
 }
 
+	
 .yass-output {
   margin-top: 20px;
   width: 100%;
@@ -841,7 +839,6 @@ button:has(:last-child:active)::before {
   padding: 10px;
   border-radius: 5px;
 }
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -854,6 +851,7 @@ button:has(:last-child:active)::before {
   justify-content: center;
   z-index: 1000;
 }
+
 
 .export-button {
   margin-top: 20px;
