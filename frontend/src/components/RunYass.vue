@@ -439,22 +439,54 @@ export default {
         console.error('Combined visualization element not found');
       }
     },
-    applyManualZoom() {
-      if (this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-          this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-        const { x1, x2, y1, y2 } = this.manualZoom;
-        this.sendRelayoutData(
-          x1, x2, y2, y1,
-          this.visualizations.exon_intervals1,
-          this.visualizations.exon_intervals2,
-          this.comparison_id,
-          true, // is_manual_zoom
-          this.visualizations.dotplot_data // Include original dotplot data
-        );
-      } else {
-        console.error('Please fill in all zoom coordinates');
-      }
-    },
+    // applyManualZoom() {
+    //   if (this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+    //       this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+    //     const { x1, x2, y1, y2 } = this.manualZoom;
+    //     this.sendRelayoutData(
+    //       x1, x2, y2, y1,
+    //       this.visualizations.exon_intervals1,
+    //       this.visualizations.exon_intervals2,
+    //       this.comparison_id,
+    //       true, // is_manual_zoom
+    //       this.visualizations.dotplot_data // Include original dotplot data
+    //     );
+    //   } else {
+    //     console.error('Please fill in all zoom coordinates');
+    //   }
+    // },
+  applyManualZoom() {
+  if (!this.visualizations || !this.visualizations.dotplot_data) return;
+
+  // Ensure the manual zoom coordinates are present
+  if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+      this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+    
+    const { x1, x2, y1, y2 } = this.manualZoom;
+
+    fetch(`${server_domain}/dash/dotplot/plot_update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        dotplot_data: this.visualizations.dotplot_data,
+        x1: x1,
+        x2: x2,
+        y1: y1,
+        y2: y2
+      }),
+      mode: 'cors',
+    })
+    .then(response => response.text())
+    .then(html => {
+      this.insertDotplotHTML(this.$refs.dotplot, html);
+    })
+    .catch(error => {
+      console.error('Error updating dotplot:', error);
+    });
+  } else {
+    console.error('Please fill in all zoom coordinates');
+  }
+},
   }
 };
 </script>

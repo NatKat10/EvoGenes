@@ -95,7 +95,9 @@ def run_evo_genes():
         logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
         yass_output = result.stdout + result.stderr
 
+
         result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
+
         logging.info("Sequences processed")
 
         gene_structure1 = fetch_gene_structure(gene_id1)
@@ -149,27 +151,27 @@ def run_evo_genes():
             'yass_output': yass_output
         })
     
-# # Define the update and plot endpoints
-# @main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
-# def update_exon_positions():
-#     data = request.json
-#     exons_positions = data.get('exonsPositions', [])
-#     return jsonify(success=True)
+# Define the update and plot endpoints
+@main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
+def update_exon_positions():
+    data = request.json
+    exons_positions = data.get('exonsPositions', [])
+    return jsonify(success=True)
 
 
-# @main.route('/dash/dotplot/update', methods=['POST'])
-# def update_dotplot_data():#This route handles POST requests to update dot plot data.
-#     data = request.json
-#     dotplot_data = data.get('dotplot_data', {})# Retrieves the dot plot data from the JSON data.
-#     return jsonify(success=True)
+@main.route('/dash/dotplot/update', methods=['POST'])
+def update_dotplot_data():#This route handles POST requests to update dot plot data.
+    data = request.json
+    dotplot_data = data.get('dotplot_data', {})# Retrieves the dot plot data from the JSON data.
+    return jsonify(success=True)
 
 
-# @main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
-# def plot_gene_structure():
-#     positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
-#     exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
-#     fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
-#     return fig.to_html()
+@main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
+def plot_gene_structure():
+    positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
+    exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
+    fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
+    return fig.to_html()
 
 
 @main.route('/dash/dotplot/plot', methods=['POST'])
@@ -182,6 +184,63 @@ def plot_dotplot_route():
     return fig.to_html()
 
 
+@main.route('/dash/dotplot/plot_update', methods=['POST'])  
+def plot_dotplot_route_update():
+    dotplot_data = request.json['dotplot_data']
+    
+    # Extract the original min and max values
+    original_min_x = dotplot_data['min_x']
+    original_max_x = dotplot_data['max_x']
+    original_min_y = dotplot_data['min_y']
+    original_max_y = dotplot_data['max_y']
+    print("this is the real cordinate Of y:, ", dotplot_data['max_y'],dotplot_data['min_y'])
+    print("this is the real cordinate Of x:, ", dotplot_data['max_x'],dotplot_data['min_x'])
+    
+    # Extract the zoom coordinates from the request
+    x1 = request.json.get('x1')
+    x2 = request.json.get('x2')
+    y1 = request.json.get('y1')
+    y2 = request.json.get('y2')
+    print("this is the Zoom cordinate:, ", x1,x2,y1,y2)
+
+    # Validate that x1, x2, y1, y2 are not None
+    if x1 is None or x2 is None or y1 is None or y2 is None:
+        return jsonify({'error': 'Zoom coordinates are required'}), 400
+
+    # Ensure x1 < x2 and y1 < y2
+    if x1 >= x2 or y1 >= y2:
+        return jsonify({'error': 'Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2'}), 400
+
+    # Validate the coordinates are within the original min/max range
+    if not (original_min_x <= x1 <= original_max_x and
+            original_min_x <= x2 <= original_max_x and
+            original_min_y <= y1 <= original_max_y and
+            original_min_y <= y2 <= original_max_y):
+        return jsonify({'error': 'Zoom coordinates are out of range'}), 400
+
+    # Update the dotplot data with the new coordinates
+    dotplot_data['min_x'] = x1
+    dotplot_data['max_x'] = x2
+    dotplot_data['min_y'] = y1
+    dotplot_data['max_y'] = y2
+    
+    filtered_directions = []
+    for direction in dotplot_data['directions']:
+        points = direction[0]  # Access the list of points within each direction
+        for point in points:
+            x, y, color = point  # Unpack each point [x, y, color]
+            if x1 <= x <= x2 and y1 <= y <= y2:
+                filtered_directions.append(direction)
+                break  # Once we find one valid point, we can include the entire direction
+    dotplot_data['directions'] = filtered_directions
+
+    # Generate the updated plot
+    fig = plot_dotplot(dotplot_data['directions'],
+                       dotplot_data['min_x'], dotplot_data['max_x'],
+                       dotplot_data['min_y'], dotplot_data['max_y'],
+                       dotplot_data['x_label'], dotplot_data['y_label'])
+
+    return fig.to_html()
 
 # @main.route('/dash/relayout', methods=['POST'])
 # def handle_relayout():
@@ -223,7 +282,7 @@ def plot_dotplot_route():
 def handle_relayout():
     try:
         relayout_data = request.json
-        print(f"Received relayout data: {relayout_data}")
+        # print(f"Received relayout data: {relayout_data}")
 
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
