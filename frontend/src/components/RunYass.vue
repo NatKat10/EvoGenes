@@ -455,8 +455,10 @@ export default {
     //     console.error('Please fill in all zoom coordinates');
     //   }
     // },
-  applyManualZoom() {
- 
+applyManualZoom() {
+  this.loading = true;
+  this.progress = 0;
+  
   try {
     if (!this.visualizations || !this.visualizations.dotplot_data) {
       throw new Error('Dotplot data is missing');
@@ -502,8 +504,11 @@ export default {
   } catch (error) {
     console.error('Error in applyManualZoom:', error.message);
   } finally {
+    this.loading = false;
+    this.progress = 100;
   }
-},
+}
+
   }
 };
 </script>
