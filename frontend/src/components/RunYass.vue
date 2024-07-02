@@ -210,10 +210,10 @@ export default {
       console.error('Error running Evo Genes:', error);
       this.errorMessage = "Incorrect Input";
     } finally {
-      this.loading = false;
-      this.progress = 100;
       this.clearInputs();
       this.updateDotplot();
+      this.loading = false;
+      this.progress = 100;
       }
     },
     async fetchWithProgress(url, options, onProgress) {
@@ -456,35 +456,52 @@ export default {
     //   }
     // },
   applyManualZoom() {
-  if (!this.visualizations || !this.visualizations.dotplot_data) return;
+ 
+  try {
+    if (!this.visualizations || !this.visualizations.dotplot_data) {
+      throw new Error('Dotplot data is missing');
+    }
 
-  // Ensure the manual zoom coordinates are present
-  if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-      this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-    
-    const { x1, x2, y1, y2 } = this.manualZoom;
-
-    fetch(`${server_domain}/dash/dotplot/plot_update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        dotplot_data: this.visualizations.dotplot_data,
-        x1: x1,
-        x2: x2,
-        y1: y1,
-        y2: y2
-      }),
-      mode: 'cors',
-    })
-    .then(response => response.text())
-    .then(html => {
-      this.insertDotplotHTML(this.$refs.dotplot, html);
-    })
-    .catch(error => {
-      console.error('Error updating dotplot:', error);
-    });
-  } else {
-    console.error('Please fill in all zoom coordinates');
+    // Ensure the manual zoom coordinates are present
+    if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+        this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+      
+      const { x1, x2, y1, y2 } = this.manualZoom;
+      const comparison_id = this.comparison_id;
+      const exon_intervals1 = this.visualizations.exon_intervals1;
+      const exon_intervals2 = this.visualizations.exon_intervals2;
+      
+      fetch(`${server_domain}/dash/dotplot/plot_update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          dotplot_data: this.visualizations.dotplot_data,
+          x1: x1,
+          x2: x2,
+          y1: y1,
+          y2: y2
+        }),
+        mode: 'cors',
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.text();
+      })
+      .then(html => {
+        this.insertDotplotHTML(this.$refs.dotplot, html);
+        this.sendRelayoutData(x1, x2, y1, y2, exon_intervals1, exon_intervals2, comparison_id);
+      })
+      .catch(error => {
+        console.error('Error updating dotplot:', error);
+      });
+    } else {
+      throw new Error('Please fill in all zoom coordinates');
+    }
+  } catch (error) {
+    console.error('Error in applyManualZoom:', error.message);
+  } finally {
   }
 },
   }

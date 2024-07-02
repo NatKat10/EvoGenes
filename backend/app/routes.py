@@ -210,6 +210,16 @@ def plot_dotplot_route_update():
     # Ensure x1 < x2 and y1 < y2
     if x1 >= x2 or y1 >= y2:
         return jsonify({'error': 'Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2'}), 400
+ 
+    # Validate that x1, x2, y1, y2 are not Zero
+    if x1==0:
+        x1+=1
+    if x2==0:
+        x2==1
+    if y1==0:
+        y1=1
+    if y2==0:
+        y2=1
 
     # Validate the coordinates are within the original min/max range
     if not (original_min_x <= x1 <= original_max_x and
