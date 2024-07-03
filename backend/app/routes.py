@@ -12,6 +12,8 @@ from flask_cors import CORS
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
+
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
@@ -95,7 +97,6 @@ def run_evo_genes():
         logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
         yass_output = result.stdout + result.stderr
 
-
         result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
 
         logging.info("Sequences processed")
@@ -117,13 +118,8 @@ def run_evo_genes():
         normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
         normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
 
-        gene_structure1_html = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x]).to_html()
-        gene_structure2_html = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y]).to_html()
-
-        soup1 = BeautifulSoup(gene_structure1_html, 'html.parser')
-        gene_structure1_body = soup1.body.decode_contents()
-        soup2 = BeautifulSoup(gene_structure2_html, 'html.parser')
-        gene_structure2_body = soup2.body.decode_contents()
+        gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
+        gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
         os.remove(fasta_file1_path)
         os.remove(fasta_file2_path)
@@ -139,23 +135,26 @@ def run_evo_genes():
             'y_label': extracted_gene_id2
         }
 
+        dotplot_plot = plot_dotplot(**dotplot_data)
+
         end_time = time.time()
         logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
         return jsonify({
-            'dotplot_data': dotplot_data,
-            'gene_structure1_html': gene_structure1_body,
-            'gene_structure2_html': gene_structure2_body,
+            'dotplot_plot': dotplot_plot.to_dict(),
+            'gene_structure1_plot': gene_structure1_plot.to_dict(),
+            'gene_structure2_plot': gene_structure2_plot.to_dict(),
             'exon_intervals1': normalized_exons1,
             'exon_intervals2': normalized_exons2,
-            'yass_output': yass_output
+            'yass_output': yass_output,
+            'data_for_manual_zoom': dotplot_data  # Add this field
         })
     
-# Define the update and plot endpoints
-@main.route('/dash/update', methods=['POST'])#This route handles POST requests to update exon positions data
+@main.route('/dash/update', methods=['POST'])
 def update_exon_positions():
     data = request.json
     exons_positions = data.get('exonsPositions', [])
+    # Process and return data if needed
     return jsonify(success=True)
 
 
@@ -166,14 +165,6 @@ def update_dotplot_data():#This route handles POST requests to update dot plot d
     return jsonify(success=True)
 
 
-@main.route('/dash/plot', methods=['GET'])#This route handles GET requests to generate and return the HTML representation of a gene structure plot based on provided exon positions.
-def plot_gene_structure():
-    positions = request.args.get('positions')#Retrieves the positions parameter from the query string.
-    exons_positions = json.loads(positions) if positions else []#Parses the positions parameter from JSON format to a Python list.
-    fig = create_gene_plot(exons_positions)#Calls create_gene_plot to generate the Plotly figure using the provided exon position
-    return fig.to_html()
-
-
 @main.route('/dash/dotplot/plot', methods=['POST'])
 def plot_dotplot_route():
     dotplot_data = request.json['dotplot_data']
@@ -181,51 +172,71 @@ def plot_dotplot_route():
                        dotplot_data['min_x'], dotplot_data['max_x'],
                        dotplot_data['min_y'], dotplot_data['max_y'],
                        dotplot_data['x_label'], dotplot_data['y_label'])
-    return fig.to_html()
+    return jsonify(fig.to_dict())
 
 
-@main.route('/dash/dotplot/plot_update', methods=['POST'])  
+@main.route('/dash/plot', methods=['POST'])
+def plot_gene_structure():
+    data = request.json
+    exons_positions = data.get('exonsPositions', [])
+    fig = create_gene_plot(exons_positions)
+    return jsonify(fig.to_dict())
+
+
+
+@main.route('/dash/dotplot/plot_update', methods=['POST'])
 def plot_dotplot_route_update():
-    dotplot_data = request.json['dotplot_data']
-    
+    data = request.json
+    # print(f"Received data: {data}")  # Log received data
+
+    if 'dotplot_data' not in data:
+        print("Error: dotplot_data is missing from the request")
+        return jsonify({'error': 'dotplot_data is missing from the request'}), 400
+
+    dotplot_data = data['dotplot_data']
+
+    if 'min_x' not in dotplot_data:
+        print("Error: min_x is missing from dotplot_data")
+        return jsonify({'error': 'min_x is missing from dotplot_data'}), 400
+
     # Extract the original min and max values
     original_min_x = dotplot_data['min_x']
     original_max_x = dotplot_data['max_x']
     original_min_y = dotplot_data['min_y']
     original_max_y = dotplot_data['max_y']
-    print("this is the real cordinate Of y:, ", dotplot_data['max_y'],dotplot_data['min_y'])
-    print("this is the real cordinate Of x:, ", dotplot_data['max_x'],dotplot_data['min_x'])
-    
+
     # Extract the zoom coordinates from the request
-    x1 = request.json.get('x1')
-    x2 = request.json.get('x2')
-    y1 = request.json.get('y1')
-    y2 = request.json.get('y2')
-    print("this is the Zoom cordinate:, ", x1,x2,y1,y2)
+    x1 = data.get('x1')
+    x2 = data.get('x2')
+    y1 = data.get('y1')
+    y2 = data.get('y2')
 
     # Validate that x1, x2, y1, y2 are not None
     if x1 is None or x2 is None or y1 is None or y2 is None:
+        print("Error: Zoom coordinates are required")
         return jsonify({'error': 'Zoom coordinates are required'}), 400
 
     # Ensure x1 < x2 and y1 < y2
     if x1 >= x2 or y1 >= y2:
+        print("Error: Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2")
         return jsonify({'error': 'Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2'}), 400
- 
+
     # Validate that x1, x2, y1, y2 are not Zero
-    if x1==0:
-        x1+=1
-    if x2==0:
-        x2==1
-    if y1==0:
-        y1=1
-    if y2==0:
-        y2=1
+    if x1 == 0:
+        x1 += 1
+    if x2 == 0:
+        x2 = 1
+    if y1 == 0:
+        y1 = 1
+    if y2 == 0:
+        y2 = 1
 
     # Validate the coordinates are within the original min/max range
     if not (original_min_x <= x1 <= original_max_x and
             original_min_x <= x2 <= original_max_x and
             original_min_y <= y1 <= original_max_y and
             original_min_y <= y2 <= original_max_y):
+        print("Error: Zoom coordinates are out of range")
         return jsonify({'error': 'Zoom coordinates are out of range'}), 400
 
     # Update the dotplot data with the new coordinates
@@ -233,15 +244,14 @@ def plot_dotplot_route_update():
     dotplot_data['max_x'] = x2
     dotplot_data['min_y'] = y1
     dotplot_data['max_y'] = y2
-    
+
     filtered_directions = []
     for direction in dotplot_data['directions']:
-        points = direction[0]  # Access the list of points within each direction
-        for point in points:
-            x, y, color = point  # Unpack each point [x, y, color]
-            if x1 <= x <= x2 and y1 <= y <= y2:
-                filtered_directions.append(direction)
-                break  # Once we find one valid point, we can include the entire direction
+        points = np.array(direction[0])  # Convert list of points to numpy array
+        mask = (points[:, 0] >= x1) & (points[:, 0] <= x2) & (points[:, 1] >= y1) & (points[:, 1] <= y2)
+        if np.any(mask):
+            filtered_directions.append(direction)
+
     dotplot_data['directions'] = filtered_directions
 
     # Generate the updated plot
@@ -250,44 +260,25 @@ def plot_dotplot_route_update():
                        dotplot_data['min_y'], dotplot_data['max_y'],
                        dotplot_data['x_label'], dotplot_data['y_label'])
 
-    return fig.to_html()
+    # Update gene structure plots based on the new zoom levels
+    exon_intervals1 = data.get('exon_intervals1', {})
+    exon_intervals2 = data.get('exon_intervals2', {})
+    x_label = dotplot_data['x_label']
+    y_label = dotplot_data['y_label']
 
-# @main.route('/dash/relayout', methods=['POST'])
-# def handle_relayout():
-#     try:
-#         relayout_data = request.json
-#         print(f"Received relayout data: {relayout_data}")
+    # Ensure consistent ranges for all plots
+    x_range = [x1, x2]
+    y_range = [y1, y2]
 
-#         # Extract the zoom coordinates (x0, x1, y0, y1) and exon intervals from the relayout_data dictionary
-#         x0 = relayout_data.get('x0')
-#         x1 = relayout_data.get('x1')
-#         y0 = relayout_data.get('y0')
-#         y1 = relayout_data.get('y1')
-#         exon_intervals1 = relayout_data.get('exon_intervals1')
-#         exon_intervals2 = relayout_data.get('exon_intervals2')
+    # Update gene structure plots based on the new zoom levels
+    gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range)
+    gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range)
 
-#         # Check for missing data
-#         missing_fields = [field for field in ['x0', 'x1', 'y0', 'y1', 'exon_intervals1', 'exon_intervals2'] if relayout_data.get(field) is None]
-#         if missing_fields:
-#             print(f"Missing fields: {missing_fields}")
-#             return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
-
-#         # Assuming exon_intervals are stored in the same format as used in the create_gene_plot function
-#         gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=[x0, x1]).to_html()
-#         gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0]).to_html()
-
-#         # Log the new gene structure ranges
-#         print(f"New gene structure 1 range: [{x0}, {x1}]")
-#         print(f"New gene structure 2 range: [{y1}, {y0}]")
-
-#         return jsonify({
-#             'gene_structure1_html': gene_structure1_html,
-#             'gene_structure2_html': gene_structure2_html
-#         })
-#     except Exception as e:
-#         print(f'Error processing relayout data: {e}')
-#         return jsonify(success=False, error=str(e)), 500
-
+    return jsonify({
+        'gene_structure1_plot': gene_structure1_plot.to_dict(),
+        'gene_structure2_plot': gene_structure2_plot.to_dict(),
+        'dotplot_plot': fig.to_dict()
+    })
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
@@ -300,43 +291,49 @@ def handle_relayout():
         y1 = relayout_data.get('y1')
         exon_intervals1 = relayout_data.get('exon_intervals1', {})
         exon_intervals2 = relayout_data.get('exon_intervals2', {})
+        x_label = relayout_data['dotplot_data']['layout']['x_label']
+        y_label = relayout_data['dotplot_data']['layout']['y_label']
 
-        # Check if this is a manual zoom
-        is_manual_zoom = relayout_data.get('is_manual_zoom', False)
+        print(f"Zoom coordinates: x0={x0}, x1={x1}, y0={y0}, y1={y1}")
 
-        if is_manual_zoom:
-            # Use the provided coordinates directly
-            x_range = [x0, x1]
-            y_range = [y1, y0]  # Note: y1 and y0 are swapped to match Plotly's coordinate system
-        else:
-            # Calculate zoom based on the relayout data (as before)
-            x_range = [x0, x1] if x0 is not None and x1 is not None else None
-            y_range = [y1, y0] if y0 is not None and y1 is not None else None
+        # Ensure consistent ranges for all plots
+        x_range = [x0, x1]
+        y_range = [y0, y1]  # Adjust y range as needed to match Plotly's coordinate system
 
-        # Update both gene structure plots and the dotplot
-        gene_structure1_html = ""
-        gene_structure2_html = ""
-        if exon_intervals1 and list(exon_intervals1.keys()):
-            gene_structure1_html = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range).to_html()
-        if exon_intervals2 and list(exon_intervals2.keys()):
-            gene_structure2_html = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range).to_html()
+        # Update gene structure plots based on the new zoom levels
+        gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range)
+        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range)
 
-        # Update the dotplot
-        dotplot_data = {
-            'directions': relayout_data.get('directions', []),
-            'min_x': x0 if x0 is not None else relayout_data.get('min_x', 0),
-            'max_x': x1 if x1 is not None else relayout_data.get('max_x', 1),
-            'min_y': y1 if y1 is not None else relayout_data.get('min_y', 0),
-            'max_y': y0 if y0 is not None else relayout_data.get('max_y', 1),
-            'x_label': relayout_data.get('x_label', ''),
-            'y_label': relayout_data.get('y_label', '')
+        # Update the dotplot layout based on the new zoom levels
+        dotplot_data = relayout_data.get('dotplot_data', {})
+        dotplot_layout = dotplot_data.get('layout', {})
+
+        dotplot_layout['xaxis'] = {
+            'range': x_range,
+            'showgrid': False,
+            'title': {'text': x_label},
+            'type': 'linear',
+            'autorange': False
         }
-        dotplot_html = plot_dotplot(**dotplot_data).to_html()
+        dotplot_layout['yaxis'] = {
+            'range': y_range,
+            'showgrid': False,
+            'showticklabels': True,
+            'side': 'right',
+            'title': {'text': y_label},
+            'type': 'linear',
+            'autorange': False
+        }
+
+        dotplot_plot = {
+            'data': dotplot_data.get('data', []),
+            'layout': dotplot_layout
+        }
 
         return jsonify({
-            'gene_structure1_html': gene_structure1_html,
-            'gene_structure2_html': gene_structure2_html,
-            'dotplot_html': dotplot_html
+            'gene_structure1_plot': gene_structure1_plot.to_dict(),
+            'gene_structure2_plot': gene_structure2_plot.to_dict(),
+            'dotplot_plot': dotplot_plot
         })
     except Exception as e:
         print(f'Error processing relayout data: {e}')

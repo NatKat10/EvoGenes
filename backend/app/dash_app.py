@@ -20,34 +20,29 @@ def create_dash_app(flask_app):
     )
 
     def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None):
-        #This function creates a Plotly figure for visualizing gene structures.
+        # This function creates a Plotly figure for visualizing gene structures.
         if not exon_intervals:
             return go.Figure()
 
-        #exon_intervals: List of exon intervals for plotting.
-        #marker_pos, marker_heights, marker_colors: Optional lists for adding markers to the plot.
-        #x_range: Optional range for the x-axis. If exon_intervals is empty, it returns an empty figure.
+        # exon_intervals: List of exon intervals for plotting.
+        # marker_pos, marker_heights, marker_colors: Optional lists for adding markers to the plot.
+        # x_range: Optional range for the x-axis. If exon_intervals is empty, it returns an empty figure.
         min_start = min(start for start, _ in exon_intervals)
         max_end = max(end for _, end in exon_intervals)
-        #minimum start and maximum end positions of the exons in the intervals.
-        
-        # Adjusting to ensure the gene plot fits within the dot plot range
-        if x_range is None:#If x_range is not provided, it sets the x-axis range to cover the entire gene length.
-             #Otherwise, it adjusts x_range based on the provided range and gene length.
+        # minimum start and maximum end positions of the exons in the intervals.
+
+        # Directly use the provided x_range if available
+        if x_range is None:
             x_range = [min_start, max_end]
-        else:
-            gene_length = max_end - min_start
-            x_range = [x_range[0], x_range[0] + gene_length]
 
-
-        #These lists are created for plotting exon intervals.
-        exon_x = []#This list stores x-coordinates for exon plotting
-        exon_y = []#This list stores y-coordinates for exon plotting
+        # These lists are created for plotting exon intervals.
+        exon_x = []  # This list stores x-coordinates for exon plotting
+        exon_y = []  # This list stores y-coordinates for exon plotting
         for start, end in exon_intervals:
             exon_x.extend([start, start, end, end, None])
             exon_y.extend([0, 0.5, 0.5, 0, None])
 
-        exon_trace = go.Scatter(x=exon_x, y=exon_y, mode='lines', fill='tozeroy', fillcolor='black',#This is a Plotly Scatter trace for the exons.
+        exon_trace = go.Scatter(x=exon_x, y=exon_y, mode='lines', fill='tozeroy', fillcolor='black',  # This is a Plotly Scatter trace for the exons.
                                 line=dict(width=0), opacity=0.6, showlegend=False)
 
         intron_x = []
@@ -60,11 +55,11 @@ def create_dash_app(flask_app):
             intron_x.extend([start, mid_x, None, mid_x, end, None])
             intron_y.extend([mid_y, 0.5, None, 0.5, mid_y, None])
 
-        intron_trace = go.Scattergl(x=intron_x, y=intron_y, mode='lines', line=dict(color='grey', width=2, dash='solid'),#This is a Plotly Scatter trace for the introns.
-                                  opacity=0.6, showlegend=False)
+        intron_trace = go.Scattergl(x=intron_x, y=intron_y, mode='lines', line=dict(color='grey', width=2, dash='solid'),  # This is a Plotly Scatter trace for the introns.
+                                    opacity=0.6, showlegend=False)
 
         marker_trace = go.Scattergl(x=marker_pos, y=[y + 0.5 for y in marker_heights], mode='markers',
-                                  marker=dict(size=8, color=marker_colors, opacity=1), showlegend=False)
+                                    marker=dict(size=8, color=marker_colors, opacity=1), showlegend=False)
 
         data = [exon_trace, intron_trace, marker_trace]
 
@@ -82,8 +77,6 @@ def create_dash_app(flask_app):
 
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label):
         logging.info("Start processing plot_dotplot function")
-        # print(directions[0])
-
         start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
         x_vals_r, y_vals_r, colors_r = [], [], []
@@ -128,16 +121,16 @@ def create_dash_app(flask_app):
 
         # Apply sampling if the number of points exceeds the threshold
         if len(x_vals_f) > base_threshold:
-            print(f"Applying sampling to forward points: {len(x_vals_f)} points (Threshold: {base_threshold})")
+            logging.info(f"Applying sampling to forward points: {len(x_vals_f)} points (Threshold: {base_threshold})")
             x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sample_fraction, max_samples)
         else:
-            print(f"No sampling applied to forward points: {len(x_vals_f)} points")
+            logging.info(f"No sampling applied to forward points: {len(x_vals_f)} points")
 
         if len(x_vals_r) > base_threshold:
-            print(f"Applying sampling to reverse points: {len(x_vals_r)} points (Threshold: {base_threshold})")
+            logging.info(f"Applying sampling to reverse points: {len(x_vals_r)} points (Threshold: {base_threshold})")
             x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sample_fraction, max_samples)
         else:
-            print(f"No sampling applied to reverse points: {len(x_vals_r)} points")
+            logging.info(f"No sampling applied to reverse points: {len(x_vals_r)} points")
 
         logging.info(f"Sampled Forward points: {len(x_vals_f)}, Sampled Reverse points: {len(x_vals_r)}")
 
@@ -158,7 +151,7 @@ def create_dash_app(flask_app):
             width=780,
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
-            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),
+            yaxis=dict(title=y_label, range=[min_y, max_y], showgrid=False, showticklabels=True, side='right'),
             hovermode='closest',
             legend=dict(
                 x=1,

@@ -28,47 +28,47 @@
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
     <div class="visualization-container" v-if="visualizations">
-      <div class="graph-container">
-        <div class="dotplot-container">
-          <div ref="dotplot" class="figure-plot"></div>
-          <div class="info-icon" @click="showModal = true">?</div>
-        </div>
-        <div class="gene-structure-container">
-          <div ref="geneStructure1" class="gene-structure"></div>
-          <div ref="geneStructure2" class="gene-structure"></div>
+  <div class="graph-container">
+    <div class="dotplot-container">
+      <div ref="dotplot" class="figure-plot"></div>
+      <div class="info-icon" @click="showModal = true">?</div>
+    </div>
+    <div class="gene-structure-container">
+      <div ref="geneStructure1" class="gene-structure"></div>
+      <div ref="geneStructure2" class="gene-structure"></div>
 
-          <div class="parent-select-container">
-            <label for="parent-select1">Select Parent for Gene 1:   </label>
-            <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
-              <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
-            </select>
-          </div>
-          
-          <div class="parent-select-container">
-            <label for="parent-select2">Select Parent for Gene 2:   </label>
-            <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
-              <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
-            </select>
-          </div>
-        </div>
+      <div ref="parentSelect1" class="parent-select-container">
+        <label for="parent-select1">Select Parent for Gene 1: </label>
+        <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
+          <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
+        </select>
       </div>
 
-      <div class="manual-zoom-container">
-        <h4>Manual Zoom</h4>
-        <div class="zoom-inputs">
-          <div>
-            <label>X-axis: </label>
-            <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
-            <input v-model.number="manualZoom.x2" type="number" placeholder="End">
-          </div>
-          <div>
-            <label>Y-axis: </label>
-            <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
-            <input v-model.number="manualZoom.y2" type="number" placeholder="End">
-          </div>
-        </div>
-        <button @click="applyManualZoom">Apply Zoom</button>
+      <div ref="parentSelect2" class="parent-select-container">
+        <label for="parent-select2">Select Parent for Gene 2: </label>
+        <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
+          <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
+        </select>
       </div>
+    </div>
+  </div>
+
+  <div ref="manualZoom" class="manual-zoom-container">
+    <h4>Manual Zoom</h4>
+    <div class="zoom-inputs">
+      <div>
+        <label>X-axis: </label>
+        <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
+        <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+      </div>
+      <div>
+        <label>Y-axis: </label>
+        <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
+        <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+      </div>
+    </div>
+    <button @click="applyManualZoom">Apply Zoom</button>
+  </div>
 
       <!-- Export button as image -->
       <div class="export-button" v-if="visualizations">
@@ -85,9 +85,10 @@
   </div>
 </template>
 
+
 <script>
 import html2canvas from 'html2canvas';
-
+import Plotly from 'plotly.js-dist';
 import LoaderOverlay from './LoaderOverlay.vue';
 // This import is used to get the server domain for making API requests
 import { server_domain } from '@/server_domain';
@@ -116,12 +117,16 @@ export default {
       yassOutput: '',
       showModal: false,
       comparison_id: null,
+      initialDotplotState: null,
+      initialGeneStructure1State: null,
+      initialGeneStructure2State: null,
       manualZoom: {
         x1: null,
         x2: null,
         y1: null,
         y2: null
       },
+      isResetting: false
     };
   },
   mounted() {
@@ -155,67 +160,74 @@ export default {
       this.handleInput('upload');
     },
     async runEvoGenes() {
-    console.log('Run Evo Genes method called');
-    const formData = new FormData();
-    if (this.file1 && this.file2) {
-      formData.append('fasta1', this.file1);
-      formData.append('fasta2', this.file2);
-    } else if (this.sequence1 && this.sequence2) {
-      formData.append('sequence1', this.sequence1);
-      formData.append('sequence2', this.sequence2);
-    } else if (this.GeneID1 && this.GeneID2) {
-      formData.append('GeneID1', this.GeneID1);
-      formData.append('GeneID2', this.GeneID2);
-    } else {
-      this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
-      return;
+  console.log('Run Evo Genes method called');
+  const formData = new FormData();
+  if (this.file1 && this.file2) {
+    formData.append('fasta1', this.file1);
+    formData.append('fasta2', this.file2);
+  } else if (this.sequence1 && this.sequence2) {
+    formData.append('sequence1', this.sequence1);
+    formData.append('sequence2', this.sequence2);
+  } else if (this.GeneID1 && this.GeneID2) {
+    formData.append('GeneID1', this.GeneID1);
+    formData.append('GeneID2', this.GeneID2);
+  } else {
+    this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
+    return;
+  }
+
+  this.loading = true;
+  this.progress = 0;
+
+  try {
+    const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
+      method: 'POST',
+      body: formData
+    }, (loaded, total) => {
+      this.progress = Math.floor((loaded / total) * 100);
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
     }
 
-    this.loading = true;
-    this.progress = 0;
+    const data = await response.json();
+    console.log("Response Data: ", data);  // Log data received from the backend
+    this.visualizations = {
+      dotplot_data: data.dotplot_plot,
+      gene_structure1_plot: data.gene_structure1_plot,
+      gene_structure2_plot: data.gene_structure2_plot,
+      exon_intervals1: data.exon_intervals1,
+      exon_intervals2: data.exon_intervals2,
+      comparison_id: data.comparison_id,
+      data_for_manual_zoom: data.data_for_manual_zoom  // Set the data for manual zoom
+    };
+    this.comparison_id = data.comparison_id;
+    this.yassOutput = data.yass_output;
+    this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
+    this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
 
-    try {
-      const response = await this.fetchWithProgress(`${server_domain}/run-evo-genes`, {
-        method: 'POST',
-        body: formData
-      }, (loaded, total) => {
-        this.progress = Math.floor((loaded / total) * 100);
-      });
+    // Capture the initial state
+    this.initialDotplotState = JSON.parse(JSON.stringify(this.visualizations.dotplot_data));
+    this.initialGeneStructure1State = JSON.parse(JSON.stringify(this.visualizations.gene_structure1_plot));
+    this.initialGeneStructure2State = JSON.parse(JSON.stringify(this.visualizations.gene_structure2_plot));
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+    this.$nextTick(() => {
+      this.renderDotplot();
+      this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
+      this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+    });
 
-      const data = await response.json();
-      console.log("Response Data: ", data);  // Log data received from the backend
-      this.visualizations = {
-        dotplot_data: data.dotplot_data,
-        gene_structure1_html: data.gene_structure1_html,
-        gene_structure2_html: data.gene_structure2_html,
-        exon_intervals1: data.exon_intervals1,
-        exon_intervals2: data.exon_intervals2,
-        comparison_id: data.comparison_id
-      };
-      this.comparison_id = data.comparison_id;
-      this.yassOutput = data.yass_output;
-      this.selectedParent1 = Object.keys(data.exon_intervals1)[0];
-      this.selectedParent2 = Object.keys(data.exon_intervals2)[0];
-      this.$nextTick(() => {
-        this.insertGeneStructureHTML(this.$refs.geneStructure1, this.visualizations.gene_structure1_html);
-        this.insertGeneStructureHTML(this.$refs.geneStructure2, this.visualizations.gene_structure2_html);
-      });
-
-      this.clearInputs();
-    } catch (error) {
-      console.error('Error running Evo Genes:', error);
-      this.errorMessage = "Incorrect Input";
-    } finally {
-      this.clearInputs();
-      this.updateDotplot();
-      this.loading = false;
-      this.progress = 100;
+    this.clearInputs();
+  } catch (error) {
+    console.error('Error running Evo Genes:', error);
+    this.errorMessage = "Incorrect Input";
+  } finally {
+    this.loading = false;
+    this.progress = 100;
       }
     },
+
     async fetchWithProgress(url, options, onProgress) {
       const response = await fetch(url, options);
       const reader = response.body.getReader();
@@ -248,128 +260,198 @@ export default {
         headers: { 'Content-Type': response.headers.get('Content-Type') }
       });
     },
+    renderDotplot() {
+      const { dotplot_data } = this.visualizations;
+      if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
+        Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
+          .then(plot => {
+            if (!this.initialDotplotState) {
+              this.initialDotplotState = JSON.parse(JSON.stringify(dotplot_data));
+            }
+            plot.on('plotly_relayout', eventData => {
+              if (this.isResetting) return;
+              console.log('Zoom event data:', eventData);
+              if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+                const x0 = eventData['xaxis.range[0]'];
+                const x1 = eventData['xaxis.range[1]'];
+                const y0 = eventData['yaxis.range[0]'];
+                const y1 = eventData['yaxis.range[1]'];
+                this.applySyncedZoom(x0, x1, y0, y1);
+              } else {
+                console.log('Resetting to initial state');
+                this.resetPlots();
+              }
+            });
+          });
+      } else {
+        console.error('Invalid dotplot data:', dotplot_data);
+      }
+    },
+
+    renderGeneStructure(ref, plotData) {
+      if (plotData && plotData.data && plotData.layout) {
+        Plotly.newPlot(ref, plotData.data, plotData.layout).then(() => {
+          if (ref === this.$refs.geneStructure1 && !this.initialGeneStructure1State) {
+            this.initialGeneStructure1State = JSON.parse(JSON.stringify(plotData));
+          } else if (ref === this.$refs.geneStructure2 && !this.initialGeneStructure2State) {
+            this.initialGeneStructure2State = JSON.parse(JSON.stringify(plotData));
+          }
+        });
+      } else {
+        console.error('Invalid gene structure plot data:', plotData);
+      }
+    },
+
+applySyncedZoom(x0, x1, y0, y1) {
+  console.log('Sending zoom data:', { x0, x1, y0, y1 });
+
+  const zoomData = {
+    x0: x0,
+    x1: x1,
+    y0: y0,
+    y1: y1,
+    comparison_id: this.comparison_id,
+    exon_intervals1: this.visualizations.exon_intervals1,
+    exon_intervals2: this.visualizations.exon_intervals2,
+    dotplot_data: {
+      data: this.visualizations.dotplot_data.data,
+      layout: {
+        ...this.visualizations.dotplot_data.layout,
+        x_label: this.visualizations.dotplot_data.layout.xaxis.title.text,
+        y_label: this.visualizations.dotplot_data.layout.yaxis.title.text,
+      }
+    }
+  };
+
+  fetch(`${server_domain}/dash/relayout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(zoomData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Received updated plot data:', data);
+    this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+    this.$nextTick(() => {
+      this.renderDotplot(); // Re-render the dotplot with the updated data
+    });
+    this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot);
+    this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot);
+  })
+  .catch(error => console.error('Error applying synced zoom:', error));
+},
+
+    renderInitialPlots() {
+      if (this.initialDotplotState && this.initialGeneStructure1State && this.initialGeneStructure2State) {
+        this.visualizations.dotplot_data = JSON.parse(JSON.stringify(this.initialDotplotState));
+        this.visualizations.gene_structure1_plot = JSON.parse(JSON.stringify(this.initialGeneStructure1State));
+        this.visualizations.gene_structure2_plot = JSON.parse(JSON.stringify(this.initialGeneStructure2State));
+        this.$nextTick(() => {
+          this.renderDotplot();
+          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
+          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+          this.isResetting = false;
+        });
+      } else {
+        console.error('Initial plot states are not captured');
+        this.isResetting = false;
+      }
+    },
+
+    resetPlots() {
+      this.isResetting = true;
+      this.renderInitialPlots();
+    },
+
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      fetch(`${server_domain}/dash/update`, {
+      fetch(`${server_domain}/dash/plot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ exonsPositions: exonIntervals }),
         mode: 'cors',
       })
         .then(response => response.json())
-        .then(() => {
-          const plotUrl = `${server_domain}/dash/plot?positions=${encodeURIComponent(JSON.stringify(exonIntervals))}`;
-          fetch(plotUrl)
-            .then(response => response.text())
-            .then(html => {
-              this.insertGeneStructureHTML(this.$refs[containerRef], html);
-            });
+        .then(plotData => {
+          this.renderGeneStructure(this.$refs[containerRef], plotData);
         })
         .catch(error => {
           console.error('Error updating gene structure:', error);
         });
     },
-    insertGeneStructureHTML(container, html) {
-      container.innerHTML = html;
-      const scripts = container.getElementsByTagName('script');
-      for (const script of scripts) {
-        const newScript = document.createElement('script');
-        newScript.text = script.text;
-        script.replaceWith(newScript);
-      }
-    },
-    updateDotplot() {
-    if (!this.visualizations || !this.visualizations.dotplot_data) return;
-    console.log('Updating dotplot with data:', this.visualizations.dotplot_data);  // Log dotplot data
-    fetch(`${server_domain}/dash/dotplot/plot`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dotplot_data: this.visualizations.dotplot_data }),
-      mode: 'cors',
-    })
-      .then(response => response.text())
-      .then(html => {
-        this.insertDotplotHTML(this.$refs.dotplot, html);
-      })
-      .catch(error => {
-        console.error('Error updating dotplot:', error);
-        });
-    },
-    fetchRelayoutData() {
-      // Ensure fetchRelayoutData is only called when necessary data is available
-      if (!this.comparison_id) {
-        console.error('comparison_id is not set');
-        return;
-      }
-      fetch(`${server_domain}/dash/relayout`, {
+    clearManualZoomInputs() {
+    this.manualZoom.x1 = null;
+    this.manualZoom.x2 = null;
+    this.manualZoom.y1 = null;
+    this.manualZoom.y2 = null;
+  },
+
+
+    applyManualZoom() {
+  this.loading = true;
+  this.progress = 0;
+
+  try {
+    if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
+      throw new Error('Dotplot data or data for manual zoom is missing');
+    }
+
+    // Ensure the manual zoom coordinates are present
+    if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+        this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+
+      const { x1, x2, y1, y2 } = this.manualZoom;
+
+      const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+
+      const requestData = {
+        dotplot_data: data_for_manual_zoom,  // Include the necessary data
+        x1: x1,
+        x2: x2,
+        y1: y1,
+        y2: y2,
+        exon_intervals1: this.visualizations.exon_intervals1,
+        exon_intervals2: this.visualizations.exon_intervals2
+      };
+
+      console.log('Sending manual zoom request with data:', requestData);
+
+      fetch(`${server_domain}/dash/dotplot/plot_update`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ action: 'fetch_relayout', comparison_id: this.comparison_id })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestData),
+        mode: 'cors',
       })
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new TypeError("Received non-JSON response");
-        }
         return response.json();
       })
       .then(data => {
-        console.log('Relayout data:', data);
+        this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+        this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
+        this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
+        this.$nextTick(() => {
+          this.renderDotplot();
+          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
+          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+        });
+        this.clearManualZoomInputs();  // Clear the manual zoom inputs
       })
       .catch(error => {
-        console.error('Error fetching relayout data:', error);
+        console.error('Error updating dotplot:', error);
       });
-    },
-    insertDotplotHTML(container, html) {
-    console.log('Inserting dotplot HTML:', html);  // Log HTML to check content
-    container.innerHTML = html;
-
-    // Execute any scripts within the newly inserted HTML
-    const scripts = container.getElementsByTagName('script');
-    for (const script of scripts) {
-      const newScript = document.createElement('script');
-      newScript.type = 'text/javascript';
-      if (script.src) {
-        newScript.src = script.src;
-      } else {
-        newScript.textContent = script.textContent;
-      }
-      script.parentNode.replaceChild(newScript, script);
+    } else {
+      throw new Error('Please fill in all zoom coordinates');
     }
-
-    this.addZoomEventListener(container); // Add this line
-    },
-    addZoomEventListener(container) {
-        const dotplot = container.querySelector('.plotly-graph-div');
-        if (dotplot) {
-            dotplot.on('plotly_relayout', (eventData) => {
-                const comparison_id = this.comparison_id;
-                const exon_intervals1 = this.visualizations.exon_intervals1;
-                const exon_intervals2 = this.visualizations.exon_intervals2;
-
-                if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-                    const x0 = eventData['xaxis.range[0]'];
-                    const x1 = eventData['xaxis.range[1]'];
-                    const y0 = eventData['yaxis.range[0]'];
-                    const y1 = eventData['yaxis.range[1]'];
-                    console.log(`Zoomed to x: [${x0}, ${x1}], y: [${y0}, ${y1}]`);
-                    console.log(`Sending relayout data: x0=${x0}, x1=${x1}, y0=${y0}, y1=${y1}, comparison_id=${comparison_id}`);
-                    this.sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id);
-                } else {
-                    // Axes have been reset, send the original coordinates
-                    const originalX0 = this.visualizations.dotplot_data.min_x;
-                    const originalX1 = this.visualizations.dotplot_data.max_x;
-                    const originalY0 = this.visualizations.dotplot_data.max_y;
-                    const originalY1 = this.visualizations.dotplot_data.min_y;
-                    console.log('Resetting axes to original coordinates');
-                    this.sendRelayoutData(originalX0, originalX1, originalY0, originalY1, exon_intervals1, exon_intervals2, comparison_id);
-        }
-      });
+  } catch (error) {
+    console.error('Error in applyManualZoom:', error.message);
+  } finally {
+    this.loading = false;
+    this.progress = 100;
       }
     },
 
@@ -407,9 +489,11 @@ export default {
       .then(data => {
         console.log('Received response:', data);
         // Update the gene structure plots and dotplot with the response data
-        this.insertGeneStructureHTML(this.$refs.geneStructure1, data.gene_structure1_html);
-        this.insertGeneStructureHTML(this.$refs.geneStructure2, data.gene_structure2_html);
-        this.insertDotplotHTML(this.$refs.dotplot, data.dotplot_html);
+        this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot);
+        this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot);
+        this.$nextTick(() => {
+          Plotly.newPlot(this.$refs.dotplot, data.dotplot_plot.data, data.dotplot_plot.layout);
+        });
         console.log('Relayout data applied successfully');
       })
       .catch(error => {
@@ -418,100 +502,44 @@ export default {
     },
 
     captureScreenshot() {
-      const combinedVisualization = document.querySelector('.visualization-container');
-      const exportButton = document.querySelector('.export-button');
-      if (combinedVisualization) {
-        console.log('Combined visualization element found');
+    const combinedVisualization = document.querySelector('.visualization-container');
+    const exportButton = document.querySelector('.export-button');
+    const parentSelect1 = this.$refs.parentSelect1;
+    const parentSelect2 = this.$refs.parentSelect2;
+    const manualZoom = this.$refs.manualZoom;
 
-        // Hide the export button
-        exportButton.style.display = 'none';
+    if (combinedVisualization) {
+      console.log('Combined visualization element found');
 
-        html2canvas(combinedVisualization).then(canvas => {
-          // Show the export button again
-          exportButton.style.display = '';
+      // Hide the export button, parent selections, and manual zoom
+      exportButton.style.display = 'none';
+      if (parentSelect1) parentSelect1.style.display = 'none';
+      if (parentSelect2) parentSelect2.style.display = 'none';
+      if (manualZoom) manualZoom.style.display = 'none';
 
-          const link = document.createElement('a');
-          link.download = 'combined_visualization.png';
-          link.href = canvas.toDataURL('image/png');
-          link.click();
-        });
-      } else {
-        console.error('Combined visualization element not found');
-      }
-    },
-    // applyManualZoom() {
-    //   if (this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-    //       this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-    //     const { x1, x2, y1, y2 } = this.manualZoom;
-    //     this.sendRelayoutData(
-    //       x1, x2, y2, y1,
-    //       this.visualizations.exon_intervals1,
-    //       this.visualizations.exon_intervals2,
-    //       this.comparison_id,
-    //       true, // is_manual_zoom
-    //       this.visualizations.dotplot_data // Include original dotplot data
-    //     );
-    //   } else {
-    //     console.error('Please fill in all zoom coordinates');
-    //   }
-    // },
-applyManualZoom() {
-  this.loading = true;
-  this.progress = 0;
-  
-  try {
-    if (!this.visualizations || !this.visualizations.dotplot_data) {
-      throw new Error('Dotplot data is missing');
-    }
+      html2canvas(combinedVisualization).then(canvas => {
+        // Show the export button, parent selections, and manual zoom again
+        exportButton.style.display = '';
+        if (parentSelect1) parentSelect1.style.display = '';
+        if (parentSelect2) parentSelect2.style.display = '';
+        if (manualZoom) manualZoom.style.display = '';
 
-    // Ensure the manual zoom coordinates are present
-    if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-        this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-      
-      const { x1, x2, y1, y2 } = this.manualZoom;
-      const comparison_id = this.comparison_id;
-      const exon_intervals1 = this.visualizations.exon_intervals1;
-      const exon_intervals2 = this.visualizations.exon_intervals2;
-      
-      fetch(`${server_domain}/dash/dotplot/plot_update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          dotplot_data: this.visualizations.dotplot_data,
-          x1: x1,
-          x2: x2,
-          y1: y1,
-          y2: y2
-        }),
-        mode: 'cors',
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.text();
-      })
-      .then(html => {
-        this.insertDotplotHTML(this.$refs.dotplot, html);
-        this.sendRelayoutData(x1, x2, y1, y2, exon_intervals1, exon_intervals2, comparison_id);
-      })
-      .catch(error => {
-        console.error('Error updating dotplot:', error);
+        const link = document.createElement('a');
+        link.download = 'combined_visualization.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
       });
     } else {
-      throw new Error('Please fill in all zoom coordinates');
+      console.error('Combined visualization element not found');
+      }
     }
-  } catch (error) {
-    console.error('Error in applyManualZoom:', error.message);
-  } finally {
-    this.loading = false;
-    this.progress = 100;
-  }
-}
-
   }
 };
 </script>
+
+
+
+
 <style scoped>
 .error-message {
   color: red;
@@ -885,7 +913,7 @@ button:has(:last-child:active)::before {
   overflow: auto;
 }
 
-	
+  
 .yass-output {
   margin-top: 20px;
   width: 100%;
