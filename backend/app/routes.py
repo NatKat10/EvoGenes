@@ -132,7 +132,8 @@ def run_evo_genes():
             'min_y': min_y,
             'max_y': max_y,
             'x_label': extracted_gene_id1,
-            'y_label': extracted_gene_id2
+            'y_label': extracted_gene_id2,
+            'sampling_fraction': request.form.get('samplingFraction', '0.1')  # Get the sampling fraction from the request
         }
 
         dotplot_plot = plot_dotplot(**dotplot_data)
@@ -147,7 +148,7 @@ def run_evo_genes():
             'exon_intervals1': normalized_exons1,
             'exon_intervals2': normalized_exons2,
             'yass_output': yass_output,
-            'data_for_manual_zoom': dotplot_data  # Add this field
+            'data_for_manual_zoom': dotplot_data
         })
     
 @main.route('/dash/update', methods=['POST'])
@@ -210,6 +211,7 @@ def plot_dotplot_route_update():
     x2 = data.get('x2')
     y1 = data.get('y1')
     y2 = data.get('y2')
+    sampling_fraction = data.get('sampling_fraction', '0.1')  # Get the sampling fraction from the request
 
     # Validate that x1, x2, y1, y2 are not None
     if x1 is None or x2 is None or y1 is None or y2 is None:
@@ -255,10 +257,16 @@ def plot_dotplot_route_update():
     dotplot_data['directions'] = filtered_directions
 
     # Generate the updated plot
-    fig = plot_dotplot(dotplot_data['directions'],
-                       dotplot_data['min_x'], dotplot_data['max_x'],
-                       dotplot_data['min_y'], dotplot_data['max_y'],
-                       dotplot_data['x_label'], dotplot_data['y_label'])
+    fig = plot_dotplot(
+        dotplot_data['directions'],
+        dotplot_data['min_x'],
+        dotplot_data['max_x'],
+        dotplot_data['min_y'],
+        dotplot_data['max_y'],
+        dotplot_data['x_label'],
+        dotplot_data['y_label'],
+        sampling_fraction=sampling_fraction  # Pass the sampling fraction
+    )
 
     # Update gene structure plots based on the new zoom levels
     exon_intervals1 = data.get('exon_intervals1', {})

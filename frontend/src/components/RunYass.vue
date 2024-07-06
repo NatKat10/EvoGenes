@@ -17,6 +17,16 @@
       </div>
     </div>
 
+      <div class="sampling-fraction">
+    <label for="sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
+    <select id="sampling-fraction-select" v-model="selectedSamplingFraction"  style="background-color: #E8F8E0;">
+      <option value="0.1">0.1</option>
+      <option value="0.01">0.01</option>
+      <option value="0.001">0.001</option>
+      <option value="all">All Dots</option>
+    </select>
+  </div>
+
     <div class="btn">
       <button @click="runEvoGenes">
         <span></span>
@@ -24,6 +34,7 @@
         <span></span>
       </button>
     </div>
+
 
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
@@ -54,21 +65,33 @@
   </div>
 
   <div ref="manualZoom" class="manual-zoom-container">
-    <h4>Manual Zoom</h4>
-    <div class="zoom-inputs">
-      <div>
-        <label>X-axis: </label>
-        <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
-        <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+  <h4>Manual Zoom</h4>
+  <div class="zoom-inputs">
+    <div>
+      <label>X-axis: </label>
+      <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
+      <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+    </div>
+    <div>
+      <label>Y-axis: </label>
+      <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
+      <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+    </div>
+  </div>
+  <!-- Add the dropdown for sampling fraction -->
+  <div class="sampling-fraction">
+    <label for="manual-sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
+    <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction" >
+      <option value="0.1">0.1</option>
+      <option value="0.01">0.01</option>
+      <option value="0.001">0.001</option>
+      <option value="all">All Dots</option>
+    </select>
       </div>
-      <div>
-        <label>Y-axis: </label>
-        <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
-        <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+      <div class="zoom-button-container">
+        <button id="apply-zoom-button" @click="applyManualZoom">Apply Zoom</button>
       </div>
     </div>
-    <button @click="applyManualZoom">Apply Zoom</button>
-  </div>
 
       <!-- Export button as image -->
       <div class="export-button" v-if="visualizations">
@@ -116,6 +139,7 @@ export default {
       dashDotplotUrl: null,
       yassOutput: '',
       showModal: false,
+      selectedSamplingFraction: '0.1',  // Default value
       comparison_id: null,
       initialDotplotState: null,
       initialGeneStructure1State: null,
@@ -126,7 +150,11 @@ export default {
         y1: null,
         y2: null
       },
-      isResetting: false
+      isResetting: false,
+      isRunning: false, 
+      manualSamplingFraction: 'all',    // Default value for manual zoom to "all dots"
+
+
     };
   },
   mounted() {
@@ -160,21 +188,26 @@ export default {
       this.handleInput('upload');
     },
     async runEvoGenes() {
-  console.log('Run Evo Genes method called');
-  const formData = new FormData();
-  if (this.file1 && this.file2) {
-    formData.append('fasta1', this.file1);
-    formData.append('fasta2', this.file2);
-  } else if (this.sequence1 && this.sequence2) {
-    formData.append('sequence1', this.sequence1);
-    formData.append('sequence2', this.sequence2);
-  } else if (this.GeneID1 && this.GeneID2) {
-    formData.append('GeneID1', this.GeneID1);
-    formData.append('GeneID2', this.GeneID2);
-  } else {
-    this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
-    return;
-  }
+      this.isRunning = true;  // Disable the choose box
+
+    console.log('Run Evo Genes method called');
+    const formData = new FormData();
+    if (this.file1 && this.file2) {
+      formData.append('fasta1', this.file1);
+      formData.append('fasta2', this.file2);
+    } else if (this.sequence1 && this.sequence2) {
+      formData.append('sequence1', this.sequence1);
+      formData.append('sequence2', this.sequence2);
+    } else if (this.GeneID1 && this.GeneID2) {
+      formData.append('GeneID1', this.GeneID1);
+      formData.append('GeneID2', this.GeneID2);
+    } else {
+      this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
+      return;
+    }
+
+  // Add the selected sampling fraction to the request
+  formData.append('samplingFraction', this.selectedSamplingFraction);
 
   this.loading = true;
   this.progress = 0;
@@ -389,69 +422,70 @@ applySyncedZoom(x0, x1, y0, y1) {
   },
 
 
-    applyManualZoom() {
-  this.loading = true;
-  this.progress = 0;
+  async applyManualZoom() {
+    this.loading = true;
+    this.progress = 0;
 
-  try {
-    if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
-      throw new Error('Dotplot data or data for manual zoom is missing');
-    }
+    try {
+      if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
+        throw new Error('Dotplot data or data for manual zoom is missing');
+      }
 
-    // Ensure the manual zoom coordinates are present
-    if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-        this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
+      // Ensure the manual zoom coordinates are present
+      if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
+          this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
 
-      const { x1, x2, y1, y2 } = this.manualZoom;
+        const { x1, x2, y1, y2 } = this.manualZoom;
 
-      const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+        const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
 
-      const requestData = {
-        dotplot_data: data_for_manual_zoom,  // Include the necessary data
-        x1: x1,
-        x2: x2,
-        y1: y1,
-        y2: y2,
-        exon_intervals1: this.visualizations.exon_intervals1,
-        exon_intervals2: this.visualizations.exon_intervals2
-      };
+        const requestData = {
+          dotplot_data: data_for_manual_zoom,  // Include the necessary data
+          x1: x1,
+          x2: x2,
+          y1: y1,
+          y2: y2,
+          sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
+          exon_intervals1: this.visualizations.exon_intervals1,
+          exon_intervals2: this.visualizations.exon_intervals2
+        };
 
-      console.log('Sending manual zoom request with data:', requestData);
+        console.log('Sending manual zoom request with data:', requestData);
 
-      fetch(`${server_domain}/dash/dotplot/plot_update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
-        mode: 'cors',
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then(data => {
-        this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
-        this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
-        this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
-        this.$nextTick(() => {
-          this.renderDotplot();
-          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
-          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+        fetch(`${server_domain}/dash/dotplot/plot_update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+          mode: 'cors',
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+          this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
+          this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
+          this.$nextTick(() => {
+            this.renderDotplot();
+            this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
+            this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+          });
+          this.clearManualZoomInputs();  // Clear the manual zoom inputs
+        })
+        .catch(error => {
+          console.error('Error updating dotplot:', error);
         });
-        this.clearManualZoomInputs();  // Clear the manual zoom inputs
-      })
-      .catch(error => {
-        console.error('Error updating dotplot:', error);
-      });
-    } else {
-      throw new Error('Please fill in all zoom coordinates');
-    }
-  } catch (error) {
-    console.error('Error in applyManualZoom:', error.message);
-  } finally {
-    this.loading = false;
-    this.progress = 100;
+      } else {
+        throw new Error('Please fill in all zoom coordinates');
+      }
+    } catch (error) {
+      console.error('Error in applyManualZoom:', error.message);
+    } finally {
+      this.loading = false;
+      this.progress = 100;
       }
     },
 
@@ -939,6 +973,36 @@ button:has(:last-child:active)::before {
   margin-top: 20px;
   display: flex;
   justify-content: center;
+}
+
+.sampling-fraction {
+  margin-top: 30px;  /* Adjust this value as needed */
+}
+#sampling-fraction-select
+ {
+  background-color: #E8F8E0; 
+  border-radius: 60px;  /* Makes the box elliptical */
+  padding: 5px;  /* Adds some padding for better appearance */
+  border: 1px solid #ccc;  /* Optional: adds a border */
+  
+}
+#manual-sampling-fraction-select
+ {
+  background-color: #E8F8E0; 
+  border-radius: 60px;  /* Makes the box elliptical */
+  padding: 5px;  /* Adds some padding for better appearance */
+  border: 1px solid #ccc;  /* Optional: adds a border */
+  
+}
+.label-space {
+  margin-left: 10px;  /* Adjust this value as needed to increase space after the colon */
+}
+
+#apply-zoom-button {
+  display: flex;
+  justify-content: center; /* Centers the button horizontally */
+  margin: 0 auto; /* Center align the button */
+  margin-top: 20px;
 }
 
 .export-button img {
