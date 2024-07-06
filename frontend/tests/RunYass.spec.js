@@ -1,87 +1,65 @@
 import { shallowMount } from '@vue/test-utils';
 import RunYass from '@/components/RunYass.vue';
 
-// Mock URL.createObjectURL
-global.URL.createObjectURL = jest.fn(() => 'blob:http://localhost:8080/dummy-url');
+// Mock the camera.png import to prevent issues
+jest.mock('@/assets/camera.png', () => 'test-file-stub');
 
-// Mock window.alert
-window.alert = jest.fn();
+// Mock the $route object
+const $route = {
+  params: {
+    comparison_id: '12345'
+  }
+};
 
 describe('RunYass.vue', () => {
-  it('renders the component correctly', () => {
-    const wrapper = shallowMount(RunYass);
-    expect(wrapper.find('textarea').exists()).toBe(true);
-    expect(wrapper.find('input[type="file"]').exists()).toBe(true);
-    expect(wrapper.find('button').exists()).toBe(true);
-  });
+  let wrapper;
 
-  it('runs YASS with sequences', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['image content'], { type: 'image/png' })),
-      })
-    );
-
-    const wrapper = shallowMount(RunYass);
-    wrapper.setData({ sequence1: 'ATCG', sequence2: 'CGTA' });
-
-    await wrapper.find('button').trigger('click');
-    // Comment out the lines causing the errors
-    // expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/run-yass', expect.any(Object));
-    // expect(wrapper.vm.imageSrc).toContain('blob:http://localhost:8080/dummy-url');
-
-    global.fetch.mockClear();
-  });
-
-  it('runs YASS with FASTA files', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['image content'], { type: 'image/png' })),
-      })
-    );
-
-    const wrapper = shallowMount(RunYass);
-    const file1 = new File(['>Gene1\nATCG'], 'gene1.fa', { type: 'text/plain' });
-    const file2 = new File(['>Gene2\nCGTA'], 'gene2.fa', { type: 'text/plain' });
-
-    // Create custom change event with files
-    const changeEvent1 = new Event('change');
-    Object.defineProperty(changeEvent1, 'target', {
-      value: { files: [file1] },
-      writable: false,
+  beforeEach(() => {
+    wrapper = shallowMount(RunYass, {
+      stubs: {
+        LoaderOverlay: true
+      },
+      mocks: {
+        $route
+      }
     });
-
-    const changeEvent2 = new Event('change');
-    Object.defineProperty(changeEvent2, 'target', {
-      value: { files: [file2] },
-      writable: false,
-    });
-
-    // Find the file inputs and dispatch the custom change event
-    await wrapper.find('input#file1').element.dispatchEvent(changeEvent1);
-    await wrapper.find('input#file2').element.dispatchEvent(changeEvent2);
-
-    // Manually call handleFileChange to update the component's file state
-    await wrapper.vm.handleFileChange('file1');
-    await wrapper.vm.handleFileChange('file2');
-
-    // Ensure the files are set correctly
-    // Comment out the lines causing the errors
-    // expect(wrapper.vm.file1).toBe(file1);
-    // expect(wrapper.vm.file2).toBe(file2);
-
-    // Trigger the click event
-    await wrapper.find('button').trigger('click');
-
-    // Log fetch calls to debug
-    console.log('Fetch calls:', global.fetch.mock.calls);
-
-    // Comment out the assertion lines to ensure tests pass
-    // expect(global.fetch).toHaveBeenCalledWith('http://localhost:5000/run-yass', expect.any(Object));
-    // expect(wrapper.vm.imageSrc).toContain('blob:http://localhost:8080/dummy-url');
-
-    global.fetch.mockClear();
   });
+
+  it('renders the component', () => {
+    expect(wrapper.exists()).toBe(true);
+  });
+
+  it('updates GeneID1 and GeneID2 when input changes', async () => {
+    const geneID1Input = wrapper.find('textarea[placeholder="Enter Gene ID 1 here"]');
+    const geneID2Input = wrapper.find('textarea[placeholder="Enter Gene ID 2 here"]');
+
+    geneID1Input.setValue('ENSG00000139618');
+    geneID2Input.setValue('ENSG00000157764');
+
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.GeneID1).toBe('ENSG00000139618');
+    expect(wrapper.vm.GeneID2).toBe('ENSG00000157764');
+  });
+
+  it('calls runEvoGenes method on button click', async () => {
+    // Manually bind the method to ensure it's available
+    wrapper.vm.runEvoGenes = jest.fn();
+    wrapper.setData({
+      GeneID1: 'ENSG00000139618',
+      GeneID2: 'ENSG00000157764'
+    });
+    wrapper.find('.btn button').trigger('click');
+
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.vm.runEvoGenes).toHaveBeenCalled();
+  });
+
+  it('displays an error message if no input is provided', async () => {
+    wrapper.vm.runEvoGenes();
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.errorMessage).toBe("Please provide two sequences or two FASTA files or two Ensembl Gene IDs.");
+  });
+
 });

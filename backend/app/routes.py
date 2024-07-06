@@ -20,7 +20,7 @@ from flask_compress import Compress
 
 app = Flask(__name__)
 Compress(app)
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 100 MB
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 logging.basicConfig(level=logging.INFO)
@@ -70,100 +70,99 @@ def run_evo_genes():
     start_time = time.time()
     logging.info("run_evo_genes started")
 
-    if 'GeneID1' in request.form and 'GeneID2' in request.form:
-        gene_id1 = request.form['GeneID1']
-        gene_id2 = request.form['GeneID2']
+    if 'GeneID1' not in request.form or 'GeneID2' not in request.form:
+        return jsonify({'error': 'GeneID1 and GeneID2 are required.'}), 400
 
-        # Ensure the gene IDs are always ordered for consistency
-        gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
+    gene_id1 = request.form['GeneID1']
+    gene_id2 = request.form['GeneID2']
 
-        logging.info("Fetching sequences in parallel")
-        # Fetch sequences in parallel
-        with ThreadPoolExecutor() as executor:
-            future_seq1 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id1)
-            future_seq2 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id2)
-            sequence1, extracted_gene_id1 = future_seq1.result()
-            sequence2, extracted_gene_id2 = future_seq2.result()
+    # Ensure the gene IDs are always ordered for consistency
+    gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
 
-        if not sequence1 or not sequence2:
-            logging.error("Failed to fetch sequences from Ensembl")
-            return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
+    logging.info("Fetching sequences in parallel")
+    # Fetch sequences in parallel
+    with ThreadPoolExecutor() as executor:
+        future_seq1 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id1)
+        future_seq2 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id2)
+        sequence1, extracted_gene_id1 = future_seq1.result()
+        sequence2, extracted_gene_id2 = future_seq2.result()
 
-        logging.info("Sequences fetched")
+    if not sequence1 or not sequence2:
+        logging.error("Failed to fetch sequences from Ensembl")
+        return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
-        # Process sequences and run YASS
-        fasta_file1_path = 'temp_sequence1.fasta'
-        fasta_file2_path = 'temp_sequence2.fasta'
-        with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
-            file1.write(sequence1)
-            file2.write(sequence2)
+    logging.info("Sequences fetched")
 
-        logging.info("Running YASS")
-        yass_output_path = 'yass_output.yop'
-        yass_executable = './yass-Win64.exe'
-        command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
-        yass_start_time = time.time()
-        result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        yass_end_time = time.time()
-        logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
-        yass_output = result.stdout + result.stderr
+    # Process sequences and run YASS
+    fasta_file1_path = 'temp_sequence1.fasta'
+    fasta_file2_path = 'temp_sequence2.fasta'
+    with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
+        file1.write(sequence1)
+        file2.write(sequence2)
 
-        result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
+    logging.info("Running YASS")
+    yass_output_path = 'yass_output.yop'
+    yass_executable = './yass-Win64.exe'
+    command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    yass_start_time = time.time()
+    result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    yass_end_time = time.time()
+    logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
+    yass_output = result.stdout + result.stderr
 
-        logging.info("Sequences processed")
+    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
 
-        gene_structure1 = fetch_gene_structure(gene_id1)
-        gene_structure2 = fetch_gene_structure(gene_id2)
-        exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
-        exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
+    logging.info("Sequences processed")
 
-        def normalize_exons(exon_intervals, min_val, max_val):
-            normalized_intervals = {}
-            for parent, intervals in exon_intervals.items():
-                min_start = min(start for start, end in intervals)
-                max_end = max(end for start, end in intervals)
-                gene_length = max_end - min_start
-                normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
-            return normalized_intervals
+    gene_structure1 = fetch_gene_structure(gene_id1)
+    gene_structure2 = fetch_gene_structure(gene_id2)
+    exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
+    exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-        normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
-        normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
+    def normalize_exons(exon_intervals, min_val, max_val):
+        normalized_intervals = {}
+        for parent, intervals in exon_intervals.items():
+            min_start = min(start for start, end in intervals)
+            max_end = max(end for start, end in intervals)
+            gene_length = max_end - min_start
+            normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
+        return normalized_intervals
 
-        gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
-        gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
+    normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
+    normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
 
-        os.remove(fasta_file1_path)
-        os.remove(fasta_file2_path)
-        os.remove(yass_output_path)
+    gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
+    gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
-        dotplot_data = {
-            'directions': directions,
-            'min_x': min_x,
-            'max_x': max_x,
-            'min_y': min_y,
-            'max_y': max_y,
-            'x_label': extracted_gene_id1,
-            'y_label': extracted_gene_id2,
-            'sampling_fraction': request.form.get('samplingFraction', '0.1')  # Get the sampling fraction from the request
-        }
+    os.remove(fasta_file1_path)
+    os.remove(fasta_file2_path)
+    os.remove(yass_output_path)
 
-        dotplot_plot = plot_dotplot(**dotplot_data)
+    dotplot_data = {
+        'directions': directions,
+        'min_x': min_x,
+        'max_x': max_x,
+        'min_y': min_y,
+        'max_y': max_y,
+        'x_label': extracted_gene_id1,
+        'y_label': extracted_gene_id2,
+        'sampling_fraction': request.form.get('samplingFraction', '0.1')  # Get the sampling fraction from the request
+    }
 
-        end_time = time.time()
-        logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
+    dotplot_plot = plot_dotplot(**dotplot_data)
 
+    end_time = time.time()
+    logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
-        
-
-        return jsonify({
-            'dotplot_plot': dotplot_plot.to_dict(),
-            'gene_structure1_plot': gene_structure1_plot.to_dict(),
-            'gene_structure2_plot': gene_structure2_plot.to_dict(),
-            'exon_intervals1': normalized_exons1,
-            'exon_intervals2': normalized_exons2,
-            'yass_output': yass_output,
-            'data_for_manual_zoom': dotplot_data
-        })
+    return jsonify({
+        'dotplot_plot': dotplot_plot.to_dict(),
+        'gene_structure1_plot': gene_structure1_plot.to_dict(),
+        'gene_structure2_plot': gene_structure2_plot.to_dict(),
+        'exon_intervals1': normalized_exons1,
+        'exon_intervals2': normalized_exons2,
+        'yass_output': yass_output,
+        'data_for_manual_zoom': dotplot_data
+    })
     
 @main.route('/dash/update', methods=['POST'])
 def update_exon_positions():
