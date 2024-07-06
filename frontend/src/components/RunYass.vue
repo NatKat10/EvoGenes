@@ -163,7 +163,8 @@ export default {
     };
   },
   mounted() {
-    this.comparison_id = this.$route.params.comparison_id || (this.visualizations && this.visualizations.comparison_id);
+    this.comparison_id = (this.$route && this.$route.params && this.$route.params.comparison_id) || (this.visualizations && this.visualizations.comparison_id);
+
   },
   computed: {
     disableOtherSections() {
