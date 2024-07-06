@@ -67,31 +67,36 @@
   <div ref="manualZoom" class="manual-zoom-container">
   <h4>Manual Zoom</h4>
   <div class="zoom-inputs">
-    <div>
-      <label>X-axis: </label>
-      <input v-model.number="manualZoom.x1" type="number" placeholder="Start">
-      <input v-model.number="manualZoom.x2" type="number" placeholder="End">
+    <div class="zoom-input-group">
+      <label>X-axis:</label>
+      <div class="zoom-input-pair">
+        <input v-model.number="manualZoom.x1" type="number" placeholder="Start" class="zoom-input">
+        <input v-model.number="manualZoom.x2" type="number" placeholder="End" class="zoom-input">
+      </div>
     </div>
-    <div>
-      <label>Y-axis: </label>
-      <input v-model.number="manualZoom.y1" type="number" placeholder="Start">
-      <input v-model.number="manualZoom.y2" type="number" placeholder="End">
+    <div class="zoom-input-group">
+      <label>Y-axis:</label>
+      <div class="zoom-input-pair">
+        <input v-model.number="manualZoom.y1" type="number" placeholder="Start" class="zoom-input">
+        <input v-model.number="manualZoom.y2" type="number" placeholder="End" class="zoom-input">
+      </div>
     </div>
   </div>
   <!-- Add the dropdown for sampling fraction -->
   <div class="sampling-fraction">
     <label for="manual-sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
-    <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction" >
+    <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction">
       <option value="0.1">0.1</option>
       <option value="0.01">0.01</option>
       <option value="0.001">0.001</option>
       <option value="all">All Dots</option>
     </select>
-      </div>
-      <div class="zoom-button-container">
-        <button id="apply-zoom-button" @click="applyManualZoom">Apply Zoom</button>
-      </div>
-    </div>
+  </div>
+  <div class="zoom-button-container">
+    <button id="apply-zoom-button" @click="applyManualZoom">Apply Zoom</button>
+  </div>
+</div>
+
 
       <!-- Export button as image -->
       <div class="export-button" v-if="visualizations">
@@ -1009,4 +1014,52 @@ button:has(:last-child:active)::before {
   width: 50px; /* Adjust the size as needed */
   height: auto;
 }
+
+
+
+
+
+.zoom-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Add space between the input groups */
+}
+
+.zoom-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Add space between the label and the input pair */
+}
+
+.zoom-input-pair {
+  display: flex;
+  gap: 10px; /* Add space between the start and end inputs */
+}
+
+.zoom-input {
+  background-color: #c3c3c3;
+  color: #205119;
+  padding: 1em;
+  border-radius: 1vw;
+  border: 0.2vw solid transparent;
+  outline: none;
+  font-family: "Heebo", sans-serif;
+  font-size: 1vw;
+  line-height: 1.2;
+  width: 100%;
+  transition: all 0.2s;
+  box-shadow: 0.5vw 0.3vw 0.5vw rgba(184, 184, 184, 0.5);
+}
+
+.zoom-input:hover {
+  background-color: #5a7f5ee9;
+  color: #ffffff;
+}
+
+.zoom-input:focus {
+  color: #333;
+  background-color: #fff;
+  border-color: #333;
+}
+
 </style>
