@@ -1018,7 +1018,6 @@ button:has(:last-child:active)::before {
 
 
 
-
 .zoom-inputs {
   display: flex;
   flex-direction: column;
@@ -1039,12 +1038,13 @@ button:has(:last-child:active)::before {
 .zoom-input {
   background-color: #c3c3c3;
   color: #205119;
-  padding: 1em;
+  padding: 1em; /* Adjust padding for thicker input boxes */
+  height: 3em;  /* Adjust height for thicker input boxes */
   border-radius: 1vw;
   border: 0.2vw solid transparent;
   outline: none;
   font-family: "Heebo", sans-serif;
-  font-size: 1vw;
+  font-size: 1vw; 
   line-height: 1.2;
   width: 100%;
   transition: all 0.2s;
@@ -1061,5 +1061,6 @@ button:has(:last-child:active)::before {
   background-color: #fff;
   border-color: #333;
 }
+
 
 </style>
