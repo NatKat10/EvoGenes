@@ -13,10 +13,14 @@ import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
+from flask_compress import Compress
+
+
 
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
+Compress(app)
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 100 MB
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +57,13 @@ def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
     except requests.exceptions.HTTPError as e:
         print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
         return []
+    
+
+
+
+def chunk_data(data, chunk_size=1000):
+    for i in range(0, len(data), chunk_size):
+        yield data[i:i + chunk_size]
 
 @main.route('/run-evo-genes', methods=['POST'])
 def run_evo_genes():
@@ -141,6 +152,9 @@ def run_evo_genes():
         end_time = time.time()
         logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
+
+        
+
         return jsonify({
             'dotplot_plot': dotplot_plot.to_dict(),
             'gene_structure1_plot': gene_structure1_plot.to_dict(),
@@ -187,6 +201,10 @@ def plot_gene_structure():
 
 @main.route('/dash/dotplot/plot_update', methods=['POST'])
 def plot_dotplot_route_update():
+
+    start_time = time.time()
+    logging.info("manual zoom started")
+
     data = request.json
     # print(f"Received data: {data}")  # Log received data
 
@@ -206,6 +224,8 @@ def plot_dotplot_route_update():
     original_min_y = dotplot_data['min_y']
     original_max_y = dotplot_data['max_y']
 
+    # print(dotplot_data['directions'])
+    print(len(dotplot_data['directions']))
     # Extract the zoom coordinates from the request
     x1 = data.get('x1')
     x2 = data.get('x2')
@@ -256,6 +276,8 @@ def plot_dotplot_route_update():
 
     dotplot_data['directions'] = filtered_directions
 
+    print("new directions lenght:   ", len(dotplot_data['directions']))
+
     # Generate the updated plot
     fig = plot_dotplot(
         dotplot_data['directions'],
@@ -281,6 +303,9 @@ def plot_dotplot_route_update():
     # Update gene structure plots based on the new zoom levels
     gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range)
     gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range)
+
+    end_time = time.time()
+    logging.info(f"manual zoom completed in {end_time - start_time:.2f} seconds")
 
     return jsonify({
         'gene_structure1_plot': gene_structure1_plot.to_dict(),

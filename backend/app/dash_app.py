@@ -79,14 +79,20 @@ def create_dash_app(flask_app):
         logging.info("Start processing plot_dotplot function")
         start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
-        x_vals_r, y_vals_r, colors_r = [], [],[]
+        x_vals_r, y_vals_r, colors_r = [], [], []
 
         color_map = {
             'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
             'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
         }
 
-        logging.info(f"Directions length: {len(directions)}")
+        total_directions = len(directions)
+        logging.info(f"Total directions: {total_directions}")
+
+        if sampling_fraction == 'all' and total_directions > 40000:
+            sampling_fraction = 0.4  # Show only 40% of the dots
+            logging.info("Sampling 40% of the dots due to large number of directions and 'all' sampling fraction selected")
+
         for seq_list, direction in directions:
             for x, y, intensity in seq_list:
                 color = f'rgba{color_map[direction][intensity] + (0.6,)}'
@@ -101,9 +107,6 @@ def create_dash_app(flask_app):
 
         logging.info(f"Forward points: {len(x_vals_f)}, Reverse points: {len(x_vals_r)}")
 
-        sample_fraction = float(sampling_fraction) if sampling_fraction != 'all' else 1.0
-        print(sample_fraction)
-
         def sample_data(x_vals, y_vals, colors, sample_fraction):
             sample_size = int(len(x_vals) * sample_fraction)
             sampled_indices = random.sample(range(len(x_vals)), sample_size)
@@ -113,9 +116,12 @@ def create_dash_app(flask_app):
                 [colors[i] for i in sampled_indices]
             )
 
-        if sample_fraction < 1.0:
-            x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sample_fraction)
-            x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sample_fraction)
+        print("sampling fraction:   ",sampling_fraction)
+
+        if sampling_fraction != 'all' and sampling_fraction != '1.0':
+            sampling_fraction = float(sampling_fraction)
+            x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sampling_fraction)
+            x_vals_r, y_vals_r, colors_r = sample_data(x_vals_r, y_vals_r, colors_r, sampling_fraction)
 
         logging.info(f"Sampled Forward points: {len(x_vals_f)}, Sampled Reverse points: {len(x_vals_r)}")
 
