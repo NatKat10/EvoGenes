@@ -12,6 +12,7 @@
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="5" aria-label="Slide 6"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="6" aria-label="Slide 7"></button>
         <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="7" aria-label="Slide 8"></button>
+        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="8" aria-label="Slide 9"></button>
       </div>
       <div class="carousel-inner">
         <div class="carousel-item active">
@@ -69,10 +70,11 @@ export default {
         require('../assets/monkey.png'),
         require('../assets/pig2.png'),
         require('../assets/fish2.png'),
-        require('../assets/bacter.png'),
+        require('../assets/alpaca.png'),
         require('../assets/mouse.png'),
         require('../assets/dog.png'),
-        require('../assets/panda.png')
+        require('../assets/panda.png'),
+        require('../assets/dolphine.png'),
       ],
       modalTitles: [
         'Humans (Homo sapiens)',
@@ -115,11 +117,11 @@ export default {
           { id: 5, col1: 'notch1a', col2: 'ENSDARG00000103554' },
         ],
         [
-          { id: 1, col1: 'unc-54', col2: 'WBGene00006789' },
-          { id: 2, col1: 'daf-2', col2: 'WBGene00000898' },
-          { id: 3, col1: 'egl-1', col2: 'WBGene00001170' },
-          { id: 4, col1: 'lin-4', col2: 'WBGene00002993' },
-          { id: 5, col1: 'ced-3', col2: 'WBGene00000417' },
+          { id: 1, col1: 'ACTB (Actin Beta)', col2: 'ENSVPAG00000010513' },
+          { id: 2, col1: 'COX1', col2: 'ENSVPAG00000018143' },
+          { id: 3, col1: 'MT-ATP6', col2: 'ENSVPAG00000018149' },
+          { id: 4, col1: 'ND4', col2: 'ENSVPAG00000018155' },
+          { id: 5, col1: 'TP53', col2: 'ENSVPAG00000007582' },
 
         ],
         [
@@ -142,7 +144,14 @@ export default {
           { id: 3, col1: 'TARS2', col2: 'ENSAMEG00000001547' },
           { id: 4, col1: 'QTRT2', col2: 'ENSAMEG00000005349' },
           { id: 5, col1: 'YARS2', col2: 'ENSAMEG00000008909' },
-        ]
+        ],
+        [
+          { id: 1, col1: 'BRCA1', col2: 'ENSDLEG00000016583' },
+          { id: 2, col1: 'COX1', col2: 'ENSDLEG00000000017' },
+          { id: 3, col1: 'MT-CYB', col2: 'ENSDLEG00000000036' },
+          { id: 4, col1: 'TP53', col2: 'ENSDLEG00000021163' },
+          { id: 5, col1: 'ND2', col2: 'ENSDLEG00000000011' },
+        ],
 
       ]
     };

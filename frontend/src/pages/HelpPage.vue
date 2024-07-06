@@ -116,8 +116,25 @@ export default {
 
 <style scoped>
 .conta {
+  position: relative;
+  overflow: hidden;
+}
+
+.conta::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: url('../assets/evo5.jpg') no-repeat center center fixed;
   background-size: cover;
+  opacity: 0.3;
+}
+
+
+.header2{
+  opacity: 0.99;
 }
 
 .container {
@@ -133,12 +150,14 @@ export default {
   flex-direction: column;
   align-items: center;
   box-sizing: border-box; /* Ensures padding and border are included in the element's total width and height */
+  position: relative;
 }
 
 .title {
   text-align: center;
   margin-bottom: 40px; /* Increase space below the title */
   font-size: 23px;
+
 }
 
 p {
@@ -220,6 +239,7 @@ p {
 .modal-content {
   background-color: #f8f9fa;
   border-radius: 1rem;
+
 }
 
 .modal-header {
@@ -244,16 +264,19 @@ p {
 
 .modal-dialog {
   max-width: 800px;
+
 }
 
 .modal-body {
   display: flex;
   flex-direction: column;
   align-items: center;
+
 }
 
 .modal-backdrop {
   background-color: rgba(0, 0, 0, 0.5); /* Ensures the backdrop darkens the background */
+
 }
 
 .modal-title {
