@@ -231,7 +231,15 @@ export default {
     }
 
     const data = await response.json();
-    console.log("Response Data: ", data);  // Log data received from the backend
+    console.log("Response Data: ", data);    // Log data received from the backend
+    if (data.message) {
+      this.errorMessage = data.message;
+      this.loading = false;
+      this.isRunning = false;
+      return;
+    }
+    
+
     this.visualizations = {
       dotplot_data: data.dotplot_plot,
       gene_structure1_plot: data.gene_structure1_plot,
@@ -358,6 +366,8 @@ applySyncedZoom(x0, x1, y0, y1) {
         ...this.visualizations.dotplot_data.layout,
         x_label: this.visualizations.dotplot_data.layout.xaxis.title.text,
         y_label: this.visualizations.dotplot_data.layout.yaxis.title.text,
+        inverted: this.visualizations.dotplot_data.layout.inverted
+
       }
     }
   };
@@ -453,7 +463,9 @@ applySyncedZoom(x0, x1, y0, y1) {
           y2: y2,
           sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
           exon_intervals1: this.visualizations.exon_intervals1,
-          exon_intervals2: this.visualizations.exon_intervals2
+          exon_intervals2: this.visualizations.exon_intervals2,
+          inverted: data_for_manual_zoom.inverted
+
         };
 
         console.log('Sending manual zoom request with data:', requestData);

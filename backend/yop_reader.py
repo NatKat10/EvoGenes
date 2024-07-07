@@ -316,7 +316,7 @@ def generate_list(fields):
 
 def process_sequences(file_path):
     sequences = parse_yop(file_path)
-    
+
     result_sequences = []
     directions = []
     x_label, y_label = 'X-axis', 'Y-axis'
@@ -326,18 +326,29 @@ def process_sequences(file_path):
     min_y = float('inf')
     max_y = float('-inf')
 
-    for sequence in tqdm(sequences, desc="Processing sequences"):
+    Amax, Bmax = 0, 0
+
+    for i, sequence in tqdm(enumerate(sequences), total=len(sequences), desc="Processing sequences"):
         fields = extract_fields(sequence)
         if fields is None:
+            print(f"Sequence {i + 1} has issues with extracting fields")
             continue
 
-        if x_label == 'X-axis' and y_label == 'Y-axis':  # Assume all sequences have the same labels
+        if i == 0:
             x_label, y_label = fields['x_label'], fields['y_label']
 
         result_list = generate_list(fields)
+        if not result_list:  # If result_list is empty, skip the updates
+            continue
+
         result_sequences.append(result_list)
         directions.append((result_list, fields['direction']))
 
+        start1, end1, start2, end2 = fields['indexes']
+        Amax = max(Amax, start1, end1)
+        Bmax = max(Bmax, start2, end2)
+
+        # Update axis limits
         for x, y, _ in result_list:
             if x < min_x:
                 min_x = x
@@ -348,4 +359,10 @@ def process_sequences(file_path):
             if y > max_y:
                 max_y = y
 
-    return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label
+    inverted = Amax < Bmax
+
+    # Check if axis limits were updated
+    if min_x == float('inf') or max_x == float('-inf') or min_y == float('inf') or max_y == float('-inf'):
+        return None, None, None, None, None, None, x_label, y_label, inverted
+
+    return result_sequences, directions, min_x, max_x, min_y, max_y, x_label, y_label, inverted

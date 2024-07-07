@@ -64,7 +64,7 @@ def create_dash_app(flask_app):
         data = [exon_trace, intron_trace, marker_trace]
 
         layout = go.Layout(
-            width=780,
+            width=800,
             height=70,
             xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
             yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6], fixedrange=True),
@@ -75,15 +75,15 @@ def create_dash_app(flask_app):
         fig = go.Figure(data=data, layout=layout)
         return fig
 
-    def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1'):
+    def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1', inverted=False):
         logging.info("Start processing plot_dotplot function")
         start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
         x_vals_r, y_vals_r, colors_r = [], [], []
 
         color_map = {
-            'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
-            'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
+            'f': {1: 'rgba(204, 255, 204, 0.6)', 2: 'rgba(102, 204, 102, 0.6)', 3: 'rgba(0, 153, 0, 0.6)'},
+            'r': {1: 'rgba(255, 204, 204, 0.6)', 2: 'rgba(204, 102, 102, 0.6)', 3: 'rgba(153, 0, 0, 0.6)'}
         }
 
         total_directions = len(directions)
@@ -95,7 +95,9 @@ def create_dash_app(flask_app):
 
         for seq_list, direction in directions:
             for x, y, intensity in seq_list:
-                color = f'rgba{color_map[direction][intensity] + (0.6,)}'
+                color = color_map[direction][intensity]
+                if inverted:
+                    x, y = y, x
                 if direction == 'f':
                     x_vals_f.append(x)
                     y_vals_f.append(y)
@@ -116,8 +118,6 @@ def create_dash_app(flask_app):
                 [colors[i] for i in sampled_indices]
             )
 
-        print("sampling fraction:   ",sampling_fraction)
-
         if sampling_fraction != 'all' and sampling_fraction != '1.0':
             sampling_fraction = float(sampling_fraction)
             x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sampling_fraction)
@@ -129,20 +129,21 @@ def create_dash_app(flask_app):
 
         if x_vals_f:
             traces.append(go.Scattergl(
-                x=x_vals_f, y=y_vals_f, mode='markers', 
+                x=x_vals_f, y=y_vals_f, mode='markers',
                 marker=dict(color=colors_f, size=5), name='Forward'
             ))
         if x_vals_r:
             traces.append(go.Scattergl(
-                x=x_vals_r, y=y_vals_r, mode='markers', 
+                x=x_vals_r, y=y_vals_r, mode='markers',
                 marker=dict(color=colors_r, size=5), name='Reverse'
             ))
 
         layout = go.Layout(
-            width=780,
+            width=800,
+            height=500,
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
-            yaxis=dict(title=y_label, range=[min_y, max_y], showgrid=False, showticklabels=True, side='right'),
+            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),  # Set range explicitly
             hovermode='closest',
             legend=dict(
                 x=1,
@@ -157,6 +158,7 @@ def create_dash_app(flask_app):
         end_time = time.time()
         logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
         return go.Figure(data=traces, layout=layout)
+
 
     dash_app.layout = html.Div([
         dcc.Graph(id='gene-plot', figure=create_gene_plot([])),

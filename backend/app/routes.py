@@ -110,7 +110,10 @@ def run_evo_genes():
     logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
     yass_output = result.stdout + result.stderr
 
-    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
+    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ ,inverted = process_sequences(yass_output_path)
+    if result_sequences is None:
+        return jsonify({'message': 'No alignment found.'}), 200
+
 
     logging.info("Sequences processed")
 
@@ -146,7 +149,9 @@ def run_evo_genes():
         'max_y': max_y,
         'x_label': extracted_gene_id1,
         'y_label': extracted_gene_id2,
-        'sampling_fraction': request.form.get('samplingFraction', '0.1')  # Get the sampling fraction from the request
+        'sampling_fraction': request.form.get('samplingFraction', '0.1'), # Get the sampling fraction from the request
+        'inverted': inverted
+
     }
 
     dotplot_plot = plot_dotplot(**dotplot_data)
@@ -154,7 +159,7 @@ def run_evo_genes():
     end_time = time.time()
     logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
-    return jsonify({
+    return_data = {
         'dotplot_plot': dotplot_plot.to_dict(),
         'gene_structure1_plot': gene_structure1_plot.to_dict(),
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
@@ -162,7 +167,10 @@ def run_evo_genes():
         'exon_intervals2': normalized_exons2,
         'yass_output': yass_output,
         'data_for_manual_zoom': dotplot_data
-    })
+    }
+
+    # print(json.dumps(return_data, indent=4)) 
+    return jsonify(return_data)
     
 @main.route('/dash/update', methods=['POST'])
 def update_exon_positions():
@@ -182,12 +190,15 @@ def update_dotplot_data():#This route handles POST requests to update dot plot d
 @main.route('/dash/dotplot/plot', methods=['POST'])
 def plot_dotplot_route():
     dotplot_data = request.json['dotplot_data']
-    fig = plot_dotplot(dotplot_data['directions'],
-                       dotplot_data['min_x'], dotplot_data['max_x'],
-                       dotplot_data['min_y'], dotplot_data['max_y'],
-                       dotplot_data['x_label'], dotplot_data['y_label'])
+    fig = plot_dotplot(
+        dotplot_data['directions'],
+        dotplot_data['min_x'], dotplot_data['max_x'],
+        dotplot_data['min_y'], dotplot_data['max_y'],
+        dotplot_data['x_label'], dotplot_data['y_label'],
+        sampling_fraction=dotplot_data.get('sampling_fraction', '0.1'),
+        inverted=dotplot_data.get('inverted', False)
+    )
     return jsonify(fig.to_dict())
-
 
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():
@@ -286,7 +297,9 @@ def plot_dotplot_route_update():
         dotplot_data['max_y'],
         dotplot_data['x_label'],
         dotplot_data['y_label'],
-        sampling_fraction=sampling_fraction  # Pass the sampling fraction
+        sampling_fraction=sampling_fraction,  # Pass the sampling fraction
+        inverted=dotplot_data.get('inverted', False)
+
     )
 
     # Update gene structure plots based on the new zoom levels
