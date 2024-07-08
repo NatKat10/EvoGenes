@@ -519,9 +519,7 @@ export default {
 
 
     async applyManualZoom() {
-      this.loading = true;
-      this.progress = 0;
-
+      this.errorMessage = '';
       try {
         if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
           throw new Error('Dotplot data or data for manual zoom is missing');
@@ -530,7 +528,6 @@ export default {
         // Ensure the manual zoom coordinates are present
         if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
           this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-
           const { x1, x2, y1, y2 } = this.manualZoom;
 
           const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
@@ -547,7 +544,8 @@ export default {
             inverted: data_for_manual_zoom.inverted
 
           };
-
+          this.loading = true;
+          this.progress = 0;
           console.log('Sending manual zoom request with data:', requestData);
 
           fetch(`${server_domain}/dash/dotplot/plot_update`, {
@@ -577,9 +575,11 @@ export default {
               console.error('Error updating dotplot:', error);
             });
         } else {
+          this.errorMessage = "Please fill in all zoom coordinates";
           throw new Error('Please fill in all zoom coordinates');
         }
       } catch (error) {
+        this.errorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
         console.error('Error in applyManualZoom:', error.message);
       } finally {
         this.loading = false;
@@ -627,7 +627,7 @@ export default {
           this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot);
           this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot);
           this.$nextTick(() => {
-            Plotly.newPlot(this.$refs.dotplot, data.dotplot_plot.data, data.dotplot_plot.layout);
+            Plotly.react(this.$refs.dotplot, data.dotplot_plot.data, data.dotplot_plot.layout);
           });
           console.log('Relayout data applied successfully');
         })

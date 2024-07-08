@@ -96,11 +96,11 @@ export default {
           email: 'alice.johnson@mail.com',
         },
         {
-          image: require('@/assets/fish.png'),
+          image: require('@/assets/maor.png'),
           name: 'Maor Biton',
-          role: 'Data Scientist',
-          linkedin: 'https://www.linkedin.com/in/bob-brown',
-          email: 'bob.brown@mail.com',
+          role: 'Backend Developer',
+          linkedin: 'https://www.linkedin.com/in/maor-biton-449136232/',
+          email: 'maor20561@gmail.com',
         },
       ]
     };
