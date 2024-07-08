@@ -19,7 +19,7 @@ def create_dash_app(flask_app):
         suppress_callback_exceptions=True
     )
 
-    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None):
+    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None, is_vertical=False):
         # This function creates a Plotly figure for visualizing gene structures.
         if not exon_intervals:
             return go.Figure()
@@ -63,16 +63,62 @@ def create_dash_app(flask_app):
 
         data = [exon_trace, intron_trace, marker_trace]
 
-        layout = go.Layout(
-            width=800,
-            height=70,
-            xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
-            yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6], fixedrange=True),
-            margin=dict(l=5, r=5, t=5, b=35),
-            hovermode='closest'
-        )
+        # layout = go.Layout(
+        #     width=800,
+        #     height=70,
+        #     xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
+        #     yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6], fixedrange=True),
+        #     margin=dict(l=5, r=5, t=5, b=35),
+        #     hovermode='closest'
+        # )
+
+        if is_vertical:
+            layout = go.Layout(
+                width=550,
+                height=90,
+                xaxis=dict(
+                    showgrid=True,
+                    range=x_range,
+                    side='top',
+                    tickangle=-90
+                ),
+                yaxis=dict(
+                    showgrid=False,
+                    showticklabels=False,
+                    range=[-0.1, 0.6],
+                    fixedrange=True,
+                    side='right'
+                ),
+                margin=dict(l=5, r=35, t=5, b=5),
+                hovermode='closest'
+            )
+        else:
+            layout = go.Layout(
+                width=780,
+                height=90,
+                xaxis=dict(
+                    title='Genomic Position',
+                    showgrid=True,
+                    range=x_range
+                ),
+                yaxis=dict(
+                    showgrid=False,
+                    showticklabels=False,
+                    range=[-0.1, 0.6],
+                    fixedrange=True
+                ),
+                margin=dict(l=5, r=5, t=5, b=35),
+                hovermode='closest'
+            )
 
         fig = go.Figure(data=data, layout=layout)
+
+        if is_vertical:
+            fig.update_layout(
+                xaxis=dict(side='top', tickangle=-90),
+                yaxis=dict(side='right')
+            )
+
         return fig
 
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1', inverted=False):
@@ -139,8 +185,8 @@ def create_dash_app(flask_app):
             ))
 
         layout = go.Layout(
-            width=800,
-            height=500,
+            width=780,
+            height=550,
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
             yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),  # Set range explicitly

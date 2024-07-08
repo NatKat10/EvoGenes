@@ -200,11 +200,19 @@ def plot_dotplot_route():
     )
     return jsonify(fig.to_dict())
 
+# @main.route('/dash/plot', methods=['POST'])
+# def plot_gene_structure():
+#     data = request.json
+#     exons_positions = data.get('exonsPositions', [])
+#     fig = create_gene_plot(exons_positions)
+#     return jsonify(fig.to_dict())
+
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():
     data = request.json
     exons_positions = data.get('exonsPositions', [])
-    fig = create_gene_plot(exons_positions)
+    is_vertical = data.get('isVertical', False)  # Get the isVertical parameter from the request
+    fig = create_gene_plot(exons_positions, is_vertical=is_vertical)  # Pass is_vertical to create_gene_plot
     return jsonify(fig.to_dict())
 
 
@@ -346,8 +354,8 @@ def handle_relayout():
         y_range = [y0, y1]  # Adjust y range as needed to match Plotly's coordinate system
 
         # Update gene structure plots based on the new zoom levels
-        gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range)
-        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range)
+        gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range, is_vertical=False)
+        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range, is_vertical=True)
 
         # Update the dotplot layout based on the new zoom levels
         dotplot_data = relayout_data.get('dotplot_data', {})
