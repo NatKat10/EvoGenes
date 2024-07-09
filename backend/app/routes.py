@@ -103,7 +103,29 @@ def run_evo_genes():
     logging.info("Running YASS")
     yass_output_path = 'yass_output.yop'
     yass_executable = './yass-Win64.exe'
-    command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    command = [
+    yass_executable, 
+    fasta_file1_path, 
+    fasta_file2_path, 
+    '-o', yass_output_path, 
+    '-O', '1000000', 
+    '-C', '5,-4,-3,-4', 
+    '-E', '10', 
+    '-G', '-16,-4', 
+    '-W', '20,40000', 
+    '-X', '30', 
+    '-c', '1', 
+    '-d', '1', 
+    '-e', '2.8', 
+    '-i', '10', 
+    '-m', '25', 
+    '-p', '#@#--#---#-@##,###-#@-#-@#', 
+    '-r', '2', 
+    '-s', '70', 
+    '-w', '4'
+    ]
+
     yass_start_time = time.time()
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     yass_end_time = time.time()
