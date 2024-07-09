@@ -294,13 +294,17 @@ def generate_list(fields):
     mutation_line = fields['mutation_line']
 
     result_list = []
-    step = 1 if fields['direction'] == 'f' else -1
-    index1, index2 = start1, start2
+    if fields['direction'] == 'f':
+        index1, index2 = start1, start2
+        step1, step2 = 1, 1
+    else:
+        index1, index2 = end1, end2
+        step1, step2 = -1, -1
 
     for char in mutation_line:
         if char == ' ':
-            index1 += step
-            index2 += step
+            index1 += step1
+            index2 += step2
             continue
         elif char == '|':
             result_list.append((index1, index2, 3))
@@ -309,10 +313,11 @@ def generate_list(fields):
         elif char == '.':
             result_list.append((index1, index2, 1))
 
-        index1 += step
-        index2 += step
+        index1 += step1 if fields['direction'] == 'f' else -step1
+        index2 += step2 if fields['direction'] == 'f' else -step2
 
     return result_list
+
 
 def process_sequences(file_path):
     sequences = parse_yop(file_path)

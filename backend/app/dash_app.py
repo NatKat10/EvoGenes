@@ -149,6 +149,7 @@ def create_dash_app(flask_app):
                     y_vals_f.append(y)
                     colors_f.append(color)
                 else:
+                    x, y = x, max_y - (y - min_y)  # Flip y-coordinate for reverse direction
                     x_vals_r.append(x)
                     y_vals_r.append(y)
                     colors_r.append(color)
@@ -189,7 +190,7 @@ def create_dash_app(flask_app):
             height=550,
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
-            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),  # Set range explicitly
+            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),
             hovermode='closest',
             legend=dict(
                 x=1,

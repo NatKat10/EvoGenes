@@ -137,9 +137,9 @@ def run_evo_genes():
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
-    os.remove(fasta_file1_path)
-    os.remove(fasta_file2_path)
-    os.remove(yass_output_path)
+    # os.remove(fasta_file1_path)
+    # os.remove(fasta_file2_path)
+    # os.remove(yass_output_path)
 
     dotplot_data = {
         'directions': directions,
