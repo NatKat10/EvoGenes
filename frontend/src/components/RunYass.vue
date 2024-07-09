@@ -68,46 +68,6 @@
           </select>
         </div>
       </div>
-      <!-- <div class="gene-structure-container">
-
-        <div ref="geneStructure1" class="gene-structure"></div>
-        <div ref="geneStructure2" class="gene-structure"></div>
-        <div ref="parentSelect1" class="parent-select-container">
-          <div class="parent-select-container">
-            <div class="parent-select">
-              <label for="parent-select1">Select Parent for Gene 1: </label>
-              <label for="parent-select1">Select Parent for Gene 1:</label>
-              <select id="parent-select1" v-model="selectedParent1"
-                @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
-                <select id="parent-select1" v-model="selectedParent1"
-                  @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
-                  <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{
-      parent }}</option>
-                  <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{
-      parent }}</option>
-                </select>
-              </select>
-            </div>
-            <div class="parent-select">
-              <label for="parent-select2">Select Parent for Gene 2:</label>
-              <select id="parent-select2" v-model="selectedParent2"
-                @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
-                <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{
-      parent }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div ref="parentSelect2" class="parent-select-container">
-          <label for="parent-select2">Select Parent for Gene 2: </label>
-          <select id="parent-select2" v-model="selectedParent2"
-            @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
-            <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{
-      parent }}</option>
-          </select>
-        </div>
-      </div> -->
 
     <div ref="manualZoom" class="manual-zoom-container">
       <h4>Manual Zoom</h4>
@@ -380,31 +340,38 @@ export default {
       }
     },
 
-    // renderGeneStructure(ref, plotData) {
-    //   if (plotData && plotData.data && plotData.layout) {
-    //     Plotly.newPlot(ref, plotData.data, plotData.layout).then(() => {
-    //       if (ref === this.$refs.geneStructure1 && !this.initialGeneStructure1State) {
-    //         this.initialGeneStructure1State = JSON.parse(JSON.stringify(plotData));
-    //       } else if (ref === this.$refs.geneStructure2 && !this.initialGeneStructure2State) {
-    //         this.initialGeneStructure2State = JSON.parse(JSON.stringify(plotData));
-    //       }
-    //     });
-    //   } else {
-    //     console.error('Invalid gene structure plot data:', plotData);
-    //   }
-    // },
-
     renderGeneStructure(ref, plotData, isVertical) {
       if (plotData && plotData.data && plotData.layout) {
-        if (isVertical) {
-          plotData.layout.width = 550;
-          plotData.layout.height = 90;
-          plotData.layout.xaxis.side = 'top';
-          plotData.layout.xaxis.tickangle = 90;
-          plotData.layout.yaxis.side = 'right';
+        if (ref === this.$refs.geneStructure2 || isVertical) {
+          plotData.layout = {
+            ...plotData.layout,  // Preserve any existing layout properties
+            width: 550,
+            height: 90,
+            xaxis: {
+              ...plotData.layout.xaxis,  // Preserve existing xaxis properties
+              showgrid: true,
+              side: 'bottom',
+              tickangle: -90,
+            },
+            yaxis: {
+              ...plotData.layout.yaxis,  // Preserve existing yaxis properties
+              showgrid: false,
+              showticklabels: false,
+              range: [-0.1, 0.6],
+              fixedrange: true,
+              side: 'right',
+            },
+            margin: {l: 60, r: 47, t: 5, b: 45},
+            hovermode: 'closest',
+          };
+          
         } else {
-          plotData.layout.width = 780;
-          plotData.layout.height = 90;
+          plotData.layout = {
+            ...plotData.layout,
+            width: 780,
+            height: 90,
+            margin: {l: 5, r: 60, t: 5, b: 35},
+          }
         }
 
         Plotly.newPlot(ref, plotData.data, plotData.layout).then(() => {
@@ -416,9 +383,9 @@ export default {
 
           if (isVertical) {
             Plotly.relayout(ref, {
-              'xaxis.side': 'top',
+              'xaxis.side': 'bottom',
               'xaxis.tickangle': -90,
-              'yaxis.side': 'right'
+              'yaxis.side': 'left'
             });
           }
         });
@@ -426,6 +393,8 @@ export default {
         console.error('Invalid gene structure plot data:', plotData);
       }
     },
+
+  
 
     applySyncedZoom(x0, x1, y0, y1) {
       console.log('Sending zoom data:', { x0, x1, y0, y1 });
@@ -460,12 +429,12 @@ export default {
         .then(response => response.json())
         .then(data => {
           console.log('Received updated plot data:', data);
-          this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+          this.visualizations.dotplot_data = data.dotplot_plot;
           this.$nextTick(() => {
-            this.renderDotplot(); // Re-render the dotplot with the updated data
+            this.renderDotplot();
+            this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot, false);
+            this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot, true);
           });
-          this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot);
-          this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot);
         })
         .catch(error => console.error('Error applying synced zoom:', error));
     },
@@ -477,8 +446,8 @@ export default {
         this.visualizations.gene_structure2_plot = JSON.parse(JSON.stringify(this.initialGeneStructure2State));
         this.$nextTick(() => {
           this.renderDotplot();
-          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
-          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
+          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
           this.isResetting = false;
         });
       } else {
@@ -495,6 +464,7 @@ export default {
     updateGeneStructure(containerRef, selectedParent) {
       const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
       const isVertical = containerRef === 'geneStructure2';
+      console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
 
       fetch(`${server_domain}/dash/plot`, {
         method: 'POST',
@@ -566,8 +536,8 @@ export default {
               this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
               this.$nextTick(() => {
                 this.renderDotplot();
-                this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot);
-                this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
+                this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
+                this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
               });
               this.clearManualZoomInputs();  // Clear the manual zoom inputs
             })
@@ -624,8 +594,8 @@ export default {
         .then(data => {
           console.log('Received response:', data);
           // Update the gene structure plots and dotplot with the response data
-          this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot);
-          this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot);
+          this.renderGeneStructure(this.$refs.geneStructure1, data.gene_structure1_plot, false);
+          this.renderGeneStructure(this.$refs.geneStructure2, data.gene_structure2_plot, true);
           this.$nextTick(() => {
             Plotly.react(this.$refs.dotplot, data.dotplot_plot.data, data.dotplot_plot.layout);
           });
@@ -990,7 +960,7 @@ button:has(:last-child:active)::before {
   align-items: center;
   justify-content: center;
 }
-/***************added content ****************** */
+
 .graph-container {
   display: grid;
   grid-template-columns: 90px 780px;
@@ -1004,7 +974,7 @@ button:has(:last-child:active)::before {
 .gene-structure-vertical {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
-  width: 90px;
+  width: 100px;
   height: 550px;
   position: relative;
   overflow: visible;
@@ -1027,11 +997,6 @@ button:has(:last-child:active)::before {
   height: 550px;
 }
 
-.figure-plot {
-  width: 100%;
-  height: 100%;
-}
-
 .gene-structure-horizontal {
   grid-column: 2 / 3;
   grid-row: 2 / 3;
@@ -1044,31 +1009,14 @@ button:has(:last-child:active)::before {
   height: 100%;
 }
 
+.figure-plot {
+  width: 100%;
+  height: 100%;
+}
+
 .manual-zoom-container {
   margin-top: 20px;
 }
-
-/* ********************************************* */
-
-/* .graph-container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-
-} */
-
-/* .dotplot-container {
-  flex: 1;
-  position: relative;
-}
-
-.gene-structure-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-} */
 
 .figure-iframe {
   width: 100%;
@@ -1079,13 +1027,6 @@ button:has(:last-child:active)::before {
 .parent-select-container {
   margin-bottom: 10px;
 }
-
-/* .gene-structure {
-  width: 100%;
-  height: 90px;
-  margin-bottom: 20px;
-} */
-
 
 
 .styled-select {

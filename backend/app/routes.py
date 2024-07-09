@@ -212,6 +212,7 @@ def plot_gene_structure():
     data = request.json
     exons_positions = data.get('exonsPositions', [])
     is_vertical = data.get('isVertical', False)  # Get the isVertical parameter from the request
+    print(f"Received isVertical: {is_vertical}") 
     fig = create_gene_plot(exons_positions, is_vertical=is_vertical)  # Pass is_vertical to create_gene_plot
     return jsonify(fig.to_dict())
 

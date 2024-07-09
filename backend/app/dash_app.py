@@ -63,14 +63,6 @@ def create_dash_app(flask_app):
 
         data = [exon_trace, intron_trace, marker_trace]
 
-        # layout = go.Layout(
-        #     width=800,
-        #     height=70,
-        #     xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
-        #     yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6], fixedrange=True),
-        #     margin=dict(l=5, r=5, t=5, b=35),
-        #     hovermode='closest'
-        # )
 
         if is_vertical:
             layout = go.Layout(
@@ -89,7 +81,7 @@ def create_dash_app(flask_app):
                     fixedrange=True,
                     side='right'
                 ),
-                margin=dict(l=5, r=35, t=5, b=5),
+                margin=dict(l=60, r=47, t=5, b=35),
                 hovermode='closest'
             )
         else:
@@ -107,7 +99,7 @@ def create_dash_app(flask_app):
                     range=[-0.1, 0.6],
                     fixedrange=True
                 ),
-                margin=dict(l=5, r=5, t=5, b=35),
+                margin=dict(l=40, r=5, t=5, b=35),
                 hovermode='closest'
             )
 
@@ -115,8 +107,8 @@ def create_dash_app(flask_app):
 
         if is_vertical:
             fig.update_layout(
-                xaxis=dict(side='top', tickangle=-90),
-                yaxis=dict(side='right')
+                xaxis=dict(side='bottom', tickangle=-90),
+                yaxis=dict(side='left')
             )
 
         return fig
@@ -191,6 +183,8 @@ def create_dash_app(flask_app):
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
             yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),
+            # xaxis=dict(range=[min_x, max_x], showgrid=False, showticklabels=False),
+            # yaxis=dict(range=[max_y, min_y], showgrid=False, showticklabels=False, side='right'),
             hovermode='closest',
             legend=dict(
                 x=1,
@@ -201,6 +195,8 @@ def create_dash_app(flask_app):
             ),
             margin=dict(l=5, r=5, t=60, b=35)
         )
+
+        
 
         end_time = time.time()
         logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
