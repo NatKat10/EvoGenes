@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h3>Popular Gene Sequences</h3>
+    <h3>Selected Genes </h3>
 
     <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-indicators">

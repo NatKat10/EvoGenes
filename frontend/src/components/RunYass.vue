@@ -4,24 +4,25 @@
     <LoaderOverlay :visible="loading" :progress="progress" />
     <!-- Sequence text inputs -->
     <div class="ensemble-section" :class="{ disabled: disableOtherSections && activeSection !== 'ensemble' }">
-      <h3>Enter Ensembl Gene ID:</h3>
+      <h3>Compare the sequence of two genes:</h3>
       <div class="file-group">
         <div class="file-label-input">
-          <label for="file1" class="upload-label">Enter Gene ID for Gene 1:</label>
-          <textarea class="textarea" v-model="GeneID1" placeholder="Enter Gene ID 1 here"
+          <label for="file1" class="upload-label">Gene Ensembl ID :</label>
+          <textarea class="textarea" v-model="GeneID1" placeholder="Gene Ensembl ID"
             @input="handleInput('ensemble')"></textarea>
         </div>
         <div class="file-label-input">
-          <label for="file2" class="upload-label">Enter Gene ID for Gene 2:</label>
-          <textarea class="textarea" v-model="GeneID2" placeholder="Enter Gene ID 2 here"
+          <label for="file2" class="upload-label">Gene Ensembl ID :</label>
+          <textarea class="textarea" v-model="GeneID2" placeholder="Gene Ensembl ID"
             @input="handleInput('ensemble')"></textarea>
         </div>
       </div>
     </div>
 
     <div class="sampling-fraction">
-      <label for="sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
+      <label for="sampling-fraction-select">Select sampling fraction: (Tooltip: For long genes, samples positions to increase speed)<span class="label-space"></span></label>
       <select id="sampling-fraction-select" v-model="selectedSamplingFraction" style="background-color: #E8F8E0;">
+        <p></p>
         <option value="0.1">0.1</option>
         <option value="0.01">0.01</option>
         <option value="0.001">0.001</option>
@@ -230,7 +231,7 @@ export default {
         formData.append('GeneID1', this.GeneID1);
         formData.append('GeneID2', this.GeneID2);
       } else {
-        this.errorMessage = "Please provide two sequences or two FASTA files or two Ensembl Gene IDs.";
+        this.errorMessage = "Please provide two Valid Ensembl Gene IDs.";
         return;
       }
 
@@ -249,7 +250,8 @@ export default {
         });
 
         if (!response.ok) {
-          throw new Error('Network response was not ok');
+          this.errorMessage = await response.json();
+          throw new Error(this.errorMessage || 'Network response was not ok');
         }
 
         const data = await response.json();
@@ -259,6 +261,10 @@ export default {
           this.loading = false;
           this.isRunning = false;
           return;
+        }
+                // Ensure data has required properties before accessing them
+        if (!data.exon_intervals1 || !data.exon_intervals2) {
+            throw new Error("Incomplete data received from the server");
         }
 
 
@@ -290,7 +296,7 @@ export default {
         this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
-        this.errorMessage = "Incorrect Input";
+        this.errorMessage = "Please Provide Vaild Ensembl Gene ID";
       } finally {
         this.loading = false;
         this.progress = 100;
