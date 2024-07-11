@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container"> <!-- This is the single root element -->
     <!-- Shows a loading spinner when the process is running -->
     <LoaderOverlay :visible="loading" :progress="progress" />
     <!-- Sequence text inputs -->
@@ -27,6 +27,7 @@
         <option value="0.001">0.001</option>
         <option value="all">All Dots</option>
       </select>
+      <div class="info-icon1" @click="showSamplingInfo = true">?</div>
     </div>
 
     <div class="btn">
@@ -36,7 +37,6 @@
         <span></span>
       </button>
     </div>
-
 
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
@@ -69,52 +69,67 @@
         </div>
       </div>
 
-    <div ref="manualZoom" class="manual-zoom-container">
-      <h4>Manual Zoom</h4>
-      <div class="zoom-inputs">
-        <div class="zoom-input-group">
-          <label>X-axis:</label>
-          <div class="zoom-input-pair">
-            <input v-model.number="manualZoom.x1" type="number" placeholder="Start" class="zoom-input">
-            <input v-model.number="manualZoom.x2" type="number" placeholder="End" class="zoom-input">
+      <div ref="manualZoom" class="manual-zoom-container">
+        <h4>Manual Zoom</h4>
+        <div class="zoom-inputs">
+          <div class="zoom-input-group">
+            <label>X-axis:</label>
+            <div class="zoom-input-pair">
+              <input v-model.number="manualZoom.x1" type="number" placeholder="Start" class="zoom-input">
+              <input v-model.number="manualZoom.x2" type="number" placeholder="End" class="zoom-input">
+            </div>
+          </div>
+          <div class="zoom-input-group">
+            <label>Y-axis:</label>
+            <div class="zoom-input-pair">
+              <input v-model.number="manualZoom.y1" type="number" placeholder="Start" class="zoom-input">
+              <input v-model.number="manualZoom.y2" type="number" placeholder="End" class="zoom-input">
+            </div>
           </div>
         </div>
-        <div class="zoom-input-group">
-          <label>Y-axis:</label>
-          <div class="zoom-input-pair">
-            <input v-model.number="manualZoom.y1" type="number" placeholder="Start" class="zoom-input">
-            <input v-model.number="manualZoom.y2" type="number" placeholder="End" class="zoom-input">
-          </div>
+        <!-- Add the dropdown for sampling fraction -->
+        <div class="sampling-fraction">
+          <label for="manual-sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
+          <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction">
+            <option value="0.1">0.1</option>
+            <option value="0.01">0.01</option>
+            <option value="0.001">0.001</option>
+            <option value="all">All Dots</option>
+          </select>
         </div>
-      </div>
-      <!-- Add the dropdown for sampling fraction -->
-      <div class="sampling-fraction">
-        <label for="manual-sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
-        <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction">
-          <option value="0.1">0.1</option>
-          <option value="0.01">0.01</option>
-          <option value="0.001">0.001</option>
-          <option value="all">All Dots</option>
-        </select>
-      </div>
-      <div class="zoom-button-container">
-        <button id="apply-zoom-button" @click="applyManualZoom">Apply Zoom</button>
+        <div class="zoom-button-container">
+          <button id="apply-zoom-button" @click="applyManualZoom">Apply Zoom</button>
+        </div>
       </div>
     </div>
 
+    <div v-if="showSamplingInfo" class="modal-overlay" @click.self="showSamplingInfo = false">
+      <div class="modal-content">
+        <h3>Sampling Fraction Information</h3>
+        <p>Select the fraction of dots to display in the dotplot:</p>
+        <ul>
+          <li>0.1: Display 10% of the dots</li>
+          <li>0.01: Display 1% of the dots</li>
+          <li>0.001: Display 0.1% of the dots</li>
+          <li>All Dots: Display all dots</li>
+        </ul>
+        <p>If the selected genes have more than 40,000 alignments, only 40% of the dots will be shown to improve performance.</p>
+        <button id="Sbutton" @click="showSamplingInfo = false">Close</button>
+      </div>
+    </div>
 
     <!-- Export button as image -->
     <div class="export-button" v-if="visualizations">
       <img src="@/assets/camera.png" alt="Export" @click="captureScreenshot" style="cursor: pointer;" />
     </div>
-  </div>
-  <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
-    <div class="modal-content">
-      <h3>YASS Alignment Summary:</h3>
-      <pre>{{ yassOutput }}</pre>
-      <button @click="showModal = false">Close</button>
+    
+    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+      <div class="modal-content">
+        <h3>YASS Alignment Summary:</h3>
+        <pre>{{ yassOutput }}</pre>
+        <button @click="showModal = false">Close</button>
+      </div>
     </div>
-  </div>
   </div>
 </template>
 
@@ -163,6 +178,8 @@ export default {
       isResetting: false,
       isRunning: false,
       manualSamplingFraction: 'all',    // Default value for manual zoom to "all dots"
+      showSamplingInfo: false  // For showing the sampling info modal
+
 
 
     };
@@ -1145,6 +1162,15 @@ button:has(:last-child:active)::before {
   /* Center align the button */
   margin-top: 20px;
 }
+#Sbutton{
+  display: flex;
+  justify-content: center;
+  /* Centers the button horizontally */
+  margin: 0 auto;
+  /* Center align the button */
+  margin-top: 20px;
+  width: 25%;
+}
 
 .export-button img {
   width: 50px;
@@ -1174,6 +1200,18 @@ button:has(:last-child:active)::before {
   gap: 10px;
   /* Add space between the start and end inputs */
 }
+.info-icon1 {
+  display: inline-block;
+  margin-left: 10px;
+  width: 20px;
+  height: 20px;
+  background-color: #5c715d;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+}
 
 .zoom-input {
   background-color: #c3c3c3;
@@ -1202,5 +1240,14 @@ button:has(:last-child:active)::before {
   color: #333;
   background-color: #fff;
   border-color: #333;
+}
+
+.modal-content{
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 40%;
+  max-height: 80%;
+  overflow: auto;
 }
 </style>
