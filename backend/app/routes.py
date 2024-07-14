@@ -355,16 +355,17 @@ def plot_dotplot_route_update():
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
         'dotplot_plot': fig.to_dict()
     })
+
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
         relayout_data = request.json
-        # print(f"Received relayout data: {relayout_data}")
 
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
         y0 = relayout_data.get('y0')
         y1 = relayout_data.get('y1')
+
         exon_intervals1 = relayout_data.get('exon_intervals1', {})
         exon_intervals2 = relayout_data.get('exon_intervals2', {})
         x_label = relayout_data['dotplot_data']['layout']['x_label']
@@ -374,11 +375,11 @@ def handle_relayout():
 
         # Ensure consistent ranges for all plots
         x_range = [x0, x1]
-        y_range = [y0, y1]  # Adjust y range as needed to match Plotly's coordinate system
+        y_range = [y0, y1]  # Keep original order for dotplot
 
         # Update gene structure plots based on the new zoom levels
         gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range, is_vertical=False)
-        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range, is_vertical=True)
+        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0], is_vertical=True)
 
         # Update the dotplot layout based on the new zoom levels
         dotplot_data = relayout_data.get('dotplot_data', {})
@@ -392,7 +393,7 @@ def handle_relayout():
             'autorange': False
         }
         dotplot_layout['yaxis'] = {
-            'range': y_range,
+            'range': y_range,  # Use original y_range here
             'showgrid': False,
             'showticklabels': True,
             'side': 'right',
@@ -414,6 +415,7 @@ def handle_relayout():
     except Exception as e:
         print(f'Error processing relayout data: {e}')
         return jsonify(success=False, error=str(e)), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
