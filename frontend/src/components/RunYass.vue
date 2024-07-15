@@ -57,13 +57,13 @@
       
       <div class="parent-select-container">
         <div class="parent-select">
-          <label for="parent-select1">Select Parent for Gene 1:</label>
+          <label for="parent-select1">Select transcript for Gene 1:</label>
           <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
             <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
           </select>
         </div>
         <div class="parent-select">
-          <label for="parent-select2">Select Parent for Gene 2:</label>
+          <label for="parent-select2">Select transcript for Gene 2:</label>
           <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
             <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
           </select>

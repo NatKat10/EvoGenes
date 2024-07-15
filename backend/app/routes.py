@@ -76,6 +76,10 @@ def run_evo_genes():
     gene_id1 = request.form['GeneID1']
     gene_id2 = request.form['GeneID2']
 
+    #remove spaces from Gene ID
+    gene_id1 = gene_id1.replace(" ", "")
+    gene_id2 = gene_id2.replace(" ", "")
+
     # Ensure the gene IDs are always ordered for consistency
     gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
 
