@@ -151,7 +151,7 @@ export default {
   text-align: center;
   background-color: #333;
   color: white;
-  padding: 20px 0;
+  padding: 5px 0;
   margin-top: 50px;
   width: 100%;
   opacity: 0.9;
