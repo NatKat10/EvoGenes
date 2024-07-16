@@ -20,7 +20,7 @@
     </div>
 
     <div class="sampling-fraction">
-      <label for="sampling-fraction-select">Select sampling fraction: (Tooltip: For long genes, samples positions to increase speed)<span class="label-space"></span></label>
+      <label for="sampling-fraction-select">Select sampling fraction: <span class="label-space"></span></label>
       <select id="sampling-fraction-select" v-model="selectedSamplingFraction" style="background-color: #E8F8E0;">
         <p></p>
         <option value="0.1">0.1</option>
@@ -57,13 +57,13 @@
       
       <div class="parent-select-container">
         <div class="parent-select">
-          <label for="parent-select1">Select transcript for Gene 1:</label>
+          <label for="parent-select1">Select transcript for Gene (X-axis):</label>
           <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
             <option v-for="parent in Object.keys(visualizations.exon_intervals1)" :key="parent" :value="parent">{{ parent }}</option>
           </select>
         </div>
         <div class="parent-select">
-          <label for="parent-select2">Select transcript for Gene 2:</label>
+          <label for="parent-select2">Select transcript for Gene (Y-axis):</label>
           <select id="parent-select2" v-model="selectedParent2" @change="updateGeneStructure('geneStructure2', selectedParent2)" class="styled-select">
             <option v-for="parent in Object.keys(visualizations.exon_intervals2)" :key="parent" :value="parent">{{ parent }}</option>
           </select>
@@ -115,6 +115,8 @@
           <li>All Dots: Display all dots</li>
         </ul>
         <p>If the selected genes have more than 40,000 alignments, only 40% of the dots will be shown to improve performance.</p>
+        <p> Recommend For long genes, samples positions will increase speed</p>
+
         <button id="Sbutton" @click="showSamplingInfo = false">Close</button>
       </div>
     </div>
