@@ -286,7 +286,6 @@ def extract_fields(sequence):
         return None
     fields['mutation_line'] = mutation_line
 
-    print(fields)
 
     return fields
 
@@ -299,8 +298,8 @@ def generate_list(fields):
         index1, index2 = start1, start2
         step1, step2 = 1, 1
     else:
-        index1, index2 = end1, end2
-        step1, step2 = -1, -1
+        index1, index2 = start1, start2
+        step1, step2 = -1, 1  # x decrements, y increments
 
     for char in mutation_line:
         if char == ' ':
@@ -308,14 +307,13 @@ def generate_list(fields):
             index2 += step2
             continue
         elif char == '|':
-            result_list.append((index1, index2, 3))
-        elif char == ':':
+            result_list.append((index1, index2, 3))  
             result_list.append((index1, index2, 2))
         elif char == '.':
             result_list.append((index1, index2, 1))
 
-        index1 += step1 if fields['direction'] == 'f' else -step1
-        index2 += step2 if fields['direction'] == 'f' else -step2
+        index1 += step1
+        index2 += step2
 
     return result_list
 
