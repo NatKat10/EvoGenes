@@ -89,7 +89,7 @@ def create_dash_app(flask_app):
                 width=780,
                 height=90,
                 xaxis=dict(
-                    title='Genomic Position',
+                    
                     showgrid=True,
                     range=x_range
                 ),
