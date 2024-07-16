@@ -38,7 +38,17 @@ export default {
           icon: 'fa fa-question-circle',
           title: 'Question Mark',
           description: 'Opens a modal with additional information about the YASS alignment summary.'
-        }
+        },
+        {
+          icon: 'fa fa-question-circle',
+          title: 'Question Mark',
+          description: 'Opens a modal with additional information about the YASS alignment summary.'
+        },
+        {
+          icon: 'fa fa-question-circle',
+          title: 'Question Mark',
+          description: 'Opens a modal with additional information about the YASS alignment summary.'
+        },
       ]
     };
   }
