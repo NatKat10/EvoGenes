@@ -226,12 +226,7 @@ def plot_dotplot_route():
     )
     return jsonify(fig.to_dict())
 
-# @main.route('/dash/plot', methods=['POST'])
-# def plot_gene_structure():
-#     data = request.json
-#     exons_positions = data.get('exonsPositions', [])
-#     fig = create_gene_plot(exons_positions)
-#     return jsonify(fig.to_dict())
+
 
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():

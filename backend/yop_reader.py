@@ -264,8 +264,8 @@ def parse_yop(file_path):
 
 def extract_fields(sequence):
     fields = {}
-
-    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", sequence[0])
+    first_line = sequence[0]
+    match = re.match(r"^\*\((\d+)-(\d+)\)\((\d+)-(\d+)\) Ev: \S+ s: \d+/\d+ ([fr])", first_line)
     if not match:
         return None
 
@@ -273,19 +273,20 @@ def extract_fields(sequence):
     fields['indexes'] = (int(start1), int(end1), int(start2), int(end2))
     fields['direction'] = direction
 
-    labels_match = re.match(r'^\* "([^"]+)" \(\d+ bp\) / "([^"]+)" \(\d+ bp\)', sequence[1])
+    second_line = sequence[1]
+    labels_match = re.match(r'^\* "([^"]+)" \(\d+ bp\) / "([^"]+)" \(\d+ bp\)', second_line)
     if labels_match:
         fields['x_label'], fields['y_label'] = labels_match.groups()
     else:
         fields['x_label'], fields['y_label'] = 'X-axis', 'Y-axis'
 
-    for line in sequence:
-        if re.fullmatch(r'[|:. ]+', line.strip()):
-            fields['mutation_line'] = line.strip()
-            break
+    mutation_line = ''.join(line.strip() for line in sequence if re.fullmatch(r'[|:. ]+', line.strip()))
 
-    if 'mutation_line' not in fields:
+    if mutation_line is None:
         return None
+    fields['mutation_line'] = mutation_line
+
+    print(fields)
 
     return fields
 
