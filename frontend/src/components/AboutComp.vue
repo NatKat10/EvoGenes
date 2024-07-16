@@ -29,16 +29,7 @@ export default {
           title: 'Camera',
           description: ['Allows you to capture a screenshot of the visualization and save it as an image file.']
         },
-        {
-          icon: 'fa fa-info-circle',
-          title: 'Help',
-          description: ['Offers additional help and support resources for using the "Evo-Genes" web application.']
-        },
-        {
-          icon: 'fa fa-question-circle',
-          title: 'Question Mark',
-          description: ['Opens a modal with additional information about the YASS alignment summary.']
-        },
+       
         {
           icon: 'fa fa-play-circle',
           title: 'Run Evo Genes Button',
@@ -106,7 +97,7 @@ export default {
           ]
         },
         {
-          icon: 'fa fa-info-circle',
+          icon: 'fa fa-question-circle',
           title: 'YASS Alignment Summary',
           description: [
             'View the summary of the YASS alignment process.',
@@ -123,7 +114,7 @@ export default {
 
 <style scoped>
 .container {
-  width: 90%;
+  width: 100%;
   max-width: 900px;
   margin: 5vh auto;
   padding: 3vw;
