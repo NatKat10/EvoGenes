@@ -169,12 +169,12 @@ def create_dash_app(flask_app):
         if x_vals_f:
             traces.append(go.Scattergl(
                 x=x_vals_f, y=y_vals_f, mode='markers',
-                marker=dict(color=colors_f, size=5), name='Forward'
+                marker=dict(color=colors_f, size=2), name='Forward'
             ))
         if x_vals_r:
             traces.append(go.Scattergl(
                 x=x_vals_r, y=y_vals_r, mode='markers',
-                marker=dict(color=colors_r, size=5), name='Reverse'
+                marker=dict(color=colors_r, size=2), name='Reverse'
             ))
 
         layout = go.Layout(
