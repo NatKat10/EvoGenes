@@ -7,22 +7,31 @@
     </header>
 
     <div class="container">
-      <h1 class="title">Comprehensive End-to-End Gene Visualization System - "Evo-Genes"</h1>
+      <h1 class="title">Gene structure and sequence comparison visualization system - "Evo-Genes"</h1>
       <p>
-        As part of our final project in the Department of Software and Information Systems Engineering at Ben Gurion University of the Negev, under the guidance of Prof. Guy Shani from the Faculty of Software and Information Systems Engineering and Dr. Tal Shay from the Faculty of Life Sciences, we have developed a comprehensive end-to-end gene visualization system. The laboratory aims to unravel the complexity of how cells with identical genetic information can exhibit diverse functions and phenotypic properties. 
-      </p>
+        The “Evo-Genes” application aims to visualize gene sequence conservation associated with gene structure. For this purpose, the dot-plot of the sequences is presented alongside the gene structure diagrams depicting exons (rectangles) and introns (lines).      </p>
       <p>
-        A significant challenge in this research is the limited capability to compare gene similarities across species while maintaining the context of the original gene structure.
-      </p>
+        The input is the Ensembl ID of the two genes to be compared. By default, the consensus transcript, as defined by Ensembl, is presented for each of the genes. The user can choose different transcripts of each of the two genes from a drop-down menu.  The user can also zoom-in to regions of interest, by either marking the regions or typing the coordinates within the genes.       </p>
       <p>
-        Currently, no system allows for the simultaneous examination of sequence similarities and structural differences between species. To address this challenge, we have created a web-based system that leverages both server-side and client-side programming to interface with the extensive Ensembl database.
-      </p>
+        As the dot-plot of long genes can be much larger than can be presented on the screen, the subsampling option allows for a smaller version, to make run time shorter. This option is recommended for large genes.        </p>
       <p>
-        Our system facilitates intuitive and visually engaging comparative gene sequence analysis, emphasizing the display of exons, thus optimizing comparative gene analysis. This unique feature significantly enhances the accessibility and utility of gene comparison tools, providing biologists and researchers with comprehensive insights into gene development and functional divergence. The system streamlines the comparative analysis process by automating sequence retrieval and aligning gene structures with Dot Plot outputs, thereby boosting research productivity and data analysis efficiency.
+        This unique visualization enables identifying changes in gene structure, for example exon split into several exons, addition of novel sequences, exon duplication etc.    </p>
+        <p>
+    The dotplot is produced by the Yass algorithm <sup>[1]</sup>, implementation version 1.16, downloaded from 
+    <a href="https://github.com/laurentnoe/yass" target="_blank">https://github.com/laurentnoe/yass</a>.
+</p>
+
+      <p><strong>Developers:</strong>
+        </p>
+        <p>
+•	This application was developed as part of a final project in the Department of Software and Information Systems Engineering at Ben-Gurion University of the Negev, under the guidance of Prof. Guy Shani from the department of Software and Information Systems Engineering and Dr. Tal Shay from the department of Life Sciences.
+
       </p>
+      <p><strong>References:</strong></p>
       <p>
-        We have invested considerable effort in the design and development of the system, ensuring a professional and attractive user experience, which is integral to its overall functionality.
+        1.	L. Noe, G. Kucherov YASS: enhancing the sensitivity of DNA similarity search, 2005, Nucleic Acids Research, 33(2):W540-W543.
       </p>
+      
       <div class="text-center mt-5">
         <button class="btn btn-primary" @click="openModal"> <i class="fas fa-phone"></i>   Contact Us</button>
       </div>
@@ -96,11 +105,11 @@ export default {
           email: 'alice.johnson@mail.com',
         },
         {
-          image: require('@/assets/fish.png'),
+          image: require('@/assets/maor.png'),
           name: 'Maor Biton',
-          role: 'Data Scientist',
-          linkedin: 'https://www.linkedin.com/in/bob-brown',
-          email: 'bob.brown@mail.com',
+          role: 'Backend Developer',
+          linkedin: 'https://www.linkedin.com/in/maor-biton-449136232/',
+          email: 'maor20561@gmail.com',
         },
       ]
     };

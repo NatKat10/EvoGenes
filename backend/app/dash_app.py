@@ -19,7 +19,7 @@ def create_dash_app(flask_app):
         suppress_callback_exceptions=True
     )
 
-    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None):
+    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None, is_vertical=False):
         # This function creates a Plotly figure for visualizing gene structures.
         if not exon_intervals:
             return go.Figure()
@@ -63,27 +63,65 @@ def create_dash_app(flask_app):
 
         data = [exon_trace, intron_trace, marker_trace]
 
-        layout = go.Layout(
-            width=780,
-            height=70,
-            xaxis=dict(title='Genomic Position', showgrid=True, range=x_range),
-            yaxis=dict(showgrid=False, showticklabels=False, range=[-0.1, 0.6], fixedrange=True),
-            margin=dict(l=5, r=5, t=5, b=35),
-            hovermode='closest'
-        )
+
+        if is_vertical:
+            layout = go.Layout(
+                width=550,
+                height=90,
+                xaxis=dict(
+                    showgrid=True,
+                    range=x_range,
+                    side='top',
+                    tickangle=-90
+                ),
+                yaxis=dict(
+                    showgrid=False,
+                    showticklabels=False,
+                    range=[-0.1, 0.6],
+                    fixedrange=True,
+                    side='right'
+                ),
+                margin=dict(l=60, r=47, t=5, b=35),
+                hovermode='closest'
+            )
+        else:
+            layout = go.Layout(
+                width=780,
+                height=90,
+                xaxis=dict(
+                    title='Genomic Position',
+                    showgrid=True,
+                    range=x_range
+                ),
+                yaxis=dict(
+                    showgrid=False,
+                    showticklabels=False,
+                    range=[-0.1, 0.6],
+                    fixedrange=True
+                ),
+                margin=dict(l=40, r=5, t=5, b=35),
+                hovermode='closest'
+            )
 
         fig = go.Figure(data=data, layout=layout)
+
+        if is_vertical:
+            fig.update_layout(
+                xaxis=dict(side='bottom', tickangle=-90),
+                yaxis=dict(side='left')
+            )
+
         return fig
 
-    def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1'):
+    def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1', inverted=False):
         logging.info("Start processing plot_dotplot function")
         start_time = time.time()
         x_vals_f, y_vals_f, colors_f = [], [], []
         x_vals_r, y_vals_r, colors_r = [], [], []
 
         color_map = {
-            'f': {1: (0.8, 1.0, 0.8), 2: (0.4, 0.8, 0.4), 3: (0.0, 0.6, 0.0)},
-            'r': {1: (1.0, 0.8, 0.8), 2: (0.8, 0.4, 0.4), 3: (0.6, 0.0, 0.0)}
+            'f': {1: 'rgba(204, 255, 204, 0.6)', 2: 'rgba(102, 204, 102, 0.6)', 3: 'rgba(0, 153, 0, 0.6)'},
+            'r': {1: 'rgba(255, 204, 204, 0.6)', 2: 'rgba(204, 102, 102, 0.6)', 3: 'rgba(153, 0, 0, 0.6)'}
         }
 
         total_directions = len(directions)
@@ -95,12 +133,15 @@ def create_dash_app(flask_app):
 
         for seq_list, direction in directions:
             for x, y, intensity in seq_list:
-                color = f'rgba{color_map[direction][intensity] + (0.6,)}'
+                color = color_map[direction][intensity]
+                if inverted:
+                    x, y = y, x
                 if direction == 'f':
                     x_vals_f.append(x)
                     y_vals_f.append(y)
                     colors_f.append(color)
                 else:
+                    x, y = x, max_y - (y - min_y)  # Flip y-coordinate for reverse direction
                     x_vals_r.append(x)
                     y_vals_r.append(y)
                     colors_r.append(color)
@@ -116,8 +157,6 @@ def create_dash_app(flask_app):
                 [colors[i] for i in sampled_indices]
             )
 
-        print("sampling fraction:   ",sampling_fraction)
-
         if sampling_fraction != 'all' and sampling_fraction != '1.0':
             sampling_fraction = float(sampling_fraction)
             x_vals_f, y_vals_f, colors_f = sample_data(x_vals_f, y_vals_f, colors_f, sampling_fraction)
@@ -129,20 +168,23 @@ def create_dash_app(flask_app):
 
         if x_vals_f:
             traces.append(go.Scattergl(
-                x=x_vals_f, y=y_vals_f, mode='markers', 
+                x=x_vals_f, y=y_vals_f, mode='markers',
                 marker=dict(color=colors_f, size=5), name='Forward'
             ))
         if x_vals_r:
             traces.append(go.Scattergl(
-                x=x_vals_r, y=y_vals_r, mode='markers', 
+                x=x_vals_r, y=y_vals_r, mode='markers',
                 marker=dict(color=colors_r, size=5), name='Reverse'
             ))
 
         layout = go.Layout(
             width=780,
+            height=550,
             title='Dot Plot of Gene Similarities',
             xaxis=dict(title=x_label, range=[min_x, max_x], showgrid=False),
-            yaxis=dict(title=y_label, range=[min_y, max_y], showgrid=False, showticklabels=True, side='right'),
+            yaxis=dict(title=y_label, range=[max_y, min_y], showgrid=False, showticklabels=True, side='right'),
+            # xaxis=dict(range=[min_x, max_x], showgrid=False, showticklabels=False),
+            # yaxis=dict(range=[max_y, min_y], showgrid=False, showticklabels=False, side='right'),
             hovermode='closest',
             legend=dict(
                 x=1,
@@ -154,9 +196,12 @@ def create_dash_app(flask_app):
             margin=dict(l=5, r=5, t=60, b=35)
         )
 
+        
+
         end_time = time.time()
         logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
         return go.Figure(data=traces, layout=layout)
+
 
     dash_app.layout = html.Div([
         dcc.Graph(id='gene-plot', figure=create_gene_plot([])),

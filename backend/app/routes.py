@@ -76,6 +76,10 @@ def run_evo_genes():
     gene_id1 = request.form['GeneID1']
     gene_id2 = request.form['GeneID2']
 
+    #remove spaces from Gene ID
+    gene_id1 = gene_id1.replace(" ", "")
+    gene_id2 = gene_id2.replace(" ", "")
+
     # Ensure the gene IDs are always ordered for consistency
     gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
 
@@ -103,14 +107,39 @@ def run_evo_genes():
     logging.info("Running YASS")
     yass_output_path = 'yass_output.yop'
     yass_executable = './yass-Win64.exe'
-    command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    # command = [yass_executable, fasta_file1_path, fasta_file2_path, '-o', yass_output_path]
+    command = [
+    yass_executable, 
+    fasta_file1_path, 
+    fasta_file2_path, 
+    '-o', yass_output_path, 
+    '-O', '1000000', 
+    '-C', '5,-4,-3,-4', 
+    '-E', '10', 
+    '-G', '-16,-4', 
+    '-W', '20,40000', 
+    '-X', '30', 
+    '-c', '1', 
+    '-d', '1', 
+    '-e', '2.8', 
+    '-i', '10', 
+    '-m', '25', 
+    '-p', '#@#--#---#-@##,###-#@-#-@#', 
+    '-r', '2', 
+    '-s', '70', 
+    '-w', '4'
+    ]
+
     yass_start_time = time.time()
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     yass_end_time = time.time()
     logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
     yass_output = result.stdout + result.stderr
 
-    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ = process_sequences(yass_output_path)
+    result_sequences, directions, min_x, max_x, min_y, max_y, _, _ ,inverted = process_sequences(yass_output_path)
+    if result_sequences is None:
+        return jsonify({'message': 'No alignment found.'}), 200
+
 
     logging.info("Sequences processed")
 
@@ -146,7 +175,9 @@ def run_evo_genes():
         'max_y': max_y,
         'x_label': extracted_gene_id1,
         'y_label': extracted_gene_id2,
-        'sampling_fraction': request.form.get('samplingFraction', '0.1')  # Get the sampling fraction from the request
+        'sampling_fraction': request.form.get('samplingFraction', '0.1'), # Get the sampling fraction from the request
+        'inverted': inverted
+
     }
 
     dotplot_plot = plot_dotplot(**dotplot_data)
@@ -154,7 +185,7 @@ def run_evo_genes():
     end_time = time.time()
     logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
 
-    return jsonify({
+    return_data = {
         'dotplot_plot': dotplot_plot.to_dict(),
         'gene_structure1_plot': gene_structure1_plot.to_dict(),
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
@@ -162,7 +193,10 @@ def run_evo_genes():
         'exon_intervals2': normalized_exons2,
         'yass_output': yass_output,
         'data_for_manual_zoom': dotplot_data
-    })
+    }
+
+    # print(json.dumps(return_data, indent=4)) 
+    return jsonify(return_data)
     
 @main.route('/dash/update', methods=['POST'])
 def update_exon_positions():
@@ -182,18 +216,30 @@ def update_dotplot_data():#This route handles POST requests to update dot plot d
 @main.route('/dash/dotplot/plot', methods=['POST'])
 def plot_dotplot_route():
     dotplot_data = request.json['dotplot_data']
-    fig = plot_dotplot(dotplot_data['directions'],
-                       dotplot_data['min_x'], dotplot_data['max_x'],
-                       dotplot_data['min_y'], dotplot_data['max_y'],
-                       dotplot_data['x_label'], dotplot_data['y_label'])
+    fig = plot_dotplot(
+        dotplot_data['directions'],
+        dotplot_data['min_x'], dotplot_data['max_x'],
+        dotplot_data['min_y'], dotplot_data['max_y'],
+        dotplot_data['x_label'], dotplot_data['y_label'],
+        sampling_fraction=dotplot_data.get('sampling_fraction', '0.1'),
+        inverted=dotplot_data.get('inverted', False)
+    )
     return jsonify(fig.to_dict())
 
+# @main.route('/dash/plot', methods=['POST'])
+# def plot_gene_structure():
+#     data = request.json
+#     exons_positions = data.get('exonsPositions', [])
+#     fig = create_gene_plot(exons_positions)
+#     return jsonify(fig.to_dict())
 
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():
     data = request.json
     exons_positions = data.get('exonsPositions', [])
-    fig = create_gene_plot(exons_positions)
+    is_vertical = data.get('isVertical', False)  # Get the isVertical parameter from the request
+    print(f"Received isVertical: {is_vertical}") 
+    fig = create_gene_plot(exons_positions, is_vertical=is_vertical)  # Pass is_vertical to create_gene_plot
     return jsonify(fig.to_dict())
 
 
@@ -286,7 +332,9 @@ def plot_dotplot_route_update():
         dotplot_data['max_y'],
         dotplot_data['x_label'],
         dotplot_data['y_label'],
-        sampling_fraction=sampling_fraction  # Pass the sampling fraction
+        sampling_fraction=sampling_fraction,  # Pass the sampling fraction
+        inverted=dotplot_data.get('inverted', False)
+
     )
 
     # Update gene structure plots based on the new zoom levels
@@ -311,16 +359,17 @@ def plot_dotplot_route_update():
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
         'dotplot_plot': fig.to_dict()
     })
+
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
         relayout_data = request.json
-        # print(f"Received relayout data: {relayout_data}")
 
         x0 = relayout_data.get('x0')
         x1 = relayout_data.get('x1')
         y0 = relayout_data.get('y0')
         y1 = relayout_data.get('y1')
+
         exon_intervals1 = relayout_data.get('exon_intervals1', {})
         exon_intervals2 = relayout_data.get('exon_intervals2', {})
         x_label = relayout_data['dotplot_data']['layout']['x_label']
@@ -330,11 +379,11 @@ def handle_relayout():
 
         # Ensure consistent ranges for all plots
         x_range = [x0, x1]
-        y_range = [y0, y1]  # Adjust y range as needed to match Plotly's coordinate system
+        y_range = [y0, y1]  # Keep original order for dotplot
 
         # Update gene structure plots based on the new zoom levels
-        gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range)
-        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=y_range)
+        gene_structure1_plot = create_gene_plot(exon_intervals1[list(exon_intervals1.keys())[0]], x_range=x_range, is_vertical=False)
+        gene_structure2_plot = create_gene_plot(exon_intervals2[list(exon_intervals2.keys())[0]], x_range=[y1, y0], is_vertical=True)
 
         # Update the dotplot layout based on the new zoom levels
         dotplot_data = relayout_data.get('dotplot_data', {})
@@ -348,7 +397,7 @@ def handle_relayout():
             'autorange': False
         }
         dotplot_layout['yaxis'] = {
-            'range': y_range,
+            'range': y_range,  # Use original y_range here
             'showgrid': False,
             'showticklabels': True,
             'side': 'right',
@@ -370,6 +419,7 @@ def handle_relayout():
     except Exception as e:
         print(f'Error processing relayout data: {e}')
         return jsonify(success=False, error=str(e)), 500
+    
 
 if __name__ == '__main__':
     app.run(debug=True)

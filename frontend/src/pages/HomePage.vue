@@ -17,13 +17,13 @@
         :link="'/run-yass'" 
         :buttonLabel="'Run Now'"
       />
-      <HomeComp
+      <!-- <HomeComp
         :imageUrl="require('../assets/evo1.png')"
         :title="'Search Gene Sequence'"
         :description="'Seach gene sequences using GeneID from www.ensembl.org website'"
         :link="'/gene-sequence/:geneId'" 
         :buttonLabel="'Search'"
-      />
+      /> -->
     </div>
   </div>
 </template>

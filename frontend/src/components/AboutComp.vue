@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h1>"Evo-Genes" Web Instructions</h1>
+    <h1>"Evo-Genes" help</h1>
     <div class="instruction-list">
       <div class="instruction-item" v-for="(item, index) in instructions" :key="index">
         <div class="icon" v-if="item.image">
@@ -27,7 +27,7 @@ export default {
         {
           image: require('../assets/camera.png'), // Update the path as needed
           title: 'Camera',
-          description: 'Allows you to capture a screenshot of the visualization and download it as an image.'
+          description: 'Allows you to capture a screenshot of the visualization and save it as an image file.'
         },
         {
           icon: 'fa fa-info-circle',
@@ -38,17 +38,7 @@ export default {
           icon: 'fa fa-question-circle',
           title: 'Question Mark',
           description: 'Opens a modal with additional information about the YASS alignment summary.'
-        },
-        {
-          icon: 'fa fa-question-circle',
-          title: 'Question Mark',
-          description: 'Opens a modal with additional information about the YASS alignment summary.'
-        },
-        {
-          icon: 'fa fa-question-circle',
-          title: 'Question Mark',
-          description: 'Opens a modal with additional information about the YASS alignment summary.'
-        },
+        }
       ]
     };
   }
