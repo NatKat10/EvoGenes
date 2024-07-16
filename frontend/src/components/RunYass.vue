@@ -55,7 +55,7 @@
         </div>
       </div>
       
-      <div class="parent-select-container">
+      <div ref="parentSelectContainer" class="parent-select-container">
         <div class="parent-select">
           <label for="parent-select1">Select transcript for Gene (X-axis):</label>
           <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
@@ -634,8 +634,7 @@ export default {
     captureScreenshot() {
       const combinedVisualization = document.querySelector('.visualization-container');
       const exportButton = document.querySelector('.export-button');
-      const parentSelect1 = this.$refs.parentSelect1;
-      const parentSelect2 = this.$refs.parentSelect2;
+      const parentSelectContainer = this.$refs.parentSelectContainer;
       const manualZoom = this.$refs.manualZoom;
 
       if (combinedVisualization) {
@@ -643,15 +642,13 @@ export default {
 
         // Hide the export button, parent selections, and manual zoom
         exportButton.style.display = 'none';
-        if (parentSelect1) parentSelect1.style.display = 'none';
-        if (parentSelect2) parentSelect2.style.display = 'none';
+        if (parentSelectContainer) parentSelectContainer.style.display = 'none';
         if (manualZoom) manualZoom.style.display = 'none';
 
         html2canvas(combinedVisualization).then(canvas => {
           // Show the export button, parent selections, and manual zoom again
           exportButton.style.display = '';
-          if (parentSelect1) parentSelect1.style.display = '';
-          if (parentSelect2) parentSelect2.style.display = '';
+          if (parentSelectContainer) parentSelectContainer.style.display = '';
           if (manualZoom) manualZoom.style.display = '';
 
           const link = document.createElement('a');
