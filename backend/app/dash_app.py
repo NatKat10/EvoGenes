@@ -141,7 +141,6 @@ def create_dash_app(flask_app):
                     y_vals_f.append(y)
                     colors_f.append(color)
                 else:
-                    x, y = x, max_y - (y - min_y)  # Flip y-coordinate for reverse direction
                     x_vals_r.append(x)
                     y_vals_r.append(y)
                     colors_r.append(color)
