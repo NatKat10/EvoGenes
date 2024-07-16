@@ -25,6 +25,18 @@
         :buttonLabel="'Search'"
       /> -->
     </div>
+
+
+
+
+    <footer class="footer">
+      <p>&copy; 2024 EvoGenes. All rights reserved.</p>
+      <div class="social-icons">
+        <a href="#"><img src="../assets/circle_logo.png" alt="Facebook" /></a>
+      </div>
+    </footer>
+
+
   </div>
 </template>
 
@@ -128,5 +140,37 @@ export default {
   background-repeat: no-repeat;
   opacity: 0.4;
   z-index: -1;
+}
+
+
+
+
+
+
+.footer {
+  text-align: center;
+  background-color: #333;
+  color: white;
+  padding: 20px 0;
+  margin-top: 50px;
+  width: 100%;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.social-icons {
+  margin-top: 10px;
+}
+
+.social-icons a {
+  margin: 0 10px;
+  display: inline-block;
+}
+
+.social-icons img {
+  width: 34px;
+  height: 34px;
 }
 </style>
