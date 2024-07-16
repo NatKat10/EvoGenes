@@ -55,7 +55,7 @@
         </div>
       </div>
       
-      <div class="parent-select-container">
+      <div ref="parentSelectContainer" class="parent-select-container">
         <div class="parent-select">
           <label for="parent-select1">Select transcript for Gene (X-axis):</label>
           <select id="parent-select1" v-model="selectedParent1" @change="updateGeneStructure('geneStructure1', selectedParent1)" class="styled-select">
@@ -632,24 +632,27 @@ export default {
     },
 
     captureScreenshot() {
-  const combinedVisualization = document.querySelector('.visualization-container');
-  const exportButton = document.querySelector('.export-button');
-  const parentSelect1Container = document.querySelector('.parent-select-container');
-  const manualZoom = this.$refs.manualZoom;
+      const combinedVisualization = document.querySelector('.visualization-container');
+      const exportButton = document.querySelector('.export-button');
+      const parentSelect1 = this.$refs.parentSelect1;
+      const parentSelect2 = this.$refs.parentSelect2;
+      const manualZoom = this.$refs.manualZoom;
 
   if (combinedVisualization) {
     console.log('Combined visualization element found');
 
-    // Hide the export button, parent selections, and manual zoom
-    exportButton.style.display = 'none';
-    if (parentSelect1Container) parentSelect1Container.style.display = 'none';
-    if (manualZoom) manualZoom.style.display = 'none';
+        // Hide the export button, parent selections, and manual zoom
+        exportButton.style.display = 'none';
+        if (parentSelect1) parentSelect1.style.display = 'none';
+        if (parentSelect2) parentSelect2.style.display = 'none';
+        if (manualZoom) manualZoom.style.display = 'none';
 
-    html2canvas(combinedVisualization).then(canvas => {
-      // Show the export button, parent selections, and manual zoom again
-      exportButton.style.display = '';
-      if (parentSelect1Container) parentSelect1Container.style.display = '';
-      if (manualZoom) manualZoom.style.display = '';
+        html2canvas(combinedVisualization).then(canvas => {
+          // Show the export button, parent selections, and manual zoom again
+          exportButton.style.display = '';
+          if (parentSelect1) parentSelect1.style.display = '';
+          if (parentSelect2) parentSelect2.style.display = '';
+          if (manualZoom) manualZoom.style.display = '';
 
       const link = document.createElement('a');
       link.download = 'combined_visualization.png';
