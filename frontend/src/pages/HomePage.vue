@@ -32,7 +32,7 @@
     <footer class="footer">
       <p>&copy; 2024 EvoGenes. All rights reserved.</p>
       <div class="social-icons">
-        <a href="#"><img src="../assets/circle_logo.png" alt="Facebook" /></a>
+        <a ><img src="../assets/circle_logo.png" alt="Facebook" /></a>
       </div>
     </footer>
 
@@ -154,6 +154,7 @@ export default {
   padding: 20px 0;
   margin-top: 50px;
   width: 100%;
+  opacity: 0.9;
 }
 
 .footer p {
@@ -170,7 +171,7 @@ export default {
 }
 
 .social-icons img {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
 }
 </style>
