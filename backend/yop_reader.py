@@ -308,7 +308,10 @@ def generate_list(fields):
             continue
         elif char == '|':
             result_list.append((index1, index2, 3))  
+            
+        elif char == ':':
             result_list.append((index1, index2, 2))
+
         elif char == '.':
             result_list.append((index1, index2, 1))
 
