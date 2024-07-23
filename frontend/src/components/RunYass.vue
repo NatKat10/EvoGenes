@@ -340,6 +340,12 @@ export default {
     renderDotplot() {
     const { dotplot_data } = this.visualizations;
     if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
+      // Ensure the y-axis range is set correctly with higher value first
+      const yaxisRange = dotplot_data.layout.yaxis.range;
+      if (yaxisRange[0] < yaxisRange[1]) {
+        dotplot_data.layout.yaxis.range = [yaxisRange[1], yaxisRange[0]];
+      }
+
       Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
         .then(plot => {
           if (!this.initialDotplotState) {
@@ -487,14 +493,12 @@ export default {
     },
 
     updateGeneStructure(containerRef, selectedParent) {
-    const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-    const isVertical = containerRef === 'geneStructure2';
-    // console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
+    const isXAxis = containerRef === 'geneStructure1';
+    const exonIntervals = isXAxis ? this.visualizations.exon_intervals1[selectedParent] : this.visualizations.exon_intervals2[selectedParent];
+    const isVertical = !isXAxis;
+    console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
 
     this.loading = true;  // Set loading to true at the beginning
-
-
-
 
     fetch(`${server_domain}/dash/plot`, {
       method: 'POST',
@@ -509,23 +513,36 @@ export default {
         const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
 
         // Determine the new min and max values for the dot plot based on the selected parent intervals
-        const newMinX = containerRef === 'geneStructure1' ? Math.min(...exonIntervals.map(interval => interval[0])) : this.visualizations.data_for_manual_zoom.min_x;
-        const newMaxX = containerRef === 'geneStructure1' ? Math.max(...exonIntervals.map(interval => interval[1])) : this.visualizations.data_for_manual_zoom.max_x;
-        const newMinY = containerRef === 'geneStructure2' ? Math.min(...exonIntervals.map(interval => interval[0])) : this.visualizations.data_for_manual_zoom.min_y;
-        const newMaxY = containerRef === 'geneStructure2' ? Math.max(...exonIntervals.map(interval => interval[1])) : this.visualizations.data_for_manual_zoom.max_y;
+        if (isXAxis) {
+          data_for_manual_zoom.min_x = Math.min(...exonIntervals.map(interval => interval[0]));
+          data_for_manual_zoom.max_x = Math.max(...exonIntervals.map(interval => interval[1]));
+        } else {
+          data_for_manual_zoom.min_y = Math.min(...exonIntervals.map(interval => interval[0]));
+          data_for_manual_zoom.max_y = Math.max(...exonIntervals.map(interval => interval[1]));
+        }
 
         // Update the dot plot limits if the x-axis or y-axis intervals have changed
         const dotplotUpdateData = {
           dotplot_data: data_for_manual_zoom,  // Include the necessary data
-          x1: newMinX,
-          x2: newMaxX,
-          y1: newMinY,
-          y2: newMaxY,
+          x1: data_for_manual_zoom.min_x,
+          x2: data_for_manual_zoom.max_x,
+          y1: data_for_manual_zoom.min_y,
+          y2: data_for_manual_zoom.max_y,
           sampling_fraction: this.selectedSamplingFraction,
-          exon_intervals1: containerRef === 'geneStructure1' ? exonIntervals : this.visualizations.exon_intervals1[this.selectedParent1],
-          exon_intervals2: containerRef === 'geneStructure2' ? exonIntervals : this.visualizations.exon_intervals2[this.selectedParent2],
+          exon_intervals1: this.visualizations.exon_intervals1[this.selectedParent1],  // Retain the selected parent for the x-axis
+          exon_intervals2: this.visualizations.exon_intervals2[this.selectedParent2],  // Retain the selected parent for the y-axis
           inverted: data_for_manual_zoom.inverted
         };
+
+        if (!isXAxis) {
+          dotplotUpdateData.x1 = this.visualizations.dotplot_data.layout.xaxis.range[0];
+          dotplotUpdateData.x2 = this.visualizations.dotplot_data.layout.xaxis.range[1];
+        }
+
+        if (isXAxis) {
+          dotplotUpdateData.y1 = this.visualizations.dotplot_data.layout.yaxis.range[0];
+          dotplotUpdateData.y2 = this.visualizations.dotplot_data.layout.yaxis.range[1];
+        }
 
         fetch(`${server_domain}/dash/dotplot/update_limits`, {
           method: 'POST',
@@ -547,7 +564,7 @@ export default {
       })
       .catch(error => {
         console.error('Error updating gene structure:', error);
-        this.loading = false;  // Set loading to false if an error occurs
+        this.loading = false;
       });
     },
     clearManualZoomInputs() {
