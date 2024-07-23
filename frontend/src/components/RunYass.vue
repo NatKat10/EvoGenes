@@ -338,30 +338,30 @@ export default {
       });
     },
     renderDotplot() {
-      const { dotplot_data } = this.visualizations;
-      if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
-        Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
-          .then(plot => {
-            if (!this.initialDotplotState) {
-              this.initialDotplotState = JSON.parse(JSON.stringify(dotplot_data));
+    const { dotplot_data } = this.visualizations;
+    if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
+      Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
+        .then(plot => {
+          if (!this.initialDotplotState) {
+            this.initialDotplotState = JSON.parse(JSON.stringify(dotplot_data));
+          }
+          plot.on('plotly_relayout', eventData => {
+            if (this.isResetting) return;
+            console.log('Zoom event data:', eventData);
+            if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+              const x0 = eventData['xaxis.range[0]'];
+              const x1 = eventData['xaxis.range[1]'];
+              const y0 = eventData['yaxis.range[0]'];
+              const y1 = eventData['yaxis.range[1]'];
+              this.applySyncedZoom(x0, x1, y0, y1);
+            } else {
+              console.log('Resetting to initial state');
+              this.resetPlots();
             }
-            plot.on('plotly_relayout', eventData => {
-              if (this.isResetting) return;
-              console.log('Zoom event data:', eventData);
-              if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-                const x0 = eventData['xaxis.range[0]'];
-                const x1 = eventData['xaxis.range[1]'];
-                const y0 = eventData['yaxis.range[0]'];
-                const y1 = eventData['yaxis.range[1]'];
-                this.applySyncedZoom(x0, x1, y0, y1);
-              } else {
-                console.log('Resetting to initial state');
-                this.resetPlots();
-              }
-            });
           });
-      } else {
-        console.error('Invalid dotplot data:', dotplot_data);
+        });
+    } else {
+      console.error('Invalid dotplot data:', dotplot_data);
       }
     },
 
@@ -487,23 +487,68 @@ export default {
     },
 
     updateGeneStructure(containerRef, selectedParent) {
-      const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      const isVertical = containerRef === 'geneStructure2';
-      console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
+    const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
+    const isVertical = containerRef === 'geneStructure2';
+    // console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
 
-      fetch(`${server_domain}/dash/plot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exonsPositions: exonIntervals, isVertical }),
-        mode: 'cors',
-      })
-        .then(response => response.json())
-        .then(plotData => {
-          this.renderGeneStructure(this.$refs[containerRef], plotData, isVertical);
+    this.loading = true;  // Set loading to true at the beginning
+
+
+
+
+    fetch(`${server_domain}/dash/plot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ exonsPositions: exonIntervals, isVertical }),
+      mode: 'cors',
+    })
+      .then(response => response.json())
+      .then(plotData => {
+        this.renderGeneStructure(this.$refs[containerRef], plotData, isVertical);
+
+        const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+
+        // Determine the new min and max values for the dot plot based on the selected parent intervals
+        const newMinX = containerRef === 'geneStructure1' ? Math.min(...exonIntervals.map(interval => interval[0])) : this.visualizations.data_for_manual_zoom.min_x;
+        const newMaxX = containerRef === 'geneStructure1' ? Math.max(...exonIntervals.map(interval => interval[1])) : this.visualizations.data_for_manual_zoom.max_x;
+        const newMinY = containerRef === 'geneStructure2' ? Math.min(...exonIntervals.map(interval => interval[0])) : this.visualizations.data_for_manual_zoom.min_y;
+        const newMaxY = containerRef === 'geneStructure2' ? Math.max(...exonIntervals.map(interval => interval[1])) : this.visualizations.data_for_manual_zoom.max_y;
+
+        // Update the dot plot limits if the x-axis or y-axis intervals have changed
+        const dotplotUpdateData = {
+          dotplot_data: data_for_manual_zoom,  // Include the necessary data
+          x1: newMinX,
+          x2: newMaxX,
+          y1: newMinY,
+          y2: newMaxY,
+          sampling_fraction: this.selectedSamplingFraction,
+          exon_intervals1: containerRef === 'geneStructure1' ? exonIntervals : this.visualizations.exon_intervals1[this.selectedParent1],
+          exon_intervals2: containerRef === 'geneStructure2' ? exonIntervals : this.visualizations.exon_intervals2[this.selectedParent2],
+          inverted: data_for_manual_zoom.inverted
+        };
+
+        fetch(`${server_domain}/dash/dotplot/update_limits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dotplotUpdateData),
+          mode: 'cors',
         })
-        .catch(error => {
-          console.error('Error updating gene structure:', error);
-        });
+          .then(response => response.json())
+          .then(data => {
+            this.visualizations.dotplot_data = data.dotplot_plot;
+            this.$nextTick(() => {
+              this.renderDotplot();
+            });
+          })
+          .catch(error => console.error('Error updating dotplot:', error))
+          .finally(() => {
+            this.loading = false;  // Set loading to false after data update
+          });
+      })
+      .catch(error => {
+        console.error('Error updating gene structure:', error);
+        this.loading = false;  // Set loading to false if an error occurs
+      });
     },
     clearManualZoomInputs() {
       this.manualZoom.x1 = null;
@@ -521,6 +566,7 @@ export default {
         }
 
         // Ensure the manual zoom coordinates are present
+
         if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
           this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
           const { x1, x2, y1, y2 } = this.manualZoom;
@@ -539,9 +585,9 @@ export default {
             inverted: data_for_manual_zoom.inverted
 
           };
+
           this.loading = true;
           this.progress = 0;
-          console.log('Sending manual zoom request with data:', requestData);
 
           fetch(`${server_domain}/dash/dotplot/plot_update`, {
             method: 'POST',

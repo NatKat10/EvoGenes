@@ -65,6 +65,18 @@ def chunk_data(data, chunk_size=1000):
     for i in range(0, len(data), chunk_size):
         yield data[i:i + chunk_size]
 
+
+
+
+
+def normalize_exons(exon_intervals, min_val):
+    normalized_intervals = {}
+    for parent, intervals in exon_intervals.items():
+        min_start = min(start for start, end in intervals)
+        max_end = max(end for start, end in intervals)
+        normalized_intervals[parent] = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+    return normalized_intervals
+
 @main.route('/run-evo-genes', methods=['POST'])
 def run_evo_genes():
     start_time = time.time()
@@ -148,17 +160,22 @@ def run_evo_genes():
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    def normalize_exons(exon_intervals, min_val, max_val):
-        normalized_intervals = {}
-        for parent, intervals in exon_intervals.items():
-            min_start = min(start for start, end in intervals)
-            max_end = max(end for start, end in intervals)
-            gene_length = max_end - min_start
-            normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
-        return normalized_intervals
+    # def normalize_exons(exon_intervals, min_val, max_val):
+    #     normalized_intervals = {}
+    #     for parent, intervals in exon_intervals.items():
+    #         min_start = min(start for start, end in intervals)
+    #         max_end = max(end for start, end in intervals)
+    #         gene_length = max_end - min_start
+    #         normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
+    #     return normalized_intervals
 
-    normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
-    normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
+    # normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
+    # normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
+    normalized_exons1 = normalize_exons(exon_intervals1, min_x)
+    normalized_exons2 = normalize_exons(exon_intervals2, min_y)
+
+
+
 
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
@@ -231,9 +248,10 @@ def plot_dotplot_route():
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():
     data = request.json
+    # print(data)
     exons_positions = data.get('exonsPositions', [])
     is_vertical = data.get('isVertical', False)  # Get the isVertical parameter from the request
-    print(f"Received isVertical: {is_vertical}") 
+    # print(f"Received isVertical: {is_vertical}") 
     fig = create_gene_plot(exons_positions, is_vertical=is_vertical)  # Pass is_vertical to create_gene_plot
     return jsonify(fig.to_dict())
 
@@ -265,7 +283,6 @@ def plot_dotplot_route_update():
     original_max_y = dotplot_data['max_y']
 
     # print(dotplot_data['directions'])
-    print(len(dotplot_data['directions']))
     # Extract the zoom coordinates from the request
     x1 = data.get('x1')
     x2 = data.get('x2')
@@ -354,6 +371,53 @@ def plot_dotplot_route_update():
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
         'dotplot_plot': fig.to_dict()
     })
+
+
+
+@main.route('/dash/dotplot/update_limits', methods=['POST'])
+def update_dotplot_limits():
+    data = request.json
+    try:
+        dotplot_data = data['dotplot_data']
+        x1 = data['x1']
+        x2 = data['x2']
+        y1 = data['y1']
+        y2 = data['y2']
+        sampling_fraction = data['sampling_fraction']
+        exon_intervals1 = data['exon_intervals1']
+        exon_intervals2 = data['exon_intervals2']
+        inverted = data['inverted']
+
+        # Update the dotplot data with new min and max values
+        dotplot_data.update({
+            'min_x': x1,
+            'max_x': x2,
+            'min_y': y1,
+            'max_y': y2,
+            'sampling_fraction': sampling_fraction,
+            'inverted': inverted
+        })
+
+        fig = plot_dotplot(**dotplot_data)
+
+        gene_structure1_plot = create_gene_plot(exon_intervals1, x_range=[x1, x2])
+        gene_structure2_plot = create_gene_plot(exon_intervals2, x_range=[y1, y2])
+
+        return jsonify({
+            'dotplot_plot': fig.to_dict(),
+            'gene_structure1_plot': gene_structure1_plot.to_dict(),
+            'gene_structure2_plot': gene_structure2_plot.to_dict()
+        })
+    except KeyError as e:
+        logging.error(f"Missing key in request data: {e}")
+        return jsonify({'error': f"Missing key in request data: {e}"}), 400
+    except ValueError as e:
+        logging.error(f"Value error in request data: {e}")
+        return jsonify({'error': f"Value error in request data: {e}"}), 400
+    except Exception as e:
+        logging.error(f"Error processing dotplot limits: {e}")
+        return jsonify({'error': f"Error processing dotplot limits: {e}"}), 500
+
 
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
