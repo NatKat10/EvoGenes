@@ -71,6 +71,7 @@ def create_dash_app(flask_app):
                 range=x_range,
                 side='bottom' if is_vertical else 'top',
                 tickangle=-90 if is_vertical else 0,
+                
             ),
             yaxis=dict(
                 showgrid=False,
@@ -79,7 +80,7 @@ def create_dash_app(flask_app):
                 fixedrange=True,
                 side='left' if is_vertical else 'right'
             ),
-            margin=dict(l=60, r=47, t=5, b=35) if is_vertical else dict(l=40, r=5, t=5, b=35),
+            margin=dict(l=60, r=55, t=5, b=35) if is_vertical else dict(l=40, r=5, t=5, b=35),
             hovermode='closest'
         )
 
