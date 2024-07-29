@@ -72,6 +72,7 @@
 
       <div ref="manualZoom" class="manual-zoom-container">
         <h4>Manual Zoom</h4>
+        <div class="zoom-error-message" v-if="ZoomErrorMessage">{{ ZoomErrorMessage }}</div>
         <div class="zoom-inputs">
           <div class="zoom-input-group">
             <label>X-axis:</label>
@@ -152,6 +153,7 @@ export default {
   data() {
     return {
       errorMessage: '',
+      ZoomErrorMessage:'',
       sequence1: '',
       sequence2: '',
       GeneID1: '',
@@ -576,7 +578,7 @@ export default {
     },
 
     async applyManualZoom() {
-      this.errorMessage = '';
+      this.ZoomErrorMessage = '';
       try {
         if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
           throw new Error('Dotplot data or data for manual zoom is missing');
@@ -612,9 +614,10 @@ export default {
             body: JSON.stringify(requestData),
             mode: 'cors',
           })
-            .then(response => {
+            .then(async response => {
               if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Network response was not ok');
               }
               return response.json();
             })
@@ -630,15 +633,16 @@ export default {
               this.clearManualZoomInputs();  // Clear the manual zoom inputs
             })
             .catch(error => {
-              console.error('Error updating dotplot:', error);
+              this.ZoomErrorMessage = `${error.message}`;
+              console.error(error);
             });
         } else {
-          this.errorMessage = "Please fill in all zoom coordinates";
+          this.ZoomErrorMessage = "Please fill in all zoom coordinates";
           throw new Error('Please fill in all zoom coordinates');
         }
       } catch (error) {
-        this.errorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
-        console.error('Error in applyManualZoom:', error.message);
+        this.ZoomErrorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
+        console.error(error.message);
       } finally {
         this.loading = false;
         this.progress = 100;
@@ -732,6 +736,10 @@ export default {
 
 <style scoped>
 .error-message {
+  color: red;
+  margin-top: 10px;
+}
+.zoom-error-message {
   color: red;
   margin-top: 10px;
 }

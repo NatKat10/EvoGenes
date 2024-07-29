@@ -267,14 +267,16 @@ def plot_dotplot_route_update():
     # print(f"Received data: {data}")  # Log received data
 
     if 'dotplot_data' not in data:
-        print("Error: dotplot_data is missing from the request")
-        return jsonify({'error': 'dotplot_data is missing from the request'}), 400
+        error_message = "Error: dotplot_data is missing from the request"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     dotplot_data = data['dotplot_data']
 
     if 'min_x' not in dotplot_data:
-        print("Error: min_x is missing from dotplot_data")
-        return jsonify({'error': 'min_x is missing from dotplot_data'}), 400
+        error_message = "Error: min_x is missing from dotplot_data"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Extract the original min and max values
     original_min_x = dotplot_data['min_x']
@@ -292,13 +294,15 @@ def plot_dotplot_route_update():
 
     # Validate that x1, x2, y1, y2 are not None
     if x1 is None or x2 is None or y1 is None or y2 is None:
-        print("Error: Zoom coordinates are required")
-        return jsonify({'error': 'Zoom coordinates are required'}), 400
+        error_message = "Error: Zoom coordinates are required"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Ensure x1 < x2 and y1 < y2
     if x1 >= x2 or y1 >= y2:
-        print("Error: Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2")
-        return jsonify({'error': 'Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2'}), 400
+        error_message = "Error: Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Validate that x1, x2, y1, y2 are not Zero
     if x1 == 0:
@@ -315,8 +319,9 @@ def plot_dotplot_route_update():
             original_min_x <= x2 <= original_max_x and
             original_min_y <= y1 <= original_max_y and
             original_min_y <= y2 <= original_max_y):
-        print("Error: Zoom coordinates are out of range")
-        return jsonify({'error': 'Zoom coordinates are out of range'}), 400
+        error_message = "Error: Zoom coordinates are out of range"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Update the dotplot data with the new coordinates
     dotplot_data['min_x'] = x1
