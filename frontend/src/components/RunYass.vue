@@ -297,7 +297,7 @@ export default {
           this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
         });
 
-        this.clearInputs();
+        // this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
         this.errorMessage = "Please Provide Vaild Ensembl Gene ID";
@@ -382,7 +382,7 @@ export default {
             height: 90,
             xaxis: {
               ...plotData.layout.xaxis,  // Preserve existing xaxis properties
-              showgrid: true,
+              showgrid: false,
               side: 'bottom',
               tickangle: -90,
             },
@@ -403,6 +403,7 @@ export default {
             ...plotData.layout,
             width: 780,
             height: 90,
+            showgrid:false,
             margin: {l: 5, r: 55, t: 5, b: 35},
           }
         }
