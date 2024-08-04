@@ -72,6 +72,7 @@ def create_dash_app(flask_app):
         )
 
         fig = go.Figure(data=data, layout=layout)
+        fig.update_xaxes(nticks=10)
 
         if return_range:
             return fig, x_range
@@ -166,7 +167,13 @@ def create_dash_app(flask_app):
 
         end_time = time.time()
         logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
-        return go.Figure(data=traces, layout=layout)
+
+        fig = go.Figure(data=traces, layout=layout)
+        fig.update_yaxes(nticks=10)
+        fig.update_xaxes(nticks=10)
+
+
+        return fig
 
 
     dash_app.layout = html.Div([
