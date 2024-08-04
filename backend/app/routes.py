@@ -33,6 +33,23 @@ dash_app, create_gene_plot, plot_dotplot = create_dash_app(app)
 main = Blueprint('main', __name__)
 generate = Blueprint('generate', __name__)
 
+
+def fetch_gene_info(gene_id):
+    url = f"https://rest.ensembl.org/lookup/id/{gene_id}"
+    headers = {"Content-Type": "application/json"}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        return None, None
+    
+    data = response.json()
+    gene_name = data.get("display_name", "Unknown")
+    species_name = data.get("species", "Unknown").replace('_', ' ').title()
+    
+    return gene_name, species_name
+
+
+
 def fetch_sequence_from_ensembl_parallel(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
@@ -85,15 +102,21 @@ def run_evo_genes():
     if 'GeneID1' not in request.form or 'GeneID2' not in request.form:
         return jsonify({'error': 'GeneID1 and GeneID2 are required.'}), 400
 
-    gene_id1 = request.form['GeneID1']
-    gene_id2 = request.form['GeneID2']
+    raw_gene_id1 = request.form['GeneID1']
+    raw_gene_id2 = request.form['GeneID2']
 
-    #remove spaces from Gene ID
-    gene_id1 = gene_id1.replace(" ", "")
-    gene_id2 = gene_id2.replace(" ", "")
+
+    # Clean up the Gene IDs by removing extra spaces, newlines, and blank lines
+    gene_id1 = raw_gene_id1.strip().replace("\n", "").replace("\r", "").replace(" ", "")
+    gene_id2 = raw_gene_id2.strip().replace("\n", "").replace("\r", "").replace(" ", "")
+
+
 
     # Ensure the gene IDs are always ordered for consistency
-    gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
+    # gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
+
+    gene_name1, species_name1 = fetch_gene_info(gene_id1)
+    gene_name2, species_name2 = fetch_gene_info(gene_id2)
 
     logging.info("Fetching sequences in parallel")
     # Fetch sequences in parallel
@@ -102,6 +125,8 @@ def run_evo_genes():
         future_seq2 = executor.submit(fetch_sequence_from_ensembl_parallel, gene_id2)
         sequence1, extracted_gene_id1 = future_seq1.result()
         sequence2, extracted_gene_id2 = future_seq2.result()
+
+
 
     if not sequence1 or not sequence2:
         logging.error("Failed to fetch sequences from Ensembl")
@@ -115,6 +140,8 @@ def run_evo_genes():
     with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
         file1.write(sequence1)
         file2.write(sequence2)
+
+    # logging.info(f"Sequences: sequence1={sequence1[:50]}..., sequence2={sequence2[:50]}...")  # Print part of the sequences for verification
 
     logging.info("Running YASS")
     yass_output_path = 'yass_output.yop'
@@ -148,7 +175,10 @@ def run_evo_genes():
     logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
     yass_output = result.stdout + result.stderr
 
+    
     result_sequences, directions, min_x, max_x, min_y, max_y, _, _ ,inverted = process_sequences(yass_output_path)
+    # logging.info(f"Processed YASS output: result_sequences={result_sequences}, directions={directions}")
+    # logging.info(f"Axis ranges: min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}")
     if result_sequences is None:
         return jsonify({'message': 'No alignment found.'}), 200
 
@@ -190,14 +220,16 @@ def run_evo_genes():
         'max_x': max_x,
         'min_y': min_y,
         'max_y': max_y,
-        'x_label': extracted_gene_id1,
-        'y_label': extracted_gene_id2,
+        'x_label': f"{gene_name1} ({species_name1}) - {extracted_gene_id1}",
+        'y_label': f"{gene_name2} ({species_name2}) - {extracted_gene_id2}",
         'sampling_fraction': request.form.get('samplingFraction', '0.1'), # Get the sampling fraction from the request
         'inverted': inverted
 
     }
 
+    # logging.info(f"Dotplot data before plotting: {dotplot_data}")
     dotplot_plot = plot_dotplot(**dotplot_data)
+    # logging.info(f"Dotplot created")
 
     end_time = time.time()
     logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
