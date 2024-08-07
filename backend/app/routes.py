@@ -200,28 +200,14 @@ def run_evo_genes():
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    # def normalize_exons(exon_intervals, min_val, max_val):
-    #     normalized_intervals = {}
-    #     for parent, intervals in exon_intervals.items():
-    #         min_start = min(start for start, end in intervals)
-    #         max_end = max(end for start, end in intervals)
-    #         gene_length = max_end - min_start
-    #         normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
-    #     return normalized_intervals
-
-    # normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
-    # normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
     normalized_exons1 = normalize_exons(exon_intervals1, min_x)
     normalized_exons2 = normalize_exons(exon_intervals2, min_y)
-
-
-
 
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
-    # os.remove(fasta_file1_path)
-    # os.remove(fasta_file2_path)
+    os.remove(fasta_file1_path)
+    os.remove(fasta_file2_path)
     os.remove(yass_output_path)
 
     dotplot_data = {
