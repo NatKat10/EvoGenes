@@ -134,6 +134,16 @@ def run_evo_genes():
 
     logging.info("Sequences fetched")
 
+
+    if len(sequence2) > len(sequence1):
+        # Swap to ensure the longer gene is on the X-axis
+        gene_id1, gene_id2 = gene_id2, gene_id1
+        sequence1, sequence2 = sequence2, sequence1
+        extracted_gene_id1, extracted_gene_id2 = extracted_gene_id2, extracted_gene_id1
+        gene_name1, gene_name2 = gene_name2, gene_name1
+        species_name1, species_name2 = species_name2, species_name1
+
+
     # Process sequences and run YASS
     fasta_file1_path = 'temp_sequence1.fasta'
     fasta_file2_path = 'temp_sequence2.fasta'
@@ -210,8 +220,8 @@ def run_evo_genes():
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
 
-    os.remove(fasta_file1_path)
-    os.remove(fasta_file2_path)
+    # os.remove(fasta_file1_path)
+    # os.remove(fasta_file2_path)
     os.remove(yass_output_path)
 
     dotplot_data = {
