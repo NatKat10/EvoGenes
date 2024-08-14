@@ -60,20 +60,108 @@ def fetch_sequence_from_ensembl_parallel(gene_id):
     else:
         return None, None
 
-def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
-    server = "http://rest.ensembl.org"
-    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
-    r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+# def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+#     server = "http://rest.ensembl.org"
+#     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+#     r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
 
-    try:
-        r.raise_for_status()
-        gene_structure = r.json()
+#     try:
+#         r.raise_for_status()
+#         gene_structure = r.json()
         
-        exons = [{'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']} for exon in gene_structure]
-        return exons
-    except requests.exceptions.HTTPError as e:
-        print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+#         exons = [{'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']} for exon in gene_structure]
+#         return exons
+#     except requests.exceptions.HTTPError as e:
+#         print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+#         return []
+
+# def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+#     server = "https://rest.ensembl.org"
+    
+#     # Step 1: Fetch and filter transcripts
+#     transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
+#     try:
+#         r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
+#         r_transcript.raise_for_status()
+#         transcripts = r_transcript.json()
+        
+#         # Filter transcripts
+#         filtered_transcript_ids = [
+#             transcript['transcript_id'] 
+#             for transcript in transcripts 
+#             if transcript['Parent'] == gene_ensembl_id
+#         ]
+        
+#         print(f"Filtered transcript IDs for gene {gene_ensembl_id}: {filtered_transcript_ids}")
+        
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
+#         return []
+
+#     # Step 2: Fetch and filter exons
+#     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+#     try:
+#         r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+#         r_exon.raise_for_status()
+#         all_exons = r_exon.json()
+        
+#         # Filter exons
+#         filtered_exons = [
+#             {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
+#             for exon in all_exons
+#             if exon['Parent'] in filtered_transcript_ids
+#         ]
+        
+#         # print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
+#         return filtered_exons
+        
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
+#         return []
+
+def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+    server = "https://rest.ensembl.org"
+    
+    # Step 1: Fetch and filter transcripts
+    transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
+    try:
+        r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
+        r_transcript.raise_for_status()
+        transcripts = r_transcript.json()
+        
+        # Filter transcripts and store strand information
+        filtered_transcripts = {
+            transcript['transcript_id']: transcript['strand']
+            for transcript in transcripts 
+            if transcript['Parent'] == gene_ensembl_id
+        }
+        
+        print(f"Filtered transcripts for gene {gene_ensembl_id}: {filtered_transcripts}")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
         return []
+
+    # Step 2: Fetch and filter exons
+    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+    try:
+        r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+        r_exon.raise_for_status()
+        all_exons = r_exon.json()
+        
+        # Filter exons
+        filtered_exons = [
+            {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
+            for exon in all_exons
+            if exon['Parent'] in filtered_transcripts
+        ]
+        
+        print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
+        return filtered_exons, filtered_transcripts
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
+        return [], {}
     
 
 
@@ -82,17 +170,60 @@ def chunk_data(data, chunk_size=1000):
     for i in range(0, len(data), chunk_size):
         yield data[i:i + chunk_size]
 
+def reverse_negative_strand_exons(exon_intervals):
+    if not exon_intervals:
+        return []
+
+    # Sort intervals by start position
+    sorted_intervals = sorted(exon_intervals, key=lambda x: x[0])
+
+    # Calculate total gene length
+    gene_start = sorted_intervals[0][0]
+    gene_end = sorted_intervals[-1][1]
+    gene_length = gene_end - gene_start
+
+    # Calculate exon sizes and inter-exon distances
+    exon_sizes = [end - start for start, end in sorted_intervals]
+    inter_exon_distances = [sorted_intervals[i+1][0] - sorted_intervals[i][1] for i in range(len(sorted_intervals) - 1)]
+
+    # Reverse exon sizes and inter-exon distances
+    reversed_sizes = exon_sizes[::-1]
+    reversed_distances = inter_exon_distances[::-1]
+
+    # Reconstruct reversed exons
+    reversed_exons = []
+    current_start = gene_start
+    for i, size in enumerate(reversed_sizes):
+        exon_end = current_start + size
+        reversed_exons.append((current_start, exon_end))
+        if i < len(reversed_distances):
+            current_start = exon_end + reversed_distances[i]
+
+    return reversed_exons
 
 
 
+# def normalize_exons(exon_intervals, min_val):
+#     normalized_intervals = {}
+#     for parent, intervals in exon_intervals.items():
+#         min_start = min(start for start, end in intervals)
+#         max_end = max(end for start, end in intervals)
+#         normalized_intervals[parent] = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+#     return normalized_intervals
 
 def normalize_exons(exon_intervals, min_val):
     normalized_intervals = {}
-    for parent, intervals in exon_intervals.items():
+    for parent, (strand_value, intervals) in exon_intervals.items():
         min_start = min(start for start, end in intervals)
         max_end = max(end for start, end in intervals)
-        normalized_intervals[parent] = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+        normalized = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+        
+        if strand_value == -1:
+            normalized = reverse_negative_strand_exons(normalized)
+        
+        normalized_intervals[parent] = normalized
     return normalized_intervals
+
 
 @main.route('/run-evo-genes', methods=['POST'])
 def run_evo_genes():
@@ -195,16 +326,29 @@ def run_evo_genes():
 
     logging.info("Sequences processed")
 
-    gene_structure1 = fetch_gene_structure(gene_id1)
-    gene_structure2 = fetch_gene_structure(gene_id2)
+    gene_structure1, transcripts1 = fetch_gene_structure(gene_id1)
+    gene_structure2, transcripts2 = fetch_gene_structure(gene_id2)
+
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    normalized_exons1 = normalize_exons(exon_intervals1, min_x)
-    normalized_exons2 = normalize_exons(exon_intervals2, min_y)
+    normalized_exons1 = normalize_exons(
+        {parent: (transcripts1[parent], intervals) for parent, intervals in exon_intervals1.items()},
+        min_x
+    )
+    normalized_exons2 = normalize_exons(
+        {parent: (transcripts2[parent], intervals) for parent, intervals in exon_intervals2.items()},
+        min_y
+    )
 
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
+
+    # print("exon_intervals1:", exon_intervals1)
+    # print("exon_intervals2:", exon_intervals2)
+
+    print("normalized_exons1:", normalized_exons1)
+    print("normalized_exons2:", normalized_exons2)
 
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
