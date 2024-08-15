@@ -35,8 +35,8 @@ class TestRoutes(unittest.TestCase):
     def test_run_evo_genes(self):#test checks if the /run-evo-genes route works correctly when provided with valid gene IDs and a sampling fraction.
         print("\nRunning test_run_evo_genes...")
         response = self.client.post('/run-evo-genes', data={
-            'GeneID1': 'ENSG00000139618',
-            'GeneID2': 'ENSG00000157764',
+            'GeneID1': 'ENSMMUG00000002658',
+            'GeneID2': 'ENSG00000069696',
             'samplingFraction': '0.1'
         })
         self.print_response(response)

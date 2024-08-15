@@ -60,6 +60,52 @@ def fetch_sequence_from_ensembl_parallel(gene_id):
     else:
         return None, None
 
+
+def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+    server = "https://rest.ensembl.org"
+    
+    # Step 1: Fetch and filter transcripts
+    transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
+    try:
+        r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
+        r_transcript.raise_for_status()
+        transcripts = r_transcript.json()
+        
+        # Filter transcripts and store strand information
+        filtered_transcripts = {
+            transcript['transcript_id']: transcript['strand']
+            for transcript in transcripts 
+            if transcript['Parent'] == gene_ensembl_id
+        }
+        
+        # print(f"Filtered transcripts for gene {gene_ensembl_id}: {filtered_transcripts}")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
+        return []
+
+    # Step 2: Fetch and filter exons
+    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+    try:
+        r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+        r_exon.raise_for_status()
+        all_exons = r_exon.json()
+        
+        # Filter exons
+        filtered_exons = [
+            {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
+            for exon in all_exons
+            if exon['Parent'] in filtered_transcripts
+        ]
+        
+        # print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
+        return filtered_exons, filtered_transcripts
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
+        return [], {}
+    
+
 # def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
 #     server = "http://rest.ensembl.org"
 #     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
@@ -118,53 +164,6 @@ def fetch_sequence_from_ensembl_parallel(gene_id):
 #     except requests.exceptions.RequestException as e:
 #         print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
 #         return []
-
-def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
-    server = "https://rest.ensembl.org"
-    
-    # Step 1: Fetch and filter transcripts
-    transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
-    try:
-        r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
-        r_transcript.raise_for_status()
-        transcripts = r_transcript.json()
-        
-        # Filter transcripts and store strand information
-        filtered_transcripts = {
-            transcript['transcript_id']: transcript['strand']
-            for transcript in transcripts 
-            if transcript['Parent'] == gene_ensembl_id
-        }
-        
-        print(f"Filtered transcripts for gene {gene_ensembl_id}: {filtered_transcripts}")
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
-        return []
-
-    # Step 2: Fetch and filter exons
-    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
-    try:
-        r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
-        r_exon.raise_for_status()
-        all_exons = r_exon.json()
-        
-        # Filter exons
-        filtered_exons = [
-            {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
-            for exon in all_exons
-            if exon['Parent'] in filtered_transcripts
-        ]
-        
-        print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
-        return filtered_exons, filtered_transcripts
-        
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
-        return [], {}
-    
-
-
 
 def chunk_data(data, chunk_size=1000):
     for i in range(0, len(data), chunk_size):
@@ -347,8 +346,8 @@ def run_evo_genes():
     # print("exon_intervals1:", exon_intervals1)
     # print("exon_intervals2:", exon_intervals2)
 
-    print("normalized_exons1:", normalized_exons1)
-    print("normalized_exons2:", normalized_exons2)
+    # print("normalized_exons1:", normalized_exons1)
+    # print("normalized_exons2:", normalized_exons2)
 
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
@@ -366,6 +365,7 @@ def run_evo_genes():
         'inverted': inverted
 
     }
+    # print("DOT PLOT DATA: ",dotplot_data)
 
     # logging.info(f"Dotplot data before plotting: {dotplot_data}")
     dotplot_plot = plot_dotplot(**dotplot_data)
@@ -383,6 +383,7 @@ def run_evo_genes():
         'yass_output': yass_output,
         'data_for_manual_zoom': dotplot_data
     }
+    # print("RETURN DATA: ",return_data)
 
     # print(json.dumps(return_data, indent=4)) 
     return jsonify(return_data)
