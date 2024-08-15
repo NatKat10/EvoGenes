@@ -165,6 +165,7 @@ export default {
   margin-top: 10px;
 }
 
+
 .social-icons a {
   margin: 0 10px;
   display: inline-block;
