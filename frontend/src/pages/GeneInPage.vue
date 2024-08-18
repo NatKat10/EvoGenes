@@ -1,5 +1,6 @@
 <template>
   <div class="container1">
+    
     <header class="header2">
       <svg class="gene-title" viewBox="0 0 1000 100">
         <text x="50%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">Insructions</text>
@@ -7,16 +8,13 @@
     </header>
     
     <div class="run-yass">
-
       <div class="yassComp">
-        
-
         <div class="components-container">
-          
           <AboutComp />
         </div>
       </div>
     </div>
+
   </div>
 </template>
 

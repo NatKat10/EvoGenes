@@ -7,16 +7,12 @@
         <p class="card-text">{{ description }}</p>
         <a :href="link" class="btn btn-light px-3 rounded-pill">{{ buttonLabel }}</a>
       </div>
-    <!-- </div> -->
   </div>
 
 </template>
   
 
-  <!-- image: require('@/assets/profile1.jpg') -->
   <script>
-    // export default {
-    // name: 'HomeComp',
     export default {
       name: 'HomeComp',
       props: {

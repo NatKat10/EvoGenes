@@ -1,7 +1,6 @@
 <template>
   <div class="seq">
     <div class="cont">
-      
     </div>
   </div>
 </template>
