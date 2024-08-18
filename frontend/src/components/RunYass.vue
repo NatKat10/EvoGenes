@@ -330,7 +330,7 @@ export default {
         // this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
-        this.errorMessage = "Please Provide Vaild Ensembl Gene ID";
+        this.errorMessage = "Please Provide Valid Ensembl Gene ID";
       } finally {
         this.loading = false;
         this.progress = 100;

@@ -1,0 +1,74 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RunYass.vue matches snapshot when loading 1`] = `
+"<div class=\\"container\\">
+  <!-- This is the single root element -->
+  <!-- Shows a loading spinner when the process is running -->
+  <loader-overlay-stub progress=\\"0\\" visible=\\"false\\"></loader-overlay-stub><!-- Sequence text inputs -->
+  <div class=\\"ensemble-section\\">
+    <h3>Compare the sequence of two genes:</h3>
+    <div class=\\"file-group\\">
+      <div class=\\"file-label-input\\"><label for=\\"file1\\" class=\\"upload-label\\">Gene Ensembl ID :</label><textarea class=\\"textarea\\" placeholder=\\"Gene Ensembl ID\\"></textarea></div>
+      <div class=\\"file-label-input\\"><label for=\\"file2\\" class=\\"upload-label\\">Gene Ensembl ID :</label><textarea class=\\"textarea\\" placeholder=\\"Gene Ensembl ID\\"></textarea></div>
+    </div>
+  </div>
+  <div class=\\"sampling-fraction\\"><label for=\\"sampling-fraction-select\\">Select sampling fraction: <span class=\\"label-space\\"></span></label><select id=\\"sampling-fraction-select\\" style=\\"background-color: rgb(232, 248, 224);\\">
+      <p></p>
+      <option value=\\"0.1\\">0.1</option>
+      <option value=\\"0.01\\">0.01</option>
+      <option value=\\"0.001\\">0.001</option>
+      <option value=\\"all\\">All Dots</option>
+    </select>
+    <div class=\\"info-icon1\\">?</div>
+  </div>
+  <div class=\\"btn\\"><button><span></span> Run Evo Genes <span></span></button></div>
+  <!--v-if-->
+  <div class=\\"visualization-container\\">
+    <div class=\\"graph-container\\">
+      <div class=\\"gene-structure-vertical\\">
+        <div class=\\"gene-structure vertical\\"></div>
+      </div>
+      <div class=\\"dotplot-container\\">
+        <div class=\\"figure-plot\\"></div>
+        <div class=\\"info-icon\\">?</div>
+      </div>
+      <div class=\\"gene-structure-horizontal\\">
+        <div class=\\"gene-structure horizontal\\"></div>
+      </div>
+    </div>
+    <div class=\\"parent-select-container\\">
+      <div class=\\"parent-select\\"><label for=\\"parent-select1\\">Select transcript for Gene (X-axis):</label><select id=\\"parent-select1\\" class=\\"styled-select\\">
+          <option value=\\"ENSMMUT00000058138\\">ENSMMUT00000058138</option>
+          <option value=\\"ENSMMUT00000067524\\">ENSMMUT00000067524</option>
+        </select></div>
+      <div class=\\"parent-select\\"><label for=\\"parent-select2\\">Select transcript for Gene (Y-axis):</label><select id=\\"parent-select2\\" class=\\"styled-select\\">
+          <option value=\\"ENST00000335295\\">ENST00000335295</option>
+          <option value=\\"ENST00000380315\\">ENST00000380315</option>
+        </select></div>
+    </div>
+    <div class=\\"manual-zoom-container\\">
+      <h4>Manual Zoom</h4>
+      <!--v-if-->
+      <div class=\\"zoom-inputs\\">
+        <div class=\\"zoom-input-group\\"><label>X-axis:</label>
+          <div class=\\"zoom-input-pair\\"><input type=\\"number\\" placeholder=\\"Start\\" class=\\"zoom-input\\"><input type=\\"number\\" placeholder=\\"End\\" class=\\"zoom-input\\"></div>
+        </div>
+        <div class=\\"zoom-input-group\\"><label>Y-axis:</label>
+          <div class=\\"zoom-input-pair\\"><input type=\\"number\\" placeholder=\\"Start\\" class=\\"zoom-input\\"><input type=\\"number\\" placeholder=\\"End\\" class=\\"zoom-input\\"></div>
+        </div>
+      </div><!-- Add the dropdown for sampling fraction -->
+      <div class=\\"sampling-fraction\\"><label for=\\"manual-sampling-fraction-select\\">Select Sampling Fraction:<span class=\\"label-space\\"></span></label><select id=\\"manual-sampling-fraction-select\\">
+          <option value=\\"0.1\\">0.1</option>
+          <option value=\\"0.01\\">0.01</option>
+          <option value=\\"0.001\\">0.001</option>
+          <option value=\\"all\\">All Dots</option>
+        </select></div>
+      <div class=\\"zoom-button-container\\"><button id=\\"apply-zoom-button\\">Apply Zoom</button></div>
+    </div>
+  </div>
+  <!--v-if-->
+  <!-- Export button as image -->
+  <div class=\\"export-button\\"><img src=\\"test-file-stub\\" alt=\\"Export\\" style=\\"cursor: pointer;\\"></div>
+  <!--v-if-->
+</div>"
+`;
