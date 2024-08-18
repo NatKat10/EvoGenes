@@ -3,18 +3,18 @@
     <Navbar/>
     <router-view/>
   </div>
-  <!-- <Navbar/> -->
+  <Navbar/>
 </template>
 
 <script>
-// import { RouterView } from 'vue-router';
+import { RouterView } from 'vue-router';
 import Navbar from './components/appNavbar.vue';
 
 export default {
   name: 'App',
   components: {
     Navbar,
-    // RouterView
+    RouterView
 }
 }
 </script>
