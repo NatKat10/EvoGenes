@@ -75,44 +75,41 @@ export default {
   gap: 20px;
 }
 
-
-
-
 .header2 {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .gene-title {
-    width: 1000px;
-    height: 100px;
-  }
-  
-  .gene-text {
-    font-size: 80px;
-    fill: #ffffff; /* Adjust color as needed */
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 700; /* Increased font weight for thicker text */
-    animation: geneMove 7s infinite alternate;
-    stroke: #000;
-    stroke-width: 4px;
-  }
-  
-  @keyframes geneMove {
-    0% { letter-spacing: 5px; }
-    50% { letter-spacing: 20px; }
-    100% { letter-spacing: 5px; }
-  }
-  
-  .components-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 20px; /* Add space between components */
-  }
-  
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gene-title {
+  width: 1000px;
+  height: 100px;
+}
+
+.gene-text {
+  font-size: 80px;
+  fill: #ffffff; /* Adjust color as needed */
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700; /* Increased font weight for thicker text */
+  animation: geneMove 7s infinite alternate;
+  stroke: #000;
+  stroke-width: 4px;
+}
+
+@keyframes geneMove {
+  0% { letter-spacing: 5px; }
+  50% { letter-spacing: 20px; }
+  100% { letter-spacing: 5px; }
+}
+
+.components-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 20px; /* Add space between components */
+}
+
 
 </style>
