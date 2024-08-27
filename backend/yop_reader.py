@@ -8,7 +8,7 @@ import plotly.graph_objs as go
 
 
 
-
+#function to parse the yop file
 def parse_yop(file_path):
     sequences = []# Initialize an empty list to store sequences
     current_sequence = []# Initialize a list to store the current sequence being parsed
@@ -32,7 +32,7 @@ def parse_yop(file_path):
             sequences.append(current_sequence)
     # Return the list of sequences parsed from the file
     return sequences
-
+# extract fields from the yop file 
 def extract_fields(sequence):
     fields = {} # Initialize an empty dictionary to store extracted fields
     first_line = sequence[0]# The first line of the sequence typically contains key information
@@ -64,7 +64,7 @@ def extract_fields(sequence):
 
 
     return fields
-
+#generate list of the x and y locations and the intensity
 def generate_list(fields):
     # Unpack the start and end positions for both sequences from the fields dictionary
     start1, end1, start2, end2 = fields['indexes']
@@ -98,7 +98,7 @@ def generate_list(fields):
 
     return result_list
 
-
+#return all the needed fields so that the plot dotplot function can create the dotplot
 def process_sequences(file_path):
     sequences = parse_yop(file_path)
     # Initialize lists and variables to store results and track axis limits

@@ -384,7 +384,7 @@ def plot_gene_structure():
     return jsonify(fig.to_dict())
 
 
-
+#this function responsible for the manual zoom 
 @main.route('/dash/dotplot/plot_update', methods=['POST'])
 def plot_dotplot_route_update():
 
@@ -505,7 +505,7 @@ def plot_dotplot_route_update():
     })
 
 
-
+#this function responsible for updaiting the dotplot limits after changing to a different transcript  
 @main.route('/dash/dotplot/update_limits', methods=['POST'])
 def update_dotplot_limits():
     data = request.json
@@ -554,7 +554,7 @@ def update_dotplot_limits():
         logging.error(f"Error processing dotplot limits: {e}")
         return jsonify({'error': f"Error processing dotplot limits: {e}"}), 500
 
-
+#this function responsible for the synced zoom 
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():
     try:
