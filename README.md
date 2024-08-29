@@ -68,9 +68,8 @@ At the end you can use the screenshot button ![](frontend/src/assets/screenshot9
 
 ---
 
-### Additional Sections (if needed):
+### Important Notes:
 
-Important Notes:
 1. The order of the gene Ensembl IDs dont matter (The algorithm takes the longest one to be the x-axis).
 2. For large genes, in order to get fast results it is recommanded to use the "Select Sampling Fraction" option and dont select "All Dots".
 
