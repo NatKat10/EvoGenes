@@ -25,12 +25,12 @@ Existing tools lack the ability to simultaneously examine sequence similarities 
 ## Getting Started
 
 To start use our website enter the following link: [Evo-Genes](https://evogene.cs.bgu.ac.il)
-You should see the home screen below. Now choose 'Run Now' button in the middle of the screen or throw the navigation bar on the left side and click
+You should see the home screen below. Now choose 'Run Now' button in the middle of the screen or through the navigation bar on the left side and click
 'Run Evo-Genes'
 
 ![](frontend/src/assets/screenshot1.png)
 
-To start use the system you should pick two Gene Ensembl IDs and copy them to text boxes shows in the screen below:
+To start use the system you should pick two Ensembl Gene IDs and copy them to text boxes shows in the screen below:
 
 ![](frontend/src/assets/screenshot2.png)
 
@@ -70,8 +70,8 @@ At the end you can use the screenshot button ![](frontend/src/assets/screenshot9
 
 ### Important Notes:
 
-1. The order of the gene Ensembl IDs dont matter (The algorithm takes the longest one to be the x-axis).
-2. For large genes, in order to get fast results it is recommanded to use the "Select Sampling Fraction" option and dont select "All Dots".
+1. The input order of the gene Ensembl IDs does not matter (The Yass algorithm takes the longest gene to be the x-axis).
+2. For large genes, in order to get fast results, it is recommanded to use the "Select Sampling Fraction" option and not select "All Dots".
 
 <!-- Feel free to add more sections as necessary, such as:
 
