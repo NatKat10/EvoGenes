@@ -1,24 +1,19 @@
 <template>
   <div class="container1">
-    
     <div class="run-yass">
-
-      
       <div class="yassComp">
+
         <header class="header2">
             <svg class="gene-title" viewBox="0 0 1000 100">
               <text x="50%" y="50%" text-anchor="middle" dy=".35em" class="gene-text">Run Evo Genes</text>
             </svg>
           </header>
 
-        
-
-
-
         <div class="components-container">
           <GeneStructure />
           <RunYass />
         </div>
+
       </div>
     </div>
   </div>
@@ -27,7 +22,6 @@
 <script>
 import RunYass from "@/components/RunYass.vue";  
 import GeneStructure from "@/components/GeneStructure.vue";  
-
 
 export default {
   components: {
@@ -84,46 +78,43 @@ export default {
   gap: 20px;
 }
 
-
-
-
 .header2 {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .gene-title {
-    width: 1200px;
-    height: 100px;
-  }
-  
-  .gene-text {
-    font-size: 80px;
-    fill: #ffffff; /* Adjust color as needed */
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: 700; /* Increased font weight for thicker text */
-    animation: geneMove 7s infinite alternate;
-    stroke: #000;
-    stroke-width: 4px;
-  }
-  
-  @keyframes geneMove {
-    0% { letter-spacing: 5px; }
-    50% { letter-spacing: 20px; }
-    100% { letter-spacing: 5px; }
-  }
-  
-  .components-container {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 20px; /* Add space between components */
-  }
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  .components-container > div {
+.gene-title {
+  width: 1200px;
+  height: 100px;
+}
+
+.gene-text {
+  font-size: 80px;
+  fill: #ffffff; /* Adjust color as needed */
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 700; /* Increased font weight for thicker text */
+  animation: geneMove 7s infinite alternate;
+  stroke: #000;
+  stroke-width: 4px;
+}
+
+@keyframes geneMove {
+  0% { letter-spacing: 5px; }
+  50% { letter-spacing: 20px; }
+  100% { letter-spacing: 5px; }
+}
+
+.components-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  gap: 20px; /* Add space between components */
+}
+
+.components-container > div {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -132,5 +123,4 @@ export default {
   min-height: 500px; /* Adjust as needed for a larger size */
 }
   
-
 </style>

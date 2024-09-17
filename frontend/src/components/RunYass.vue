@@ -18,7 +18,8 @@
         </div>
       </div>
     </div>
-
+    
+    <!-- The dropdown for sampling fraction -->
     <div class="sampling-fraction">
       <label for="sampling-fraction-select">Select sampling fraction: <span class="label-space"></span></label>
       <select id="sampling-fraction-select" v-model="selectedSamplingFraction" style="background-color: #E8F8E0;">
@@ -31,6 +32,7 @@
       <div class="info-icon1" @click="showSamplingInfo = true">?</div>
     </div>
 
+    <!-- Run Evo Genes button -->
     <div class="btn">
       <button @click="runEvoGenes">
         <span></span>
@@ -41,6 +43,7 @@
 
     <div class="error-message" v-if="errorMessage">{{ errorMessage }}</div>
 
+    <!-- All the graphs together:  gene-structure-vertical, gene-structure-horizontal, and dotplot graph -->
     <div class="visualization-container" v-if="visualizations">
       <div class="graph-container">
         <div class="gene-structure-vertical">
@@ -55,6 +58,7 @@
         </div>
       </div>
       
+      <!-- Parent Select Section -->
       <div ref="parentSelectContainer" class="parent-select-container">
         <div class="parent-select">
           <label for="parent-select1">Select transcript for Gene (X-axis):</label>
@@ -70,6 +74,7 @@
         </div>
       </div>
 
+      <!-- Manual Zoom Section -->
       <div ref="manualZoom" class="manual-zoom-container">
         <h4>Manual Zoom</h4>
         <div class="zoom-error-message" v-if="ZoomErrorMessage">{{ ZoomErrorMessage }}</div>
@@ -89,7 +94,7 @@
             </div>
           </div>
         </div>
-        <!-- Add the dropdown for sampling fraction -->
+        <!-- The dropdown for sampling fraction in the manual zoom -->
         <div class="sampling-fraction">
           <label for="manual-sampling-fraction-select">Select Sampling Fraction:<span class="label-space"></span></label>
           <select id="manual-sampling-fraction-select" v-model="manualSamplingFraction">
@@ -185,23 +190,38 @@ export default {
       manualSamplingFraction: 'all',    // Default value for manual zoom to "all dots"
       showSamplingInfo: false  // For showing the sampling info modal
 
-
-
     };
   },
   mounted() {
+    /**
+     * Lifecycle hook that sets the comparison_id when the component is mounted.
+     * It retrieves the ID from either the route parameters or the visualizations data.
+     */
     this.comparison_id = (this.$route && this.$route.params && this.$route.params.comparison_id) || (this.visualizations && this.visualizations.comparison_id);
 
   },
   computed: {
+    /**
+     * Determines whether to disable other input sections based on current input state.
+     * @returns {boolean} True if any input field is filled, false otherwise.
+     */
     disableOtherSections() {
       return this.sequence1 || this.sequence2 || this.file1 || this.file2 || this.GeneID1 || this.GeneID2;
     },
   },
   methods: {
+
+    /**
+     * Updates the activeSection based on user input.
+     * @param {string} section - The section being interacted with.
+     */
     handleInput(section) {
       this.activeSection = section;
     },
+
+    /**
+     * Resets all input fields and error messages.
+     */
     clearInputs() {
       this.file1 = null;
       this.file2 = null;
@@ -215,11 +235,21 @@ export default {
       if (fileInput1) fileInput1.value = '';
       if (fileInput2) fileInput2.value = '';
     },
+
+    /**
+     * Handles file input changes (not used in current implementation).
+     * @param {string} refName - The ref name of the file input.
+     */
     handleFileChange(refName) {
       const file = this.$refs[refName].files[0];
       this[refName] = file;
       this.handleInput('upload');
     },
+
+    /**
+     * Main function to initiate gene comparison. Prepares form data, 
+     * sends a request to the server, and processes the response to update visualizations.
+     */
     async runEvoGenes() {
       this.isRunning = true;  // Disable the choose box
 
@@ -307,6 +337,13 @@ export default {
       }
     },
 
+    /**
+     * Fetches data from the server with progress tracking.
+     * @param {string} url - The URL to fetch from.
+     * @param {Object} options - Fetch options.
+     * @param {Function} onProgress - Callback function for progress updates.
+     * @returns {Promise<Response>} The fetch response.
+     */
     async fetchWithProgress(url, options, onProgress) {
       const response = await fetch(url, options);
       const reader = response.body.getReader();
@@ -339,6 +376,10 @@ export default {
         headers: { 'Content-Type': response.headers.get('Content-Type') }
       });
     },
+
+    /**
+     * Renders the dotplot visualization using Plotly.js.
+     */
     renderDotplot() {
     const { dotplot_data } = this.visualizations;
     if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
@@ -373,6 +414,12 @@ export default {
       }
     },
 
+    /**
+     * Renders gene structure plots using Plotly.js.
+     * @param {HTMLElement} ref - The DOM element reference for the plot.
+     * @param {Object} plotData - The data for the plot.
+     * @param {boolean} isVertical - Whether the geneStructure should be vertical( - for geneStructure2).
+     */
     renderGeneStructure(ref, plotData, isVertical) {
       if (plotData && plotData.data && plotData.layout) {
         if (ref === this.$refs.geneStructure2 || isVertical) {
@@ -428,8 +475,13 @@ export default {
       }
     },
 
-  
-
+    /**
+     * Applies synchronized zoom across all plots.
+     * @param {number} x0 - Start of x-axis range.
+     * @param {number} x1 - End of x-axis range.
+     * @param {number} y0 - Start of y-axis range.
+     * @param {number} y1 - End of y-axis range.
+     */
     applySyncedZoom(x0, x1, y0, y1) {
       console.log('Sending zoom data:', { x0, x1, y0, y1 });
 
@@ -473,6 +525,9 @@ export default {
         .catch(error => console.error('Error applying synced zoom:', error));
     },
 
+    /**
+     * Resets all plots to their initial states.
+     */
     renderInitialPlots() {
       if (this.initialDotplotState && this.initialGeneStructure1State && this.initialGeneStructure2State) {
         this.visualizations.dotplot_data = JSON.parse(JSON.stringify(this.initialDotplotState));
@@ -490,11 +545,19 @@ export default {
       }
     },
 
+    /**
+     * Triggers a reset of all plots to their initial states.
+     */
     resetPlots() {
       this.isResetting = true;
       this.renderInitialPlots();
     },
 
+    /**
+     * Updates gene structure plot based on selected transcript.
+     * @param {string} containerRef - The ref name of the container.
+     * @param {string} selectedParent - The selected transcript ID.
+     */
     updateGeneStructure(containerRef, selectedParent) {
       const isXAxis = containerRef === 'geneStructure1';
       const exonIntervals = isXAxis ? this.visualizations.exon_intervals1[selectedParent] : this.visualizations.exon_intervals2[selectedParent];
@@ -571,6 +634,9 @@ export default {
         });
     },
 
+    /**
+     * Clears manual zoom input fields.
+     */
     clearManualZoomInputs() {
       this.manualZoom.x1 = null;
       this.manualZoom.x2 = null;
@@ -578,99 +644,113 @@ export default {
       this.manualZoom.y2 = null;
     },
 
+    /**
+     * Applies manual zoom to the plots based on user input.
+     */
     async applyManualZoom() {
-  this.ZoomErrorMessage = '';
-  try {
-    if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
-      throw new Error('Dotplot data or data for manual zoom is missing');
-    }
-
-    // Extract current X and Y ranges, flipping Y if necessary
-    let currentXRange = this.visualizations.dotplot_data.layout.xaxis.range;
-    let currentYRange = this.visualizations.dotplot_data.layout.yaxis.range;
-
-    // Check if the Y-axis range is inverted and correct it
-    if (currentYRange[0] > currentYRange[1]) {
-      currentYRange = [currentYRange[1], currentYRange[0]];
-    }
-
-    // Get the input zoom coordinates
-    const { x1, x2, y1, y2 } = this.manualZoom;
-
-    // Determine which axis has been provided and keep the other axis as it is
-    const newX1 = x1 !== null && x1 !== undefined ? x1 : currentXRange[0];
-    const newX2 = x2 !== null && x2 !== undefined ? x2 : currentXRange[1];
-    const newY1 = y1 !== null && y1 !== undefined ? y1 : currentYRange[0];
-    const newY2 = y2 !== null && y2 !== undefined ? y2 : currentYRange[1];
-
-    // Ensure that at least one axis's coordinates are provided
-    if ((x1 === null || x1 === undefined) && (x2 === null || x2 === undefined) &&
-        (y1 === null || y1 === undefined) && (y2 === null || y2 === undefined)) {
-      this.ZoomErrorMessage = "Please provide zoom coordinates for at least one axis";
-      throw new Error('Please provide zoom coordinates for at least one axis');
-    }
-
-    // Validate the provided coordinates
-    if ((x1 !== null && x2 !== null && newX1 >= newX2) || 
-        (y1 !== null && y2 !== null && newY1 >= newY2)) {
-      this.ZoomErrorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
-      throw new Error('Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2');
-    }
-
-    const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
-
-    const requestData = {
-      dotplot_data: data_for_manual_zoom,
-      x1: newX1,
-      x2: newX2,
-      y1: newY1,
-      y2: newY2,
-      sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
-      exon_intervals1: this.visualizations.exon_intervals1,
-      exon_intervals2: this.visualizations.exon_intervals2,
-      inverted: data_for_manual_zoom.inverted
-    };
-
-    this.loading = true;
-    this.progress = 0;
-
-    fetch(`${server_domain}/dash/dotplot/plot_update`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestData),
-      mode: 'cors',
-    })
-      .then(async response => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Network response was not ok');
+      this.ZoomErrorMessage = '';
+      try {
+        if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
+          throw new Error('Dotplot data or data for manual zoom is missing');
         }
-        return response.json();
-      })
-      .then(data => {
-        this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
-        this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
-        this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
-        this.$nextTick(() => {
-          this.renderDotplot();
-          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
-          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
-        });
-        this.clearManualZoomInputs();  // Clear the manual zoom inputs
-      })
-      .catch(error => {
-        this.ZoomErrorMessage = `${error.message}`;
-        console.error(error);
-      });
-  } catch (error) {
-    this.ZoomErrorMessage = error.message;
-    console.error(error.message);
-  } finally {
-    this.loading = false;
-    this.progress = 100;
+
+        // Extract current X and Y ranges, flipping Y if necessary
+        let currentXRange = this.visualizations.dotplot_data.layout.xaxis.range;
+        let currentYRange = this.visualizations.dotplot_data.layout.yaxis.range;
+
+        // Check if the Y-axis range is inverted and correct it
+        if (currentYRange[0] > currentYRange[1]) {
+          currentYRange = [currentYRange[1], currentYRange[0]];
+        }
+
+        // Get the input zoom coordinates
+        const { x1, x2, y1, y2 } = this.manualZoom;
+
+        // Determine which axis has been provided and keep the other axis as it is
+        const newX1 = x1 !== null && x1 !== undefined ? x1 : currentXRange[0];
+        const newX2 = x2 !== null && x2 !== undefined ? x2 : currentXRange[1];
+        const newY1 = y1 !== null && y1 !== undefined ? y1 : currentYRange[0];
+        const newY2 = y2 !== null && y2 !== undefined ? y2 : currentYRange[1];
+
+        // Ensure that at least one axis's coordinates are provided
+        if ((x1 === null || x1 === undefined) && (x2 === null || x2 === undefined) &&
+            (y1 === null || y1 === undefined) && (y2 === null || y2 === undefined)) {
+          this.ZoomErrorMessage = "Please provide zoom coordinates for at least one axis";
+          throw new Error('Please provide zoom coordinates for at least one axis');
+        }
+
+        // Validate the provided coordinates
+        if ((x1 !== null && x2 !== null && newX1 >= newX2) || 
+            (y1 !== null && y2 !== null && newY1 >= newY2)) {
+          this.ZoomErrorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
+          throw new Error('Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2');
+        }
+
+        const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+
+        const requestData = {
+          dotplot_data: data_for_manual_zoom,
+          x1: newX1,
+          x2: newX2,
+          y1: newY1,
+          y2: newY2,
+          sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
+          exon_intervals1: this.visualizations.exon_intervals1,
+          exon_intervals2: this.visualizations.exon_intervals2,
+          inverted: data_for_manual_zoom.inverted
+        };
+
+        this.loading = true;
+        this.progress = 0;
+
+        fetch(`${server_domain}/dash/dotplot/plot_update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestData),
+          mode: 'cors',
+        })
+          .then(async response => {
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+            this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
+            this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
+            this.$nextTick(() => {
+              this.renderDotplot();
+              this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
+              this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
+            });
+            this.clearManualZoomInputs();  // Clear the manual zoom inputs
+          })
+          .catch(error => {
+            this.ZoomErrorMessage = `${error.message}`;
+            console.error(error);
+          });
+      } catch (error) {
+        this.ZoomErrorMessage = error.message;
+        console.error(error.message);
+      } finally {
+        this.loading = false;
+        this.progress = 100;
       }
     },
 
+    /**
+     * Sends relayout data to the server for plot updates.
+     * @param {number} x0 - Start of x-axis range.
+     * @param {number} x1 - End of x-axis range.
+     * @param {number} y0 - Start of y-axis range.
+     * @param {number} y1 - End of y-axis range.
+     * @param {Object} exon_intervals1 - Exon intervals for the first gene.
+     * @param {Object} exon_intervals2 - Exon intervals for the second gene.
+     * @param {string} comparison_id - The ID of the current comparison.
+     * @param {boolean} is_manual_zoom - Whether this is a manual zoom operation.
+     */
     sendRelayoutData(x0, x1, y0, y1, exon_intervals1, exon_intervals2, comparison_id, is_manual_zoom = false) {
       const dotplot_data = this.visualizations.dotplot_data;
       const requestBody = {
@@ -720,33 +800,36 @@ export default {
         });
     },
 
+    /**
+     * Captures a screenshot of the current visualization.
+     */
     captureScreenshot() {
-  const combinedVisualization = document.querySelector('.visualization-container');
-  const exportButton = document.querySelector('.export-button');
-  const parentSelect1Container = document.querySelector('.parent-select-container');
-  const manualZoom = this.$refs.manualZoom;
+      const combinedVisualization = document.querySelector('.visualization-container');
+      const exportButton = document.querySelector('.export-button');
+      const parentSelect1Container = document.querySelector('.parent-select-container');
+      const manualZoom = this.$refs.manualZoom;
 
-  if (combinedVisualization) {
-    console.log('Combined visualization element found');
+      if (combinedVisualization) {
+        console.log('Combined visualization element found');
 
-    // Hide the export button, parent selections, and manual zoom
-    exportButton.style.display = 'none';
-    if (parentSelect1Container) parentSelect1Container.style.display = 'none';
-    if (manualZoom) manualZoom.style.display = 'none';
+        // Hide the export button, parent selections, and manual zoom
+        exportButton.style.display = 'none';
+        if (parentSelect1Container) parentSelect1Container.style.display = 'none';
+        if (manualZoom) manualZoom.style.display = 'none';
 
-    html2canvas(combinedVisualization).then(canvas => {
-      // Show the export button, parent selections, and manual zoom again
-      exportButton.style.display = '';
-      if (parentSelect1Container) parentSelect1Container.style.display = '';
-      if (manualZoom) manualZoom.style.display = '';
+        html2canvas(combinedVisualization).then(canvas => {
+          // Show the export button, parent selections, and manual zoom again
+          exportButton.style.display = '';
+          if (parentSelect1Container) parentSelect1Container.style.display = '';
+          if (manualZoom) manualZoom.style.display = '';
 
-      const link = document.createElement('a');
-      link.download = 'combined_visualization.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
-  } else {
-    console.error('Combined visualization element not found');
+          const link = document.createElement('a');
+          link.download = 'combined_visualization.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      } else {
+        console.error('Combined visualization element not found');
       }
     }
   }

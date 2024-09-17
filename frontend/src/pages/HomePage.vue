@@ -17,17 +17,7 @@
         :link="'/run-yass'" 
         :buttonLabel="'Run Now'"
       />
-      <!-- <HomeComp
-        :imageUrl="require('../assets/evo1.png')"
-        :title="'Search Gene Sequence'"
-        :description="'Seach gene sequences using GeneID from www.ensembl.org website'"
-        :link="'/gene-sequence/:geneId'" 
-        :buttonLabel="'Search'"
-      /> -->
     </div>
-
-
-
 
     <footer class="footer">
       <p>&copy; 2024 EvoGenes. All rights reserved.</p>
@@ -35,7 +25,6 @@
         <a ><img src="../assets/circle_logo.png" alt="Facebook" /></a>
       </div>
     </footer>
-
 
   </div>
 </template>
@@ -141,11 +130,6 @@ export default {
   opacity: 0.4;
   z-index: -1;
 }
-
-
-
-
-
 
 .footer {
   text-align: center;

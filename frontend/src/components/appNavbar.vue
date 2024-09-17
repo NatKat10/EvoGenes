@@ -7,7 +7,6 @@
       <nav class="nav flex-column">
         <router-link to="/" class="nav-link" @click="keepSidebarOpen"> <i class="fa fa-home"></i> <span>Home</span> </router-link>
         <router-link to="/run-yass" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-play"></i><span>Run Evo-Genes</span></router-link>
-        <!-- <router-link to="/gene-sequence/:geneId" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-list"></i><span>Search Gene Sequence</span></router-link> -->
         <router-link to="/gene-structure" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-cogs"></i><span>Instructions</span></router-link>
         <router-link to="/about" class="nav-link" @click="keepSidebarOpen"><i class="fa fa-info-circle"></i><span>About</span></router-link>
       </nav>

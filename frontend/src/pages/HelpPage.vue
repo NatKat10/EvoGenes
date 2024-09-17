@@ -60,9 +60,6 @@
                       <a :href="'mailto:' + member.email" class="icon">
                         <i class="fas fa-envelope"></i>
                       </a>
-                      <!-- <span class="icon">
-                        <i class="fas fa-phone"></i>
-                      </span> -->
                     </div>
                   </div>
                 </div>
