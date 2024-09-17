@@ -42,12 +42,15 @@
               <tr>
                 <th>Gene Name</th>
                 <th>Ensembl Gene ID</th>
+                <th v-if="currentSlide !== 0">Ensembl Gene ID in Human</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="row in tableData[currentSlide]" :key="row.id">
                 <td>{{ row.col1 }}</td>
                 <td>{{ row.col2 }}</td>
+                <td v-if="currentSlide !== 0">{{ row.col3 }}</td>
+
               </tr>
             </tbody>
           </table>
@@ -97,60 +100,60 @@ export default {
           { id: 6, col1: 'APOE', col2: 'ENSG00000130203' }
         ],
         [
-          { id: 1, col1: 'TP53', col2: 'ENSMMUG00000008639' },
-          { id: 2, col1: 'BRCA1/BRCA2', col2: 'ENSMMUG00000001329' },
-          { id: 3, col1: 'APOE', col2: 'ENSMMUG00000014305' },
-          { id: 4, col1: 'DRD4', col2: 'ENSMMUG00000002658' }
+          { id: 1, col1: 'TP53', col2: 'ENSMMUG00000008639', col3: 'ENSG00000141510' },
+          { id: 2, col1: 'BRCA1/BRCA2', col2: 'ENSMMUG00000001329', col3: 'ENSG00000012048' },
+          { id: 3, col1: 'APOE', col2: 'ENSMMUG00000014305', col3: 'ENSG00000130203' },
+          { id: 4, col1: 'DRD4', col2: 'ENSMMUG00000002658',col3:'ENSG00000069696' },
         ],
         [
-          { id: 1, col1: 'RAG1/RAG2', col2: 'ENSSSCG00040015624' },
-          { id: 2, col1: 'MC4R', col2: 'ENSSSCG00000051798' },
-          { id: 3, col1: 'ESR1', col2: 'ENSSSCG00070026203' },
-          { id: 4, col1: 'LEP', col2: 'ENSSSCG00070028207' },
-          { id: 5, col1: 'TP53', col2: 'ENSSSCG00025036064' }
+          { id: 1, col1: 'RAG1/RAG2', col2: 'ENSSSCG00040015624', col3: 'ENSG00000166349' },
+          { id: 2, col1: 'MC4R', col2: 'ENSSSCG00000051798', col3: 'ENSG00000166603' },
+          { id: 3, col1: 'ESR1', col2: 'ENSSSCG00070026203', col3: 'ENSG00000091831' },
+          { id: 4, col1: 'LEP', col2: 'ENSSSCG00070028207', col3: 'ENSG00000174697' },
+          { id: 5, col1: 'TP53', col2: 'ENSSSCG00025036064', col3: 'ENSG00000141510' }
         ],
         [
-          { id: 1, col1: 'tp53', col2: 'ENSDARG00000035559' },
-          { id: 2, col1: 'gata1', col2: 'ENSDARG00000013477' },
-          { id: 3, col1: 'dmd', col2: 'ENSDARG00000008487' },
-          { id: 4, col1: 'cryaa', col2: 'ENSDARG00000053502' },
-          { id: 5, col1: 'notch1a', col2: 'ENSDARG00000103554' },
+        { id: 1, col1: 'tp53', col2: 'ENSDARG00000035559', col3: 'ENSG00000141510' },
+        { id: 2, col1: 'gata1', col2: 'ENSDARG00000013477' , col3: 'ENSG00000102145'},
+          { id: 3, col1: 'dmd', col2: 'ENSDARG00000008487', col3: 'ENSG00000198947' },
+          { id: 4, col1: 'cryaa', col2: 'ENSDARG00000053502', col3: 'ENSG00000160202' },
+          { id: 5, col1: 'notch1a', col2: 'ENSDARG00000103554', col3: 'ENST00000412477' },
         ],
         [
-          { id: 1, col1: 'ACTB (Actin Beta)', col2: 'ENSVPAG00000010513' },
-          { id: 2, col1: 'COX1', col2: 'ENSVPAG00000018143' },
-          { id: 3, col1: 'MT-ATP6', col2: 'ENSVPAG00000018149' },
-          { id: 4, col1: 'ND4', col2: 'ENSVPAG00000018155' },
-          { id: 5, col1: 'TP53', col2: 'ENSVPAG00000007582' },
+          { id: 1, col1: 'ACTB (Actin Beta)', col2: 'ENSVPAG00000010513', col3: 'ENSG00000075624' },
+          { id: 2, col1: 'COX1', col2: 'ENSVPAG00000018143', col3: 'ENST00000624677' },
+          { id: 3, col1: 'MT-ATP6', col2: 'ENSVPAG00000018149', col3: 'ENSG00000198899' },
+          { id: 4, col1: 'ND4', col2: 'ENSVPAG00000018155', col3: 'ENSG00000141510' },
+          { id: 5, col1: 'TP53', col2: 'ENSVPAG00000007582', col3: 'ENSG00000198886' }
 
         ],
         [
-          { id: 1, col1: 'P53 (Trp53)', col2: 'ENSMUSG00000027472' },
-          { id: 2, col1: 'Myc', col2: 'ENSMUSG00000022346' },
-          { id: 3, col1: 'Lepr', col2: 'ENSMUSG00000057722' },
-          { id: 4, col1: 'Fmr1', col2: 'ENSMUSG00000000838' },
-          { id: 5, col1: 'Apoe', col2: 'ENSMUSG00000002985' }
+          { id: 1, col1: 'P53 (Trp53)', col2: 'ENSMUSG00000027472', col3: 'ENSG00000141510' },
+          { id: 2, col1: 'Myc', col2: 'ENSMUSG00000022346', col3: 'ENSG00000136997' },
+          { id: 3, col1: 'Lepr', col2: 'ENSMUSG00000057722', col3: 'ENSG00000116678' },
+          { id: 4, col1: 'Fmr1', col2: 'ENSMUSG00000000838', col3: 'ENSG00000102081' },
+          { id: 5, col1: 'Apoe', col2: 'ENSMUSG00000002985', col3: 'ENSG00000130203' }
         ],
         [
-          { id: 1, col1: 'DRD4', col2: 'ENSCAFG00845017368' },
-          { id: 2, col1: 'SOD1', col2: 'ENSCAFG00040024569' },
-          { id: 3, col1: 'FGF4', col2: 'ENSCAFG00845017368' },
-          { id: 4, col1: 'POMC', col2: 'ENSCAFG00040006132' },
-          { id: 5, col1: 'RPS13', col2: 'ENSCAFG00040021439' },
+          { id: 1, col1: 'DRD4', col2: 'ENSCAFG00845017368',col3:'ENSG00000069696' },
+          { id: 2, col1: 'SOD1', col2: 'ENSCAFG00040024569',col3:'ENSG00000142168'  },
+          { id: 3, col1: 'FGF4', col2: 'ENSCAFG00845017368',col3:'ENSG00000075388'  },
+          { id: 4, col1: 'POMC', col2: 'ENSCAFG00040006132',col3:'ENSG00000115138'  },
+          { id: 5, col1: 'RPS13', col2: 'ENSCAFG00040021439',col3:'ENSG00000110700'  },
+        ], 
+        [
+          { id: 1, col1: 'FARS2', col2: 'ENSAMEG00000027009' ,col3:'ENSG00000145982'},
+          { id: 2, col1: 'MARS2', col2: 'ENSAMEG00000019748',col3:'ENSG00000247626' },
+          { id: 3, col1: 'TARS2', col2: 'ENSAMEG00000001547' ,col3:'ENSG00000143374'},
+          { id: 4, col1: 'QTRT2', col2: 'ENSAMEG00000005349',col3:'ENSG00000151576' },
+          { id: 5, col1: 'YARS2', col2: 'ENSAMEG00000008909' ,col3:'ENSG00000139131'},
         ],
         [
-          { id: 1, col1: 'FARS2', col2: 'ENSAMEG00000027009' },
-          { id: 2, col1: 'MARS2', col2: 'ENSAMEG00000019748' },
-          { id: 3, col1: 'TARS2', col2: 'ENSAMEG00000001547' },
-          { id: 4, col1: 'QTRT2', col2: 'ENSAMEG00000005349' },
-          { id: 5, col1: 'YARS2', col2: 'ENSAMEG00000008909' },
-        ],
-        [
-          { id: 1, col1: 'BRCA1', col2: 'ENSDLEG00000016583' },
-          { id: 2, col1: 'COX1', col2: 'ENSDLEG00000000017' },
-          { id: 3, col1: 'MT-CYB', col2: 'ENSDLEG00000000036' },
-          { id: 4, col1: 'TP53', col2: 'ENSDLEG00000021163' },
-          { id: 5, col1: 'ND2', col2: 'ENSDLEG00000000011' },
+          { id: 1, col1: 'BRCA1', col2: 'ENSDLEG00000016583', col3: 'ENSG00000012048' },
+          { id: 2, col1: 'COX1', col2: 'ENSDLEG00000000017' ,col3: 'ENST00000624677'},
+          { id: 3, col1: 'MT-CYB', col2: 'ENSDLEG00000000036',col3: 'ENSG00000198727' },
+          { id: 4, col1: 'TP53', col2: 'ENSDLEG00000021163', col3: 'ENSG00000141510' },
+          { id: 5, col1: 'ND2', col2: 'ENSDLEG00000000011',col3: 'ENSG00000198763' },
         ],
 
       ]

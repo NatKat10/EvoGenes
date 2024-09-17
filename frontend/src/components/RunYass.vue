@@ -72,6 +72,7 @@
 
       <div ref="manualZoom" class="manual-zoom-container">
         <h4>Manual Zoom</h4>
+        <div class="zoom-error-message" v-if="ZoomErrorMessage">{{ ZoomErrorMessage }}</div>
         <div class="zoom-inputs">
           <div class="zoom-input-group">
             <label>X-axis:</label>
@@ -152,6 +153,7 @@ export default {
   data() {
     return {
       errorMessage: '',
+      ZoomErrorMessage:'',
       sequence1: '',
       sequence2: '',
       GeneID1: '',
@@ -295,10 +297,10 @@ export default {
           this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot);
         });
 
-        this.clearInputs();
+        // this.clearInputs();
       } catch (error) {
         console.error('Error running Evo Genes:', error);
-        this.errorMessage = "Please Provide Vaild Ensembl Gene ID";
+        this.errorMessage = "Please Provide Valid Ensembl Gene ID";
       } finally {
         this.loading = false;
         this.progress = 100;
@@ -338,30 +340,36 @@ export default {
       });
     },
     renderDotplot() {
-      const { dotplot_data } = this.visualizations;
-      if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
-        Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
-          .then(plot => {
-            if (!this.initialDotplotState) {
-              this.initialDotplotState = JSON.parse(JSON.stringify(dotplot_data));
+    const { dotplot_data } = this.visualizations;
+    if (dotplot_data && dotplot_data.data && dotplot_data.layout) {
+      // Ensure the y-axis range is set correctly with higher value first
+      const yaxisRange = dotplot_data.layout.yaxis.range;
+      if (yaxisRange[0] < yaxisRange[1]) {
+        dotplot_data.layout.yaxis.range = [yaxisRange[1], yaxisRange[0]];
+      }
+
+      Plotly.newPlot(this.$refs.dotplot, dotplot_data.data, dotplot_data.layout)
+        .then(plot => {
+          if (!this.initialDotplotState) {
+            this.initialDotplotState = JSON.parse(JSON.stringify(dotplot_data));
+          }
+          plot.on('plotly_relayout', eventData => {
+            if (this.isResetting) return;
+            console.log('Zoom event data:', eventData);
+            if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
+              const x0 = eventData['xaxis.range[0]'];
+              const x1 = eventData['xaxis.range[1]'];
+              const y0 = eventData['yaxis.range[0]'];
+              const y1 = eventData['yaxis.range[1]'];
+              this.applySyncedZoom(x0, x1, y0, y1);
+            } else {
+              console.log('Resetting to initial state');
+              this.resetPlots();
             }
-            plot.on('plotly_relayout', eventData => {
-              if (this.isResetting) return;
-              console.log('Zoom event data:', eventData);
-              if (eventData['xaxis.range[0]'] && eventData['xaxis.range[1]']) {
-                const x0 = eventData['xaxis.range[0]'];
-                const x1 = eventData['xaxis.range[1]'];
-                const y0 = eventData['yaxis.range[0]'];
-                const y1 = eventData['yaxis.range[1]'];
-                this.applySyncedZoom(x0, x1, y0, y1);
-              } else {
-                console.log('Resetting to initial state');
-                this.resetPlots();
-              }
-            });
           });
-      } else {
-        console.error('Invalid dotplot data:', dotplot_data);
+        });
+    } else {
+      console.error('Invalid dotplot data:', dotplot_data);
       }
     },
 
@@ -374,7 +382,7 @@ export default {
             height: 90,
             xaxis: {
               ...plotData.layout.xaxis,  // Preserve existing xaxis properties
-              showgrid: true,
+              showgrid: false,
               side: 'bottom',
               tickangle: -90,
             },
@@ -395,7 +403,8 @@ export default {
             ...plotData.layout,
             width: 780,
             height: 90,
-            margin: {l: 5, r: 60, t: 5, b: 35},
+            showgrid:false,
+            margin: {l: 5, r: 55, t: 5, b: 35},
           }
         }
 
@@ -487,9 +496,12 @@ export default {
     },
 
     updateGeneStructure(containerRef, selectedParent) {
-      const exonIntervals = this.visualizations[containerRef === 'geneStructure1' ? 'exon_intervals1' : 'exon_intervals2'][selectedParent];
-      const isVertical = containerRef === 'geneStructure2';
+      const isXAxis = containerRef === 'geneStructure1';
+      const exonIntervals = isXAxis ? this.visualizations.exon_intervals1[selectedParent] : this.visualizations.exon_intervals2[selectedParent];
+      const isVertical = !isXAxis;
       console.log(`Updating ${containerRef}, isVertical: ${isVertical}`);
+
+      this.loading = true;  // Set loading to true at the beginning
 
       fetch(`${server_domain}/dash/plot`, {
         method: 'POST',
@@ -500,11 +512,65 @@ export default {
         .then(response => response.json())
         .then(plotData => {
           this.renderGeneStructure(this.$refs[containerRef], plotData, isVertical);
+
+          const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+
+          // Determine the new min and max values for the dot plot based on the selected parent intervals
+          if (isXAxis) {
+            data_for_manual_zoom.min_x = Math.min(...exonIntervals.map(interval => interval[0]));
+            data_for_manual_zoom.max_x = Math.max(...exonIntervals.map(interval => interval[1]));
+          } else {
+            data_for_manual_zoom.min_y = Math.min(...exonIntervals.map(interval => interval[0]));
+            data_for_manual_zoom.max_y = Math.max(...exonIntervals.map(interval => interval[1]));
+          }
+
+          // Update the dot plot limits if the x-axis or y-axis intervals have changed
+          const dotplotUpdateData = {
+            dotplot_data: data_for_manual_zoom,  // Include the necessary data
+            x1: data_for_manual_zoom.min_x,
+            x2: data_for_manual_zoom.max_x,
+            y1: data_for_manual_zoom.min_y,
+            y2: data_for_manual_zoom.max_y,
+            sampling_fraction: this.selectedSamplingFraction,
+            exon_intervals1: this.visualizations.exon_intervals1[this.selectedParent1],  // Retain the selected parent for the x-axis
+            exon_intervals2: this.visualizations.exon_intervals2[this.selectedParent2],  // Retain the selected parent for the y-axis
+            inverted: data_for_manual_zoom.inverted
+          };
+
+          if (!isXAxis) {
+            dotplotUpdateData.x1 = this.visualizations.dotplot_data.layout.xaxis.range[0];
+            dotplotUpdateData.x2 = this.visualizations.dotplot_data.layout.xaxis.range[1];
+          }
+
+          if (isXAxis) {
+            dotplotUpdateData.y1 = this.visualizations.dotplot_data.layout.yaxis.range[0];
+            dotplotUpdateData.y2 = this.visualizations.dotplot_data.layout.yaxis.range[1];
+          }
+
+          fetch(`${server_domain}/dash/dotplot/update_limits`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dotplotUpdateData),
+            mode: 'cors',
+          })
+            .then(response => response.json())
+            .then(data => {
+              this.visualizations.dotplot_data = data.dotplot_plot;
+              this.$nextTick(() => {
+                this.renderDotplot();
+              });
+            })
+            .catch(error => console.error('Error updating dotplot:', error))
+            .finally(() => {
+              this.loading = false;  // Set loading to false after data update
+            });
         })
         .catch(error => {
           console.error('Error updating gene structure:', error);
+          this.loading = false;
         });
     },
+
     clearManualZoomInputs() {
       this.manualZoom.x1 = null;
       this.manualZoom.x2 = null;
@@ -512,73 +578,96 @@ export default {
       this.manualZoom.y2 = null;
     },
 
-
     async applyManualZoom() {
-      this.errorMessage = '';
-      try {
-        if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
-          throw new Error('Dotplot data or data for manual zoom is missing');
+  this.ZoomErrorMessage = '';
+  try {
+    if (!this.visualizations || !this.visualizations.dotplot_data || !this.visualizations.data_for_manual_zoom) {
+      throw new Error('Dotplot data or data for manual zoom is missing');
+    }
+
+    // Extract current X and Y ranges, flipping Y if necessary
+    let currentXRange = this.visualizations.dotplot_data.layout.xaxis.range;
+    let currentYRange = this.visualizations.dotplot_data.layout.yaxis.range;
+
+    // Check if the Y-axis range is inverted and correct it
+    if (currentYRange[0] > currentYRange[1]) {
+      currentYRange = [currentYRange[1], currentYRange[0]];
+    }
+
+    // Get the input zoom coordinates
+    const { x1, x2, y1, y2 } = this.manualZoom;
+
+    // Determine which axis has been provided and keep the other axis as it is
+    const newX1 = x1 !== null && x1 !== undefined ? x1 : currentXRange[0];
+    const newX2 = x2 !== null && x2 !== undefined ? x2 : currentXRange[1];
+    const newY1 = y1 !== null && y1 !== undefined ? y1 : currentYRange[0];
+    const newY2 = y2 !== null && y2 !== undefined ? y2 : currentYRange[1];
+
+    // Ensure that at least one axis's coordinates are provided
+    if ((x1 === null || x1 === undefined) && (x2 === null || x2 === undefined) &&
+        (y1 === null || y1 === undefined) && (y2 === null || y2 === undefined)) {
+      this.ZoomErrorMessage = "Please provide zoom coordinates for at least one axis";
+      throw new Error('Please provide zoom coordinates for at least one axis');
+    }
+
+    // Validate the provided coordinates
+    if ((x1 !== null && x2 !== null && newX1 >= newX2) || 
+        (y1 !== null && y2 !== null && newY1 >= newY2)) {
+      this.ZoomErrorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
+      throw new Error('Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2');
+    }
+
+    const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
+
+    const requestData = {
+      dotplot_data: data_for_manual_zoom,
+      x1: newX1,
+      x2: newX2,
+      y1: newY1,
+      y2: newY2,
+      sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
+      exon_intervals1: this.visualizations.exon_intervals1,
+      exon_intervals2: this.visualizations.exon_intervals2,
+      inverted: data_for_manual_zoom.inverted
+    };
+
+    this.loading = true;
+    this.progress = 0;
+
+    fetch(`${server_domain}/dash/dotplot/plot_update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestData),
+      mode: 'cors',
+    })
+      .then(async response => {
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Network response was not ok');
         }
-
-        // Ensure the manual zoom coordinates are present
-        if (this.manualZoom && this.manualZoom.x1 !== null && this.manualZoom.x2 !== null &&
-          this.manualZoom.y1 !== null && this.manualZoom.y2 !== null) {
-          const { x1, x2, y1, y2 } = this.manualZoom;
-
-          const data_for_manual_zoom = JSON.parse(JSON.stringify(this.visualizations.data_for_manual_zoom));  // Deep clone
-
-          const requestData = {
-            dotplot_data: data_for_manual_zoom,  // Include the necessary data
-            x1: x1,
-            x2: x2,
-            y1: y1,
-            y2: y2,
-            sampling_fraction: this.manualSamplingFraction,  // Include the selected sampling fraction
-            exon_intervals1: this.visualizations.exon_intervals1,
-            exon_intervals2: this.visualizations.exon_intervals2,
-            inverted: data_for_manual_zoom.inverted
-
-          };
-          this.loading = true;
-          this.progress = 0;
-          console.log('Sending manual zoom request with data:', requestData);
-
-          fetch(`${server_domain}/dash/dotplot/plot_update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestData),
-            mode: 'cors',
-          })
-            .then(response => {
-              if (!response.ok) {
-                throw new Error('Network response was not ok');
-              }
-              return response.json();
-            })
-            .then(data => {
-              this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
-              this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
-              this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
-              this.$nextTick(() => {
-                this.renderDotplot();
-                this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
-                this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
-              });
-              this.clearManualZoomInputs();  // Clear the manual zoom inputs
-            })
-            .catch(error => {
-              console.error('Error updating dotplot:', error);
-            });
-        } else {
-          this.errorMessage = "Please fill in all zoom coordinates";
-          throw new Error('Please fill in all zoom coordinates');
-        }
-      } catch (error) {
-        this.errorMessage = "Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2";
-        console.error('Error in applyManualZoom:', error.message);
-      } finally {
-        this.loading = false;
-        this.progress = 100;
+        return response.json();
+      })
+      .then(data => {
+        this.visualizations.dotplot_data = data.dotplot_plot; // Update dotplot data
+        this.visualizations.gene_structure1_plot = data.gene_structure1_plot; // Update gene structure plot
+        this.visualizations.gene_structure2_plot = data.gene_structure2_plot; // Update gene structure plot
+        this.$nextTick(() => {
+          this.renderDotplot();
+          this.renderGeneStructure(this.$refs.geneStructure1, this.visualizations.gene_structure1_plot, false);
+          this.renderGeneStructure(this.$refs.geneStructure2, this.visualizations.gene_structure2_plot, true);
+        });
+        this.clearManualZoomInputs();  // Clear the manual zoom inputs
+      })
+      .catch(error => {
+        this.ZoomErrorMessage = `${error.message}`;
+        console.error(error);
+      });
+  } catch (error) {
+    this.ZoomErrorMessage = error.message;
+    console.error(error.message);
+  } finally {
+    this.loading = false;
+    this.progress = 100;
       }
     },
 
@@ -669,6 +758,10 @@ export default {
 
 <style scoped>
 .error-message {
+  color: red;
+  margin-top: 10px;
+}
+.zoom-error-message {
   color: red;
   margin-top: 10px;
 }

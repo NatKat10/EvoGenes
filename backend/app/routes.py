@@ -33,6 +33,23 @@ dash_app, create_gene_plot, plot_dotplot = create_dash_app(app)
 main = Blueprint('main', __name__)
 generate = Blueprint('generate', __name__)
 
+
+def fetch_gene_info(gene_id):
+    url = f"https://rest.ensembl.org/lookup/id/{gene_id}"
+    headers = {"Content-Type": "application/json"}
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code != 200:
+        return None, None
+    
+    data = response.json()
+    gene_name = data.get("display_name", "Unknown")
+    species_name = data.get("species", "Unknown").replace('_', ' ').title()
+    
+    return gene_name, species_name
+
+
+
 def fetch_sequence_from_ensembl_parallel(gene_id):
     ensembl_url = f'https://rest.ensembl.org/sequence/id/{gene_id}?content-type=text/x-fasta'
     response = requests.get(ensembl_url)
@@ -43,27 +60,169 @@ def fetch_sequence_from_ensembl_parallel(gene_id):
     else:
         return None, None
 
-def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
-    server = "http://rest.ensembl.org"
-    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
-    r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
 
+def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+    server = "https://rest.ensembl.org"
+    
+    # Step 1: Fetch and filter transcripts
+    transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
     try:
-        r.raise_for_status()
-        gene_structure = r.json()
+        r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
+        r_transcript.raise_for_status()
+        transcripts = r_transcript.json()
         
-        exons = [{'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']} for exon in gene_structure]
-        return exons
-    except requests.exceptions.HTTPError as e:
-        print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+        # Filter transcripts and store strand information
+        filtered_transcripts = {
+            transcript['transcript_id']: transcript['strand']
+            for transcript in transcripts 
+            if transcript['Parent'] == gene_ensembl_id
+        }
+        
+        # print(f"Filtered transcripts for gene {gene_ensembl_id}: {filtered_transcripts}")
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
         return []
+
+    # Step 2: Fetch and filter exons
+    exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+    try:
+        r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+        r_exon.raise_for_status()
+        all_exons = r_exon.json()
+        
+        # Filter exons
+        filtered_exons = [
+            {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
+            for exon in all_exons
+            if exon['Parent'] in filtered_transcripts
+        ]
+        
+        # print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
+        return filtered_exons, filtered_transcripts
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
+        return [], {}
     
 
+# def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+#     server = "http://rest.ensembl.org"
+#     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+#     r = requests.get(server + exon_endpoint, headers={"Accept": content_type})
 
+#     try:
+#         r.raise_for_status()
+#         gene_structure = r.json()
+        
+#         exons = [{'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']} for exon in gene_structure]
+#         return exons
+#     except requests.exceptions.HTTPError as e:
+#         print(f"Error fetching gene structure for gene_id {gene_ensembl_id}: {e}")
+#         return []
+
+# def fetch_gene_structure(gene_ensembl_id, content_type='application/json'):
+#     server = "https://rest.ensembl.org"
+    
+#     # Step 1: Fetch and filter transcripts
+#     transcript_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=transcript"
+#     try:
+#         r_transcript = requests.get(server + transcript_endpoint, headers={"Accept": content_type})
+#         r_transcript.raise_for_status()
+#         transcripts = r_transcript.json()
+        
+#         # Filter transcripts
+#         filtered_transcript_ids = [
+#             transcript['transcript_id'] 
+#             for transcript in transcripts 
+#             if transcript['Parent'] == gene_ensembl_id
+#         ]
+        
+#         print(f"Filtered transcript IDs for gene {gene_ensembl_id}: {filtered_transcript_ids}")
+        
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error fetching transcripts for gene_id {gene_ensembl_id}: {e}")
+#         return []
+
+#     # Step 2: Fetch and filter exons
+#     exon_endpoint = f"/overlap/id/{gene_ensembl_id}?feature=exon"
+#     try:
+#         r_exon = requests.get(server + exon_endpoint, headers={"Accept": content_type})
+#         r_exon.raise_for_status()
+#         all_exons = r_exon.json()
+        
+#         # Filter exons
+#         filtered_exons = [
+#             {'start': exon['start'], 'end': exon['end'], 'Parent': exon['Parent']}
+#             for exon in all_exons
+#             if exon['Parent'] in filtered_transcript_ids
+#         ]
+        
+#         # print(f"Number of filtered exons for gene {gene_ensembl_id}: {len(filtered_exons)}")
+#         return filtered_exons
+        
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error fetching exons for gene_id {gene_ensembl_id}: {e}")
+#         return []
 
 def chunk_data(data, chunk_size=1000):
     for i in range(0, len(data), chunk_size):
         yield data[i:i + chunk_size]
+
+def reverse_negative_strand_exons(exon_intervals):
+    if not exon_intervals:
+        return []
+
+    # Sort intervals by start position
+    sorted_intervals = sorted(exon_intervals, key=lambda x: x[0])
+
+    # Calculate total gene length
+    gene_start = sorted_intervals[0][0]
+    gene_end = sorted_intervals[-1][1]
+    gene_length = gene_end - gene_start
+
+    # Calculate exon sizes and inter-exon distances
+    exon_sizes = [end - start for start, end in sorted_intervals]
+    inter_exon_distances = [sorted_intervals[i+1][0] - sorted_intervals[i][1] for i in range(len(sorted_intervals) - 1)]
+
+    # Reverse exon sizes and inter-exon distances
+    reversed_sizes = exon_sizes[::-1]
+    reversed_distances = inter_exon_distances[::-1]
+
+    # Reconstruct reversed exons
+    reversed_exons = []
+    current_start = gene_start
+    for i, size in enumerate(reversed_sizes):
+        exon_end = current_start + size
+        reversed_exons.append((current_start, exon_end))
+        if i < len(reversed_distances):
+            current_start = exon_end + reversed_distances[i]
+
+    return reversed_exons
+
+
+
+# def normalize_exons(exon_intervals, min_val):
+#     normalized_intervals = {}
+#     for parent, intervals in exon_intervals.items():
+#         min_start = min(start for start, end in intervals)
+#         max_end = max(end for start, end in intervals)
+#         normalized_intervals[parent] = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+#     return normalized_intervals
+
+def normalize_exons(exon_intervals, min_val):
+    normalized_intervals = {}
+    for parent, (strand_value, intervals) in exon_intervals.items():
+        min_start = min(start for start, end in intervals)
+        max_end = max(end for start, end in intervals)
+        normalized = [(min_val + (start - min_start), end - min_start + min_val) for start, end in intervals]
+        
+        if strand_value == -1:
+            normalized = reverse_negative_strand_exons(normalized)
+        
+        normalized_intervals[parent] = normalized
+    return normalized_intervals
+
 
 @main.route('/run-evo-genes', methods=['POST'])
 def run_evo_genes():
@@ -73,15 +232,21 @@ def run_evo_genes():
     if 'GeneID1' not in request.form or 'GeneID2' not in request.form:
         return jsonify({'error': 'GeneID1 and GeneID2 are required.'}), 400
 
-    gene_id1 = request.form['GeneID1']
-    gene_id2 = request.form['GeneID2']
+    raw_gene_id1 = request.form['GeneID1']
+    raw_gene_id2 = request.form['GeneID2']
 
-    #remove spaces from Gene ID
-    gene_id1 = gene_id1.replace(" ", "")
-    gene_id2 = gene_id2.replace(" ", "")
+
+    # Clean up the Gene IDs by removing extra spaces, newlines, and blank lines
+    gene_id1 = raw_gene_id1.strip().replace("\n", "").replace("\r", "").replace(" ", "")
+    gene_id2 = raw_gene_id2.strip().replace("\n", "").replace("\r", "").replace(" ", "")
+
+
 
     # Ensure the gene IDs are always ordered for consistency
-    gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
+    # gene_id1, gene_id2 = sorted([gene_id1, gene_id2])
+
+    gene_name1, species_name1 = fetch_gene_info(gene_id1)
+    gene_name2, species_name2 = fetch_gene_info(gene_id2)
 
     logging.info("Fetching sequences in parallel")
     # Fetch sequences in parallel
@@ -91,11 +256,23 @@ def run_evo_genes():
         sequence1, extracted_gene_id1 = future_seq1.result()
         sequence2, extracted_gene_id2 = future_seq2.result()
 
+
+
     if not sequence1 or not sequence2:
         logging.error("Failed to fetch sequences from Ensembl")
         return jsonify({'error': 'Failed to fetch sequences from Ensembl.'}), 400
 
     logging.info("Sequences fetched")
+
+
+    if len(sequence2) > len(sequence1):
+        # Swap to ensure the longer gene is on the X-axis
+        gene_id1, gene_id2 = gene_id2, gene_id1
+        sequence1, sequence2 = sequence2, sequence1
+        extracted_gene_id1, extracted_gene_id2 = extracted_gene_id2, extracted_gene_id1
+        gene_name1, gene_name2 = gene_name2, gene_name1
+        species_name1, species_name2 = species_name2, species_name1
+
 
     # Process sequences and run YASS
     fasta_file1_path = 'temp_sequence1.fasta'
@@ -103,6 +280,8 @@ def run_evo_genes():
     with open(fasta_file1_path, 'wb') as file1, open(fasta_file2_path, 'wb') as file2:
         file1.write(sequence1)
         file2.write(sequence2)
+
+    # logging.info(f"Sequences: sequence1={sequence1[:50]}..., sequence2={sequence2[:50]}...")  # Print part of the sequences for verification
 
     logging.info("Running YASS")
     yass_output_path = 'yass_output.yop'
@@ -136,32 +315,39 @@ def run_evo_genes():
     logging.info(f"YASS completed in {yass_end_time - yass_start_time:.2f} seconds")
     yass_output = result.stdout + result.stderr
 
+    
     result_sequences, directions, min_x, max_x, min_y, max_y, _, _ ,inverted = process_sequences(yass_output_path)
+    # logging.info(f"Processed YASS output: result_sequences={result_sequences}, directions={directions}")
+    # logging.info(f"Axis ranges: min_x={min_x}, max_x={max_x}, min_y={min_y}, max_y={max_y}")
     if result_sequences is None:
         return jsonify({'message': 'No alignment found.'}), 200
 
 
     logging.info("Sequences processed")
 
-    gene_structure1 = fetch_gene_structure(gene_id1)
-    gene_structure2 = fetch_gene_structure(gene_id2)
+    gene_structure1, transcripts1 = fetch_gene_structure(gene_id1)
+    gene_structure2, transcripts2 = fetch_gene_structure(gene_id2)
+
     exon_intervals1 = {parent: [(exon['start'], exon['end']) for exon in gene_structure1 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure1)}
     exon_intervals2 = {parent: [(exon['start'], exon['end']) for exon in gene_structure2 if exon['Parent'] == parent] for parent in set(exon['Parent'] for exon in gene_structure2)}
 
-    def normalize_exons(exon_intervals, min_val, max_val):
-        normalized_intervals = {}
-        for parent, intervals in exon_intervals.items():
-            min_start = min(start for start, end in intervals)
-            max_end = max(end for start, end in intervals)
-            gene_length = max_end - min_start
-            normalized_intervals[parent] = [(min_val + ((start - min_start) / gene_length) * (max_val - min_val), min_val + ((end - min_start) / gene_length) * (max_val - min_val)) for start, end in intervals]
-        return normalized_intervals
-
-    normalized_exons1 = normalize_exons(exon_intervals1, min_x, max_x)
-    normalized_exons2 = normalize_exons(exon_intervals2, min_y, max_y)
+    normalized_exons1 = normalize_exons(
+        {parent: (transcripts1[parent], intervals) for parent, intervals in exon_intervals1.items()},
+        min_x
+    )
+    normalized_exons2 = normalize_exons(
+        {parent: (transcripts2[parent], intervals) for parent, intervals in exon_intervals2.items()},
+        min_y
+    )
 
     gene_structure1_plot = create_gene_plot(normalized_exons1[list(normalized_exons1.keys())[0]], x_range=[min_x, max_x])
     gene_structure2_plot = create_gene_plot(normalized_exons2[list(normalized_exons2.keys())[0]], x_range=[min_y, max_y])
+
+    # print("exon_intervals1:", exon_intervals1)
+    # print("exon_intervals2:", exon_intervals2)
+
+    # print("normalized_exons1:", normalized_exons1)
+    # print("normalized_exons2:", normalized_exons2)
 
     os.remove(fasta_file1_path)
     os.remove(fasta_file2_path)
@@ -173,14 +359,17 @@ def run_evo_genes():
         'max_x': max_x,
         'min_y': min_y,
         'max_y': max_y,
-        'x_label': extracted_gene_id1,
-        'y_label': extracted_gene_id2,
+        'x_label': f"{gene_name1} ({species_name1}) - {extracted_gene_id1}",
+        'y_label': f"{gene_name2} ({species_name2}) - {extracted_gene_id2}",
         'sampling_fraction': request.form.get('samplingFraction', '0.1'), # Get the sampling fraction from the request
         'inverted': inverted
 
     }
+    # print("DOT PLOT DATA: ",dotplot_data)
 
+    # logging.info(f"Dotplot data before plotting: {dotplot_data}")
     dotplot_plot = plot_dotplot(**dotplot_data)
+    # logging.info(f"Dotplot created")
 
     end_time = time.time()
     logging.info(f"run_evo_genes completed in {end_time - start_time:.2f} seconds")
@@ -194,6 +383,7 @@ def run_evo_genes():
         'yass_output': yass_output,
         'data_for_manual_zoom': dotplot_data
     }
+    # print("RETURN DATA: ",return_data)
 
     # print(json.dumps(return_data, indent=4)) 
     return jsonify(return_data)
@@ -231,9 +421,10 @@ def plot_dotplot_route():
 @main.route('/dash/plot', methods=['POST'])
 def plot_gene_structure():
     data = request.json
+    # print(data)
     exons_positions = data.get('exonsPositions', [])
     is_vertical = data.get('isVertical', False)  # Get the isVertical parameter from the request
-    print(f"Received isVertical: {is_vertical}") 
+    # print(f"Received isVertical: {is_vertical}") 
     fig = create_gene_plot(exons_positions, is_vertical=is_vertical)  # Pass is_vertical to create_gene_plot
     return jsonify(fig.to_dict())
 
@@ -249,14 +440,16 @@ def plot_dotplot_route_update():
     # print(f"Received data: {data}")  # Log received data
 
     if 'dotplot_data' not in data:
-        print("Error: dotplot_data is missing from the request")
-        return jsonify({'error': 'dotplot_data is missing from the request'}), 400
+        error_message = "Error: dotplot_data is missing from the request"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     dotplot_data = data['dotplot_data']
 
     if 'min_x' not in dotplot_data:
-        print("Error: min_x is missing from dotplot_data")
-        return jsonify({'error': 'min_x is missing from dotplot_data'}), 400
+        error_message = "Error: min_x is missing from dotplot_data"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Extract the original min and max values
     original_min_x = dotplot_data['min_x']
@@ -265,7 +458,6 @@ def plot_dotplot_route_update():
     original_max_y = dotplot_data['max_y']
 
     # print(dotplot_data['directions'])
-    print(len(dotplot_data['directions']))
     # Extract the zoom coordinates from the request
     x1 = data.get('x1')
     x2 = data.get('x2')
@@ -275,13 +467,15 @@ def plot_dotplot_route_update():
 
     # Validate that x1, x2, y1, y2 are not None
     if x1 is None or x2 is None or y1 is None or y2 is None:
-        print("Error: Zoom coordinates are required")
-        return jsonify({'error': 'Zoom coordinates are required'}), 400
+        error_message = "Error: Zoom coordinates are required"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Ensure x1 < x2 and y1 < y2
     if x1 >= x2 or y1 >= y2:
-        print("Error: Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2")
-        return jsonify({'error': 'Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2'}), 400
+        error_message = "Error: Invalid zoom coordinates: x1 should be less than x2 and y1 should be less than y2"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Validate that x1, x2, y1, y2 are not Zero
     if x1 == 0:
@@ -298,8 +492,9 @@ def plot_dotplot_route_update():
             original_min_x <= x2 <= original_max_x and
             original_min_y <= y1 <= original_max_y and
             original_min_y <= y2 <= original_max_y):
-        print("Error: Zoom coordinates are out of range")
-        return jsonify({'error': 'Zoom coordinates are out of range'}), 400
+        error_message = "Error: Zoom coordinates are out of range"
+        print(error_message)
+        return jsonify({'error': error_message}), 400
 
     # Update the dotplot data with the new coordinates
     dotplot_data['min_x'] = x1
@@ -354,6 +549,53 @@ def plot_dotplot_route_update():
         'gene_structure2_plot': gene_structure2_plot.to_dict(),
         'dotplot_plot': fig.to_dict()
     })
+
+
+
+@main.route('/dash/dotplot/update_limits', methods=['POST'])
+def update_dotplot_limits():
+    data = request.json
+    try:
+        dotplot_data = data['dotplot_data']
+        x1 = data['x1']
+        x2 = data['x2']
+        y1 = data['y1']
+        y2 = data['y2']
+        sampling_fraction = data['sampling_fraction']
+        exon_intervals1 = data['exon_intervals1']
+        exon_intervals2 = data['exon_intervals2']
+        inverted = data['inverted']
+
+        # Update the dotplot data with new min and max values
+        dotplot_data.update({
+            'min_x': x1,
+            'max_x': x2,
+            'min_y': y1,
+            'max_y': y2,
+            'sampling_fraction': sampling_fraction,
+            'inverted': inverted
+        })
+
+        fig = plot_dotplot(**dotplot_data)
+
+        gene_structure1_plot = create_gene_plot(exon_intervals1, x_range=[x1, x2])
+        gene_structure2_plot = create_gene_plot(exon_intervals2, x_range=[y1, y2])
+
+        return jsonify({
+            'dotplot_plot': fig.to_dict(),
+            'gene_structure1_plot': gene_structure1_plot.to_dict(),
+            'gene_structure2_plot': gene_structure2_plot.to_dict()
+        })
+    except KeyError as e:
+        logging.error(f"Missing key in request data: {e}")
+        return jsonify({'error': f"Missing key in request data: {e}"}), 400
+    except ValueError as e:
+        logging.error(f"Value error in request data: {e}")
+        return jsonify({'error': f"Value error in request data: {e}"}), 400
+    except Exception as e:
+        logging.error(f"Error processing dotplot limits: {e}")
+        return jsonify({'error': f"Error processing dotplot limits: {e}"}), 500
+
 
 @main.route('/dash/relayout', methods=['POST'])
 def handle_relayout():

@@ -98,11 +98,11 @@ export default {
           email: 'nat.kataev@gmail.com',
         },
         {
-          image: require('@/assets/fish.png'),
-          name: 'Assaf Shokroon',
-          role: 'Frontend Developer',
+          image: require('@/assets/assaf.jpg'),
+          name: 'Assaf Shukrun',
+          role: 'Fullstack Developer',
           linkedin: 'https://www.linkedin.com/in/assaf-shukrun/',
-          email: 'alice.johnson@mail.com',
+          email: 'assaf7070@gmail.com',
         },
         {
           image: require('@/assets/maor.png'),

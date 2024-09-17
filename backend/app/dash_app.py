@@ -19,43 +19,30 @@ def create_dash_app(flask_app):
         suppress_callback_exceptions=True
     )
 
-    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None, is_vertical=False):
-        # This function creates a Plotly figure for visualizing gene structures.
+    def create_gene_plot(exon_intervals, marker_pos=[], marker_heights=[], marker_colors=[], x_range=None, is_vertical=False, return_range=False):
         if not exon_intervals:
             return go.Figure()
 
-        # exon_intervals: List of exon intervals for plotting.
-        # marker_pos, marker_heights, marker_colors: Optional lists for adding markers to the plot.
-        # x_range: Optional range for the x-axis. If exon_intervals is empty, it returns an empty figure.
         min_start = min(start for start, _ in exon_intervals)
         max_end = max(end for _, end in exon_intervals)
-        # minimum start and maximum end positions of the exons in the intervals.
 
-        # Directly use the provided x_range if available
         if x_range is None:
             x_range = [min_start, max_end]
 
-        # These lists are created for plotting exon intervals.
-        exon_x = []  # This list stores x-coordinates for exon plotting
-        exon_y = []  # This list stores y-coordinates for exon plotting
+        exon_x = []
+        exon_y = []
         for start, end in exon_intervals:
             exon_x.extend([start, start, end, end, None])
             exon_y.extend([0, 0.5, 0.5, 0, None])
 
-        exon_trace = go.Scatter(x=exon_x, y=exon_y, mode='lines', fill='tozeroy', fillcolor='black',  # This is a Plotly Scatter trace for the exons.
+        exon_trace = go.Scatter(x=exon_x, y=exon_y, mode='lines', fill='tozeroy', fillcolor='black',
                                 line=dict(width=0), opacity=0.6, showlegend=False)
 
-        intron_x = []
-        intron_y = []
-        for i in range(len(exon_intervals) - 1):
-            start = exon_intervals[i][1]
-            end = exon_intervals[i + 1][0]
-            mid_x = (start + end) / 2
-            mid_y = 0.25
-            intron_x.extend([start, mid_x, None, mid_x, end, None])
-            intron_y.extend([mid_y, 0.5, None, 0.5, mid_y, None])
+        # Create an intron line that spans the entire x-axis range
+        intron_x = [x_range[0], x_range[1], None]
+        intron_y = [0.25, 0.25, None]  # Use a constant y-value below the exon regions
 
-        intron_trace = go.Scattergl(x=intron_x, y=intron_y, mode='lines', line=dict(color='grey', width=2, dash='solid'),  # This is a Plotly Scatter trace for the introns.
+        intron_trace = go.Scattergl(x=intron_x, y=intron_y, mode='lines', line=dict(color='black', width=1, dash='solid'),
                                     opacity=0.6, showlegend=False)
 
         marker_trace = go.Scattergl(x=marker_pos, y=[y + 0.5 for y in marker_heights], mode='markers',
@@ -63,55 +50,36 @@ def create_dash_app(flask_app):
 
         data = [exon_trace, intron_trace, marker_trace]
 
-
-        if is_vertical:
-            layout = go.Layout(
-                width=550,
-                height=90,
-                xaxis=dict(
-                    showgrid=True,
-                    range=x_range,
-                    side='top',
-                    tickangle=-90
-                ),
-                yaxis=dict(
-                    showgrid=False,
-                    showticklabels=False,
-                    range=[-0.1, 0.6],
-                    fixedrange=True,
-                    side='right'
-                ),
-                margin=dict(l=60, r=47, t=5, b=35),
-                hovermode='closest'
-            )
-        else:
-            layout = go.Layout(
-                width=780,
-                height=90,
-                xaxis=dict(
-                    
-                    showgrid=True,
-                    range=x_range
-                ),
-                yaxis=dict(
-                    showgrid=False,
-                    showticklabels=False,
-                    range=[-0.1, 0.6],
-                    fixedrange=True
-                ),
-                margin=dict(l=40, r=5, t=5, b=35),
-                hovermode='closest'
-            )
+        layout = go.Layout(
+            width=780 if not is_vertical else 550,
+            height=90,
+            xaxis=dict(
+                showgrid=False,
+                range=x_range,
+                side='bottom' if is_vertical else 'top',
+                tickangle=-90 if is_vertical else 0,
+            ),
+            yaxis=dict(
+                showgrid=False,
+                showticklabels=False,
+                range=[-0.1, 0.6],  # Ensure this range accommodates both exons and introns
+                fixedrange=True,
+                zeroline=False,
+                side='left' if is_vertical else 'right'
+            ),
+            margin=dict(l=60, r=55, t=5, b=35) if is_vertical else dict(l=40, r=5, t=5, b=35),
+            hovermode='closest'
+        )
 
         fig = go.Figure(data=data, layout=layout)
+        fig.update_xaxes(nticks=10)
 
-        if is_vertical:
-            fig.update_layout(
-                xaxis=dict(side='bottom', tickangle=-90),
-                yaxis=dict(side='left')
-            )
+        if return_range:
+            return fig, x_range
+        else:
+            return fig
 
-        return fig
+
 
     def plot_dotplot(directions, min_x, max_x, min_y, max_y, x_label, y_label, sampling_fraction='0.1', inverted=False):
         logging.info("Start processing plot_dotplot function")
@@ -199,7 +167,13 @@ def create_dash_app(flask_app):
 
         end_time = time.time()
         logging.info(f"Completed processing plot_dotplot function in {end_time - start_time:.2f} seconds")
-        return go.Figure(data=traces, layout=layout)
+
+        fig = go.Figure(data=traces, layout=layout)
+        fig.update_yaxes(nticks=10)
+        fig.update_xaxes(nticks=10)
+
+
+        return fig
 
 
     dash_app.layout = html.Div([
